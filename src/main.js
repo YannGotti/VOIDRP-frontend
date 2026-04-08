@@ -4,6 +4,9 @@ import router from './router'
 import { bootstrapAuth } from './stores/authStore'
 import './styles.css'
 
-await bootstrapAuth()
-
-createApp(App).use(router).mount('#app')
+;(async () => {
+  await bootstrapAuth()
+  createApp(App).use(router).mount('#app')
+})().catch((error) => {
+  console.error('Failed to bootstrap app:', error)
+})
