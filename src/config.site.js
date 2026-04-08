@@ -1,6 +1,6 @@
 export const siteConfig = {
   siteUrl: 'https://void-rp.ru',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001/api/v1',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.void-rp.ru/api/v1',
   serverName: 'VoidRP',
   serverIp: 'void-rp.ru',
   serverVersion: '1.21.1',
