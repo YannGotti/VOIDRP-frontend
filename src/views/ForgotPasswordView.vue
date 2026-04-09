@@ -13,8 +13,9 @@ async function submit() {
   isSubmitting.value = true
 
   try {
-    const response = await requestPasswordReset(form)
-    successMessage.value = response.message
+    await requestPasswordReset(form)
+    successMessage.value =
+      'Если аккаунт с такой почтой существует, письмо со ссылкой для смены пароля уже отправлено.'
   } catch (error) {
     errorMessage.value = error.message || 'Не удалось запросить восстановление доступа.'
   } finally {
@@ -30,7 +31,7 @@ async function submit() {
         <div class="section-kicker">Восстановление доступа</div>
         <h1 class="section-title">Забыли пароль?</h1>
         <p class="section-subtitle">
-          Укажи свою почту. Сейчас письма ещё не отправляются автоматически, поэтому код для смены пароля выдаётся во временном режиме.
+          Укажи свою почту. Мы отправим письмо со ссылкой на страницу смены пароля.
         </p>
 
         <form class="mt-8 grid gap-4" @submit.prevent="submit">
@@ -39,18 +40,28 @@ async function submit() {
             <input v-model="form.email" type="email" class="input input-bordered w-full rounded-2xl" required />
           </label>
 
-          <p v-if="errorMessage" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <p
+            v-if="errorMessage"
+            class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+          >
             {{ errorMessage }}
           </p>
 
-          <p v-if="successMessage" class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <p
+            v-if="successMessage"
+            class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+          >
             {{ successMessage }}
           </p>
 
           <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Отправляем запрос...' : 'Продолжить' }}
+            {{ isSubmitting ? 'Отправляем письмо...' : 'Отправить письмо' }}
           </button>
         </form>
+
+        <div class="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
+          Для безопасности мы не показываем, существует ли аккаунт с этой почтой. Если письмо не пришло сразу, проверь папку «Спам».
+        </div>
       </div>
     </div>
   </section>

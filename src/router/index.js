@@ -20,7 +20,7 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { guestOnly: true } },
     { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView, meta: { guestOnly: true } },
-    { path: '/reset-password', name: 'reset-password', component: ResetPasswordView, meta: { guestOnly: true } },
+    { path: '/reset-password', name: 'reset-password', component: ResetPasswordView },
     { path: '/verify-email', name: 'verify-email', component: VerifyEmailView },
     { path: '/download-launcher', name: 'download-launcher', component: DownloadLauncherView },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },

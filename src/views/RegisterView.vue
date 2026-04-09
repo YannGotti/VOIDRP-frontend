@@ -23,12 +23,13 @@ async function submit() {
   isSubmitting.value = true
 
   try {
-    const response = await registerAndOptionallyStay(form)
-    successMessage.value = response.message
+    await registerAndOptionallyStay(form)
+
     await router.push({
       path: '/verify-email',
       query: {
         email: form.email,
+        sent: '1',
         redirect: typeof route.query.redirect === 'string' ? route.query.redirect : '',
       },
     })
@@ -47,7 +48,7 @@ async function submit() {
         <div class="section-kicker">Регистрация</div>
         <h1 class="section-title">Создать аккаунт VoidRP</h1>
         <p class="section-subtitle">
-          Этот аккаунт нужен для сайта, личного кабинета и официального лаунчера. После регистрации ты сразу перейдёшь к следующему шагу.
+          Этот аккаунт нужен для сайта, личного кабинета и официального лаунчера. После регистрации мы сразу отправим письмо для подтверждения почты.
         </p>
 
         <form class="mt-8 grid gap-4 md:grid-cols-2" @submit.prevent="submit">
