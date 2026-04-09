@@ -37,7 +37,7 @@ async function onLogout() {
           class="menu menu-horizontal rounded-2xl border border-slate-200 bg-white/90 p-1.5 text-sm text-slate-700 shadow-[0_10px_40px_rgba(15,23,42,0.06)]"
         >
           <li><RouterLink to="/" style="border-radius: 10px;">Главная</RouterLink></li>
-          <li><RouterLink to="/download-launcher" style="border-radius: 10px;">Скачать</RouterLink></li>
+          <li><RouterLink to="/download-launcher" style="border-radius: 10px;">Лаунчер</RouterLink></li>
           <li><RouterLink to="/links" style="border-radius: 10px;">Ссылки</RouterLink></li>
           <li v-if="isAuthenticated"><RouterLink to="/profile" style="border-radius: 10px;">Профиль</RouterLink></li>
           <li v-else><RouterLink to="/login" style="border-radius: 10px;">Вход</RouterLink></li>
@@ -107,7 +107,7 @@ async function onLogout() {
             class="menu dropdown-content z-[1] mt-3 w-72 rounded-[24px] border border-slate-200 bg-white p-2 text-slate-700 shadow-2xl"
           >
             <li><RouterLink to="/">Главная</RouterLink></li>
-            <li><RouterLink to="/download-launcher">Скачать лаунчер</RouterLink></li>
+            <li><RouterLink to="/download-launcher">Лаунчер</RouterLink></li>
             <li><RouterLink to="/links">Ссылки</RouterLink></li>
             <li v-if="isAuthenticated"><RouterLink to="/profile">Профиль</RouterLink></li>
             <li v-else><RouterLink to="/login">Вход</RouterLink></li>

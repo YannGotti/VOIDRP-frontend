@@ -9,10 +9,10 @@ import { siteConfig } from '../config.site'
         <div class="max-w-3xl">
           <div class="section-kicker section-kicker--light">Готов начать</div>
           <h2 class="text-3xl font-black leading-tight md:text-5xl">
-            Создай аккаунт {{ siteConfig.serverName }} и переходи к скачиванию лаунчера
+            Создай аккаунт {{ siteConfig.serverName }} и переходи к игре
           </h2>
           <p class="mt-4 text-lg leading-8 text-white/80">
-            Новая воронка входа начинается с регистрации на сайте, а дальше ведёт игрока к официальному лаунчеру.
+            Начни с регистрации на сайте, потом скачай официальный лаунчер и заходи на сервер.
           </p>
         </div>
 
@@ -21,7 +21,7 @@ import { siteConfig } from '../config.site'
             to="/register"
             class="btn btn-primary btn-lg rounded-2xl bg-white text-slate-950 hover:bg-white/90"
           >
-            Регистрация
+            Создать аккаунт
           </RouterLink>
           <RouterLink
             to="/download-launcher"

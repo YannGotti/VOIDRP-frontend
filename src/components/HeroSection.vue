@@ -27,7 +27,7 @@ import { siteConfig } from '../config.site'
             to="/download-launcher"
             class="btn btn-primary btn-lg rounded-2xl shadow-[0_12px_45px_rgba(56,189,248,0.20)]"
           >
-            Перейти к скачиванию
+            Скачать лаунчер
           </RouterLink>
           <RouterLink
             to="/register"
@@ -50,7 +50,7 @@ import { siteConfig } from '../config.site'
             <div class="hero-preview__top">
               <div>
                 <p class="text-sm uppercase tracking-[0.22em] text-slate-500">VoidRP</p>
-                <p class="mt-2 text-3xl font-black text-slate-900">Сайт, аккаунт и лаунчер в одной системе</p>
+                <p class="mt-2 text-3xl font-black text-slate-900">Понятный путь от сайта до игры</p>
               </div>
 
               <div
@@ -78,22 +78,22 @@ import { siteConfig } from '../config.site'
             <div class="mt-6 grid gap-3">
               <div class="info-row">
                 <span class="info-dot info-dot--blue"></span>
-                Сначала создай аккаунт VoidRP и подтверди почту.
+                Создай аккаунт и укажи свой игровой ник.
               </div>
               <div class="info-row">
                 <span class="info-dot info-dot--emerald"></span>
-                Потом скачай официальный лаунчер и используй тот же аккаунт.
+                Скачай официальный лаунчер и войди под теми же данными.
               </div>
               <div class="info-row">
                 <span class="info-dot info-dot--violet"></span>
-                Дальше профиль, скин, статистика и игровой вход будут жить в одной системе.
+                Запусти игру и заходи на сервер без лишней путаницы.
               </div>
             </div>
 
             <div class="mt-6 rounded-[24px] border border-slate-200 bg-white/80 p-4">
-              <p class="text-sm text-slate-500">Новый старт</p>
+              <p class="text-sm text-slate-500">Быстрый старт</p>
               <p class="mt-2 text-base leading-7 text-slate-700">
-                Теперь сайт ведёт игрока не сразу к файлу, а в понятную воронку: аккаунт → скачивание → лаунчер.
+                Здесь всё собрано так, чтобы игроку было понятно: зарегистрировался, скачал лаунчер и зашёл в игру.
               </p>
             </div>
           </div>

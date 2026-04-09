@@ -17,10 +17,10 @@ const auth = useAuthStore()
       <section v-if="!auth.ready.value" class="py-20 md:py-28">
         <div class="container-shell max-w-2xl">
           <div class="glass-card rounded-[32px] p-8 md:p-10 text-center">
-            <div class="section-kicker">VoidRP Account</div>
-            <h1 class="section-title">Проверяем сессию сайта</h1>
+            <div class="section-kicker">VoidRP</div>
+            <h1 class="section-title">Подготавливаем сайт</h1>
             <p class="section-subtitle">
-              Восстанавливаем вход и готовим account-состояние перед загрузкой страниц.
+              Проверяем вход и загружаем твою страницу.
             </p>
             <div class="mt-8 flex justify-center">
               <span class="loading loading-spinner loading-lg text-primary"></span>

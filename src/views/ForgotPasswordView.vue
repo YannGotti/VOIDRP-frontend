@@ -16,7 +16,7 @@ async function submit() {
     const response = await requestPasswordReset(form)
     successMessage.value = response.message
   } catch (error) {
-    errorMessage.value = error.message || 'Не удалось запросить сброс пароля.'
+    errorMessage.value = error.message || 'Не удалось запросить восстановление пароля.'
   } finally {
     isSubmitting.value = false
   }
@@ -28,14 +28,14 @@ async function submit() {
     <div class="container-shell max-w-2xl">
       <div class="glass-card rounded-[32px] p-8 md:p-10">
         <div class="section-kicker">Восстановление доступа</div>
-        <h1 class="section-title">Запросить сброс пароля</h1>
+        <h1 class="section-title">Не помнишь пароль?</h1>
         <p class="section-subtitle">
-          На текущем этапе reset token будет записан в логи backend, потому что email backend пока работает в режиме logging.
+          Укажи свою почту. Сейчас код для смены пароля выдаётся вручную, поэтому после запроса может понадобиться помощь администратора.
         </p>
 
         <form class="mt-8 grid gap-4" @submit.prevent="submit">
           <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Email</span>
+            <span class="label-text mb-2 font-semibold text-slate-700">Почта</span>
             <input v-model="form.email" type="email" class="input input-bordered w-full rounded-2xl" required />
           </label>
 
@@ -48,7 +48,7 @@ async function submit() {
           </p>
 
           <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Отправляем запрос...' : 'Запросить токен сброса' }}
+            {{ isSubmitting ? 'Отправляем запрос...' : 'Запросить восстановление' }}
           </button>
         </form>
       </div>

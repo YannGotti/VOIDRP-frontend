@@ -26,7 +26,7 @@ async function submit() {
       router.push('/login')
     }, 1000)
   } catch (error) {
-    errorMessage.value = error.message || 'Не удалось сбросить пароль.'
+    errorMessage.value = error.message || 'Не удалось сохранить новый пароль.'
   } finally {
     isSubmitting.value = false
   }
@@ -38,14 +38,14 @@ async function submit() {
     <div class="container-shell max-w-2xl">
       <div class="glass-card rounded-[32px] p-8 md:p-10">
         <div class="section-kicker">Новый пароль</div>
-        <h1 class="section-title">Сброс пароля аккаунта</h1>
+        <h1 class="section-title">Придумай новый пароль</h1>
         <p class="section-subtitle">
-          Вставь reset token из логов backend и задай новый пароль для аккаунта VoidRP.
+          Вставь код восстановления и задай новый пароль для своего аккаунта.
         </p>
 
         <form class="mt-8 grid gap-4" @submit.prevent="submit">
           <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Reset token</span>
+            <span class="label-text mb-2 font-semibold text-slate-700">Код восстановления</span>
             <input v-model="form.token" class="input input-bordered w-full rounded-2xl" required />
           </label>
 
@@ -55,7 +55,7 @@ async function submit() {
           </label>
 
           <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Повтор нового пароля</span>
+            <span class="label-text mb-2 font-semibold text-slate-700">Повтори новый пароль</span>
             <input v-model="form.new_password_repeat" type="password" class="input input-bordered w-full rounded-2xl" required />
           </label>
 
@@ -68,7 +68,7 @@ async function submit() {
           </p>
 
           <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Сохраняем пароль...' : 'Сбросить пароль' }}
+            {{ isSubmitting ? 'Сохраняем...' : 'Сохранить новый пароль' }}
           </button>
         </form>
       </div>

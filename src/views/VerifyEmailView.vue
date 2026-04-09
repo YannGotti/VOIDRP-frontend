@@ -43,9 +43,9 @@ async function submitResend() {
 
   try {
     const response = await resendVerification({ email: form.email })
-    resendMessage.value = `${response.message} Проверь логи backend.`
+    resendMessage.value = `${response.message} Если письмо не приходит автоматически, обратись к администратору.`
   } catch (error) {
-    errorMessage.value = error.message || 'Не удалось перевыпустить токен.'
+    errorMessage.value = error.message || 'Не удалось запросить новый код.'
   } finally {
     isResending.value = false
   }
@@ -58,14 +58,14 @@ async function submitResend() {
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="glass-card rounded-[32px] p-8 md:p-10">
           <div class="section-kicker">Подтверждение почты</div>
-          <h1 class="section-title">Подтвердить email токеном</h1>
+          <h1 class="section-title">Подтверди свою почту</h1>
           <p class="section-subtitle">
-            На текущем этапе verification token берётся из логов backend, потому что реальная отправка писем будет добавлена позже.
+            Вставь код подтверждения. Пока письмо может выдаваться вручную, если автоматическая отправка ещё не подключена.
           </p>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submitVerify">
             <label class="form-control w-full">
-              <span class="label-text mb-2 font-semibold text-slate-700">Verification token</span>
+              <span class="label-text mb-2 font-semibold text-slate-700">Код подтверждения</span>
               <input v-model="form.token" class="input input-bordered w-full rounded-2xl" required />
             </label>
 
@@ -84,7 +84,7 @@ async function submitResend() {
             </p>
 
             <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Проверяем...' : 'Подтвердить email' }}
+              {{ isSubmitting ? 'Проверяем...' : 'Подтвердить почту' }}
             </button>
           </form>
 
@@ -96,21 +96,21 @@ async function submitResend() {
               Войти в аккаунт
             </RouterLink>
             <RouterLink to="/download-launcher" class="btn btn-ghost rounded-2xl">
-              К скачиванию лаунчера
+              Скачать лаунчер
             </RouterLink>
           </div>
         </div>
 
         <div class="glass-card rounded-[32px] p-8 md:p-10">
-          <div class="section-kicker">Перевыпуск</div>
-          <h2 class="section-title">Запросить новый токен</h2>
+          <div class="section-kicker">Новый код</div>
+          <h2 class="section-title">Запросить код повторно</h2>
           <p class="section-subtitle">
-            Если первый token потерялся, можно перевыпустить новый verification token на тот же email.
+            Если первый код потерялся, можно запросить новый для той же почты.
           </p>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submitResend">
             <label class="form-control w-full">
-              <span class="label-text mb-2 font-semibold text-slate-700">Email</span>
+              <span class="label-text mb-2 font-semibold text-slate-700">Почта</span>
               <input v-model="form.email" type="email" class="input input-bordered w-full rounded-2xl" required />
             </label>
 
@@ -122,7 +122,7 @@ async function submitResend() {
             </p>
 
             <button type="submit" class="btn btn-outline rounded-2xl" :disabled="isResending">
-              {{ isResending ? 'Запрашиваем...' : 'Перевыпустить токен' }}
+              {{ isResending ? 'Запрашиваем...' : 'Запросить новый код' }}
             </button>
           </form>
         </div>

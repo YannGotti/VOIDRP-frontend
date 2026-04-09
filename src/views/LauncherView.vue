@@ -9,10 +9,10 @@ import { siteConfig } from '../config.site'
         <div class="max-w-3xl">
           <div class="section-kicker section-kicker--light">Официальный вход</div>
           <h2 class="text-3xl font-black leading-tight md:text-5xl">
-            Лаунчер {{ siteConfig.serverName }} становится частью единой аккаунт-системы
+            Играй через официальный лаунчер {{ siteConfig.serverName }}
           </h2>
           <p class="mt-4 text-lg leading-8 text-white/80">
-            Сначала войди или зарегистрируйся на сайте, затем скачай официальный лаунчер и используй тот же аккаунт для дальнейшего запуска игры.
+            Сначала войди или зарегистрируйся на сайте, потом скачай официальный лаунчер и используй те же данные для входа в игру.
           </p>
         </div>
 
@@ -21,7 +21,7 @@ import { siteConfig } from '../config.site'
             to="/download-launcher"
             class="btn btn-primary btn-lg rounded-2xl bg-white text-slate-950 hover:bg-white/90"
           >
-            Перейти к скачиванию
+            Скачать лаунчер
           </RouterLink>
           <a
             :href="siteConfig.dynmapUrl"

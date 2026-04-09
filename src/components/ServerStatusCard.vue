@@ -12,12 +12,12 @@ import { siteConfig } from '../config.site'
               class="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700"
             >
               <span class="h-2 w-2 rounded-full bg-primary"></span>
-              Активность сервера
+              Онлайн сервера
             </div>
 
-            <h2 class="section-title !mb-0">Смотри, когда сервер особенно активен</h2>
+            <h2 class="section-title !mb-0">Посмотри, когда на сервере больше игроков</h2>
             <p class="section-subtitle mt-4">
-              Здесь можно быстро посмотреть активность проекта и понять, в какое время на сервере больше игроков.
+              Здесь можно быстро оценить активность сервера и понять, в какое время удобнее заходить в игру.
             </p>
 
             <div class="mt-6 grid gap-3">
@@ -27,11 +27,11 @@ import { siteConfig } from '../config.site'
               </div>
               <div class="soft-line-card">
                 <span class="soft-line-card__dot bg-emerald-400"></span>
-                Переходи на карту мира и планируй свои путешествия.
+                Открывай карту мира и планируй свои путешествия.
               </div>
               <div class="soft-line-card">
                 <span class="soft-line-card__dot bg-violet-400"></span>
-                Сначала создай аккаунт, а затем переходи к скачиванию официального лаунчера.
+                Сначала создай аккаунт, а затем скачай официальный лаунчер.
               </div>
             </div>
 
@@ -62,7 +62,7 @@ import { siteConfig } from '../config.site'
             </div>
 
             <div class="mt-4 rounded-[20px] border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-600">
-              Если график не загрузился сразу, просто обнови страницу или открой мониторинг позже.
+              Если график открылся не сразу, просто обнови страницу чуть позже.
             </div>
           </div>
         </div>

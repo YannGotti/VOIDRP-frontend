@@ -27,7 +27,7 @@ async function submit() {
     await loginWithPassword(form)
     await router.push(redirectTarget.value)
   } catch (error) {
-    errorMessage.value = error.message || 'Не удалось выполнить вход.'
+    errorMessage.value = error.message || 'Не удалось войти в аккаунт.'
   } finally {
     isSubmitting.value = false
   }
@@ -39,21 +39,21 @@ async function submit() {
     <div class="container-shell max-w-2xl">
       <div class="glass-card rounded-[32px] p-8 md:p-10">
         <div class="section-kicker">Вход</div>
-        <h1 class="section-title">Войди в аккаунт VoidRP</h1>
+        <h1 class="section-title">Войди в свой аккаунт</h1>
         <p class="section-subtitle">
-          Используй логин или email и тот же пароль, который позже будет использоваться в лаунчере.
+          Используй логин или почту и пароль. Эти же данные понадобятся тебе в официальном лаунчере.
         </p>
 
         <div
           v-if="route.query.redirect"
           class="mt-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700"
         >
-          Чтобы открыть запрошенную страницу, сначала нужно войти в аккаунт.
+          Сначала войди в аккаунт, а потом откроется нужная страница.
         </div>
 
         <form class="mt-8 grid gap-4" @submit.prevent="submit">
           <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Логин или email</span>
+            <span class="label-text mb-2 font-semibold text-slate-700">Логин или почта</span>
             <input v-model="form.login" class="input input-bordered w-full rounded-2xl" required />
           </label>
 
