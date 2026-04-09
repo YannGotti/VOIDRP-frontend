@@ -12,26 +12,26 @@ import { siteConfig } from '../config.site'
               class="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700"
             >
               <span class="h-2 w-2 rounded-full bg-primary"></span>
-              Онлайн сервера
+              Активность сервера
             </div>
 
             <h2 class="section-title !mb-0">Посмотри, когда на сервере больше игроков</h2>
             <p class="section-subtitle mt-4">
-              Здесь можно быстро оценить активность сервера и понять, в какое время удобнее заходить в игру.
+              Это поможет понять, в какое время на сервере обычно оживлённее и когда легче встретить других игроков.
             </p>
 
             <div class="mt-6 grid gap-3">
               <div class="soft-line-card">
                 <span class="soft-line-card__dot bg-primary"></span>
-                Следи за активностью сервера в удобном графике.
+                Смотри график активности прямо на сайте.
               </div>
               <div class="soft-line-card">
                 <span class="soft-line-card__dot bg-emerald-400"></span>
-                Открывай карту мира и планируй свои путешествия.
+                Переходи на карту мира и планируй свои путешествия.
               </div>
               <div class="soft-line-card">
                 <span class="soft-line-card__dot bg-violet-400"></span>
-                Сначала создай аккаунт, а затем скачай официальный лаунчер.
+                Создай аккаунт, скачай лаунчер и заходи в игру по официальному пути.
               </div>
             </div>
 
@@ -45,7 +45,7 @@ import { siteConfig } from '../config.site'
                 rel="noreferrer"
                 class="btn btn-outline rounded-2xl"
               >
-                Карта мира
+                Открыть карту
               </a>
             </div>
           </div>
@@ -62,7 +62,7 @@ import { siteConfig } from '../config.site'
             </div>
 
             <div class="mt-4 rounded-[20px] border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-600">
-              Если график открылся не сразу, просто обнови страницу чуть позже.
+              Если график загрузился не сразу, просто обнови страницу чуть позже.
             </div>
           </div>
         </div>

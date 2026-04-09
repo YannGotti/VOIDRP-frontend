@@ -12,11 +12,11 @@ const links = [
     title: 'Telegram',
     description: 'Новости проекта, анонсы и важные сообщения для игроков.',
     url: siteConfig.telegramUrl,
-    button: 'Открыть Telegram',
+    button: 'Перейти в Telegram',
   },
   {
-    title: 'Сайт проекта',
-    description: 'Главная страница проекта со всей основной информацией о сервере.',
+    title: 'Главная страница',
+    description: 'Основная страница проекта со стартом, лаунчером и всей ключевой информацией.',
     url: siteConfig.siteUrl,
     button: 'Открыть сайт',
   },
@@ -28,9 +28,9 @@ const links = [
     <div class="container-shell">
       <div class="max-w-3xl">
         <div class="section-kicker">Полезные ссылки</div>
-        <h1 class="section-title">Все важные ссылки в одном месте</h1>
+        <h1 class="section-title">Всё важное в одном месте</h1>
         <p class="section-subtitle">
-          Открывай карту мира, следи за новостями и быстро переходи к главным страницам проекта.
+          Открывай карту мира, переходи в Telegram и быстро возвращайся к главным страницам проекта.
         </p>
       </div>
 
@@ -39,7 +39,7 @@ const links = [
           <div
             class="mb-4 inline-flex rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs uppercase tracking-[0.24em] text-slate-500"
           >
-            Полезная ссылка
+            Ссылка
           </div>
 
           <h2 class="text-2xl font-black text-slate-900">{{ item.title }}</h2>

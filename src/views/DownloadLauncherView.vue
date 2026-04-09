@@ -12,9 +12,9 @@ const isAuthenticated = computed(() => auth.isAuthenticated.value)
     <div class="container-shell">
       <div class="max-w-3xl">
         <div class="section-kicker">Лаунчер</div>
-        <h1 class="section-title">Скачай официальный лаунчер VoidRP</h1>
+        <h1 class="section-title">Скачать официальный лаунчер VoidRP</h1>
         <p class="section-subtitle">
-          Здесь начинается путь в игру: сначала аккаунт, потом лаунчер, потом вход на сервер.
+          Это главный способ входа на сервер. Лаунчер сам подготовит игру и запустит нужную сборку.
         </p>
       </div>
 
@@ -24,14 +24,14 @@ const isAuthenticated = computed(() => auth.isAuthenticated.value)
             Твой статус
           </div>
           <h2 class="text-2xl font-black text-slate-900">
-            {{ isAuthenticated ? 'Можно скачивать' : 'Сначала войди или зарегистрируйся' }}
+            {{ isAuthenticated ? 'Можно скачивать' : 'Сначала создай аккаунт' }}
           </h2>
           <p class="mt-4 leading-7 text-slate-600">
             <template v-if="isAuthenticated">
-              Ты вошёл как <strong>{{ auth.displayName.value }}</strong>. Теперь скачай лаунчер и используй этот же аккаунт для входа в игру.
+              Ты вошёл как <strong>{{ auth.displayName.value }}</strong>. Теперь можно скачать лаунчер и войти в него под тем же аккаунтом.
             </template>
             <template v-else>
-              Сначала создай аккаунт или войди в уже существующий. После этого можно будет скачать официальный лаунчер.
+              Сначала зарегистрируйся или войди в уже существующий аккаунт. После этого путь к игре станет проще и понятнее.
             </template>
           </p>
 
@@ -39,7 +39,7 @@ const isAuthenticated = computed(() => auth.isAuthenticated.value)
             v-if="isAuthenticated && !auth.emailVerified.value"
             class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
           >
-            Почта пока не подтверждена. Играть это сейчас не мешает, но лучше подтвердить её заранее.
+            Почта ещё не подтверждена. Играть это пока не мешает, но лучше завершить этот шаг заранее.
           </div>
 
           <div class="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -53,29 +53,29 @@ const isAuthenticated = computed(() => auth.isAuthenticated.value)
               Скачать лаунчер
             </a>
             <RouterLink v-else to="/register" class="btn btn-primary rounded-2xl">Создать аккаунт</RouterLink>
-            <RouterLink v-if="!isAuthenticated" to="/login" class="btn btn-outline rounded-2xl">Уже есть аккаунт</RouterLink>
-            <RouterLink v-if="isAuthenticated" to="/profile" class="btn btn-outline rounded-2xl">Мой профиль</RouterLink>
+            <RouterLink v-if="!isAuthenticated" to="/login" class="btn btn-outline rounded-2xl">Войти</RouterLink>
+            <RouterLink v-if="isAuthenticated" to="/profile" class="btn btn-outline rounded-2xl">Открыть профиль</RouterLink>
             <RouterLink v-if="isAuthenticated && !auth.emailVerified.value" to="/verify-email" class="btn btn-ghost rounded-2xl">Подтвердить почту</RouterLink>
           </div>
         </div>
 
         <div class="glass-card rounded-[32px] p-8">
           <div class="mb-4 inline-flex rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs uppercase tracking-[0.24em] text-slate-500">
-            Что делать дальше
+            Как начать
           </div>
-          <h2 class="text-2xl font-black text-slate-900">Три простых шага</h2>
+          <h2 class="text-2xl font-black text-slate-900">Что делать дальше</h2>
           <div class="mt-6 grid gap-4">
             <div class="build-info-card">
-              <p class="build-info-card__label">1. Аккаунт</p>
-              <p class="build-info-card__value">Зарегистрируйся или войди на сайте</p>
+              <p class="build-info-card__label">1. Создай аккаунт</p>
+              <p class="build-info-card__value">Укажи логин, почту и свой игровой ник</p>
             </div>
             <div class="build-info-card">
-              <p class="build-info-card__label">2. Лаунчер</p>
-              <p class="build-info-card__value">Скачай лаунчер и войди под теми же данными</p>
+              <p class="build-info-card__label">2. Скачай лаунчер</p>
+              <p class="build-info-card__value">Войди в него под тем же аккаунтом</p>
             </div>
             <div class="build-info-card">
-              <p class="build-info-card__label">3. Игра</p>
-              <p class="build-info-card__value">Запусти клиент и заходи на сервер</p>
+              <p class="build-info-card__label">3. Нажми «Играть»</p>
+              <p class="build-info-card__value">Лаунчер сам проверит файлы и запустит игру</p>
             </div>
           </div>
         </div>

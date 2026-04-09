@@ -39,21 +39,21 @@ async function submit() {
     <div class="container-shell max-w-2xl">
       <div class="glass-card rounded-[32px] p-8 md:p-10">
         <div class="section-kicker">Вход</div>
-        <h1 class="section-title">Войди в свой аккаунт</h1>
+        <h1 class="section-title">Войти в аккаунт</h1>
         <p class="section-subtitle">
-          Используй логин или почту и пароль. Эти же данные понадобятся тебе в официальном лаунчере.
+          Используй логин или email и пароль от аккаунта VoidRP. Эти же данные подойдут для официального лаунчера.
         </p>
 
         <div
           v-if="route.query.redirect"
           class="mt-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700"
         >
-          Сначала войди в аккаунт, а потом откроется нужная страница.
+          Сначала нужно войти в аккаунт, а потом страница откроется автоматически.
         </div>
 
         <form class="mt-8 grid gap-4" @submit.prevent="submit">
           <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Логин или почта</span>
+            <span class="label-text mb-2 font-semibold text-slate-700">Логин или email</span>
             <input v-model="form.login" class="input input-bordered w-full rounded-2xl" required />
           </label>
 
@@ -81,7 +81,7 @@ async function submit() {
 
         <div class="mt-6 flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
           <RouterLink to="/forgot-password" class="font-semibold text-primary">Забыли пароль?</RouterLink>
-          <RouterLink to="/register" class="font-semibold text-primary">Нет аккаунта? Зарегистрироваться</RouterLink>
+          <RouterLink to="/register" class="font-semibold text-primary">Нет аккаунта? Создать</RouterLink>
         </div>
       </div>
     </div>

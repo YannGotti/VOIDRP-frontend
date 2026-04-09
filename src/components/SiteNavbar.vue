@@ -26,7 +26,7 @@ async function onLogout() {
               {{ siteConfig.serverName }}
             </p>
             <p class="mt-1 text-xs uppercase tracking-[0.28em] text-slate-500">
-              better mc 5
+              Better MC 5
             </p>
           </div>
         </RouterLink>
@@ -39,8 +39,8 @@ async function onLogout() {
           <li><RouterLink to="/" style="border-radius: 10px;">Главная</RouterLink></li>
           <li><RouterLink to="/download-launcher" style="border-radius: 10px;">Лаунчер</RouterLink></li>
           <li><RouterLink to="/links" style="border-radius: 10px;">Ссылки</RouterLink></li>
-          <li v-if="isAuthenticated"><RouterLink to="/profile" style="border-radius: 10px;">Профиль</RouterLink></li>
-          <li v-else><RouterLink to="/login" style="border-radius: 10px;">Вход</RouterLink></li>
+          <li v-if="isAuthenticated"><RouterLink to="/profile" style="border-radius: 10px;">Мой профиль</RouterLink></li>
+          <li v-else><RouterLink to="/login" style="border-radius: 10px;">Войти</RouterLink></li>
         </ul>
       </div>
 
@@ -107,10 +107,10 @@ async function onLogout() {
             class="menu dropdown-content z-[1] mt-3 w-72 rounded-[24px] border border-slate-200 bg-white p-2 text-slate-700 shadow-2xl"
           >
             <li><RouterLink to="/">Главная</RouterLink></li>
-            <li><RouterLink to="/download-launcher">Лаунчер</RouterLink></li>
+            <li><RouterLink to="/download-launcher">Скачать лаунчер</RouterLink></li>
             <li><RouterLink to="/links">Ссылки</RouterLink></li>
-            <li v-if="isAuthenticated"><RouterLink to="/profile">Профиль</RouterLink></li>
-            <li v-else><RouterLink to="/login">Вход</RouterLink></li>
+            <li v-if="isAuthenticated"><RouterLink to="/profile">Мой профиль</RouterLink></li>
+            <li v-else><RouterLink to="/login">Войти</RouterLink></li>
             <li v-if="!isAuthenticated"><RouterLink to="/register">Регистрация</RouterLink></li>
             <li>
               <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer">Карта мира</a>

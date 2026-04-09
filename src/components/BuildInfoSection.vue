@@ -9,7 +9,7 @@ import { siteConfig } from '../config.site'
         <div class="section-kicker">О сервере</div>
         <h2 class="section-title">Что ждёт тебя на VoidRP</h2>
         <p class="section-subtitle">
-          VoidRP построен на Better MC 5 и подойдёт тем, кто любит большой мир, приключения, исследование и красивую атмосферу.
+          Большой мир, удобный старт через официальный лаунчер и всё важное в одном месте: сайт, карта и личный кабинет.
         </p>
 
         <div class="mt-6 grid gap-4">
@@ -24,30 +24,30 @@ import { siteConfig } from '../config.site'
           </div>
 
           <div class="build-info-card">
-            <p class="build-info-card__label">IP сервера</p>
+            <p class="build-info-card__label">Адрес сервера</p>
             <p class="build-info-card__value">{{ siteConfig.serverIp }}</p>
           </div>
 
           <div class="build-info-card">
             <p class="build-info-card__label">Карта мира</p>
-            <p class="build-info-card__value">Можно открыть прямо в браузере</p>
+            <p class="build-info-card__value">Открывается прямо в браузере</p>
           </div>
         </div>
       </div>
 
       <div class="glass-card rounded-[32px] p-6 md:p-8">
-        <div class="section-kicker">Почему это удобно</div>
+        <div class="section-kicker">Почему начать легко</div>
         <h3 class="text-3xl font-black leading-tight text-slate-900">
-          Нужная информация всегда перед глазами
+          Игроку не нужно разбираться в лишних настройках
         </h3>
 
         <div class="mt-6 space-y-4">
           <div class="advantage-row">
             <div class="advantage-row__icon">01</div>
             <div>
-              <p class="font-bold text-slate-900">Понятный старт</p>
+              <p class="font-bold text-slate-900">Понятный путь</p>
               <p class="mt-1 text-slate-600">
-                Сначала аккаунт, потом лаунчер, потом игра. Без лишних шагов и догадок.
+                Сайт по шагам показывает, что делать сначала и куда нажимать дальше.
               </p>
             </div>
           </div>
@@ -55,9 +55,9 @@ import { siteConfig } from '../config.site'
           <div class="advantage-row">
             <div class="advantage-row__icon">02</div>
             <div>
-              <p class="font-bold text-slate-900">Карта всегда рядом</p>
+              <p class="font-bold text-slate-900">Официальный лаунчер</p>
               <p class="mt-1 text-slate-600">
-                Можно быстро посмотреть мир, маршруты и интересные места.
+                Не нужно вручную искать правильную сборку и настраивать клиент.
               </p>
             </div>
           </div>
@@ -65,9 +65,9 @@ import { siteConfig } from '../config.site'
           <div class="advantage-row">
             <div class="advantage-row__icon">03</div>
             <div>
-              <p class="font-bold text-slate-900">Простые подсказки</p>
+              <p class="font-bold text-slate-900">Личный кабинет</p>
               <p class="mt-1 text-slate-600">
-                На сайте сразу понятно, куда нажать и что делать дальше.
+                В одном месте видно твой ник, почту и основные действия по аккаунту.
               </p>
             </div>
           </div>
@@ -75,9 +75,9 @@ import { siteConfig } from '../config.site'
           <div class="advantage-row">
             <div class="advantage-row__icon">04</div>
             <div>
-              <p class="font-bold text-slate-900">Всё в одном месте</p>
+              <p class="font-bold text-slate-900">Все ссылки рядом</p>
               <p class="mt-1 text-slate-600">
-                Лаунчер, карта, ссылки и важная информация собраны на одном сайте.
+                Карта мира, новости проекта и страница скачивания доступны без долгого поиска.
               </p>
             </div>
           </div>

@@ -16,7 +16,7 @@ async function submit() {
     const response = await requestPasswordReset(form)
     successMessage.value = response.message
   } catch (error) {
-    errorMessage.value = error.message || 'Не удалось запросить восстановление пароля.'
+    errorMessage.value = error.message || 'Не удалось запросить восстановление доступа.'
   } finally {
     isSubmitting.value = false
   }
@@ -28,14 +28,14 @@ async function submit() {
     <div class="container-shell max-w-2xl">
       <div class="glass-card rounded-[32px] p-8 md:p-10">
         <div class="section-kicker">Восстановление доступа</div>
-        <h1 class="section-title">Не помнишь пароль?</h1>
+        <h1 class="section-title">Забыли пароль?</h1>
         <p class="section-subtitle">
-          Укажи свою почту. Сейчас код для смены пароля выдаётся вручную, поэтому после запроса может понадобиться помощь администратора.
+          Укажи свою почту. Сейчас письма ещё не отправляются автоматически, поэтому код для смены пароля выдаётся во временном режиме.
         </p>
 
         <form class="mt-8 grid gap-4" @submit.prevent="submit">
           <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Почта</span>
+            <span class="label-text mb-2 font-semibold text-slate-700">Email</span>
             <input v-model="form.email" type="email" class="input input-bordered w-full rounded-2xl" required />
           </label>
 
@@ -48,7 +48,7 @@ async function submit() {
           </p>
 
           <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Отправляем запрос...' : 'Запросить восстановление' }}
+            {{ isSubmitting ? 'Отправляем запрос...' : 'Продолжить' }}
           </button>
         </form>
       </div>

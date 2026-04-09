@@ -45,9 +45,9 @@ async function submit() {
     <div class="container-shell max-w-3xl">
       <div class="glass-card rounded-[32px] p-8 md:p-10">
         <div class="section-kicker">Регистрация</div>
-        <h1 class="section-title">Создай аккаунт VoidRP</h1>
+        <h1 class="section-title">Создать аккаунт VoidRP</h1>
         <p class="section-subtitle">
-          Укажи данные один раз и используй их и на сайте, и в официальном лаунчере.
+          Этот аккаунт нужен для сайта, личного кабинета и официального лаунчера. После регистрации ты сразу перейдёшь к следующему шагу.
         </p>
 
         <form class="mt-8 grid gap-4 md:grid-cols-2" @submit.prevent="submit">
@@ -62,7 +62,7 @@ async function submit() {
           </label>
 
           <label class="form-control w-full md:col-span-2">
-            <span class="label-text mb-2 font-semibold text-slate-700">Почта</span>
+            <span class="label-text mb-2 font-semibold text-slate-700">Email</span>
             <input v-model="form.email" type="email" class="input input-bordered w-full rounded-2xl" required />
           </label>
 
@@ -94,7 +94,7 @@ async function submit() {
             <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
               {{ isSubmitting ? 'Создаём аккаунт...' : 'Создать аккаунт' }}
             </button>
-            <RouterLink to="/login" class="font-semibold text-primary">Уже есть аккаунт? Войти</RouterLink>
+            <RouterLink to="/login" class="font-semibold text-primary">Уже зарегистрирован? Войти</RouterLink>
           </div>
         </form>
       </div>

@@ -24,21 +24,21 @@ import { siteConfig } from '../config.site'
 
         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
           <RouterLink
-            to="/download-launcher"
+            to="/register"
             class="btn btn-primary btn-lg rounded-2xl shadow-[0_12px_45px_rgba(56,189,248,0.20)]"
           >
-            Скачать лаунчер
+            Создать аккаунт
           </RouterLink>
           <RouterLink
-            to="/register"
+            to="/download-launcher"
             class="btn btn-outline btn-lg rounded-2xl"
           >
-            Создать аккаунт
+            Скачать лаунчер
           </RouterLink>
         </div>
 
         <div class="mt-8 flex flex-wrap gap-3">
-          <div class="hero-chip">IP: {{ siteConfig.serverIp }}</div>
+          <div class="hero-chip">Адрес: {{ siteConfig.serverIp }}</div>
           <div class="hero-chip">Версия: {{ siteConfig.serverVersion }}</div>
           <div class="hero-chip">Сборка: Better MC 5</div>
         </div>
@@ -49,8 +49,8 @@ import { siteConfig } from '../config.site'
           <div class="hero-preview">
             <div class="hero-preview__top">
               <div>
-                <p class="text-sm uppercase tracking-[0.22em] text-slate-500">VoidRP</p>
-                <p class="mt-2 text-3xl font-black text-slate-900">Понятный путь от сайта до игры</p>
+                <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Начать легко</p>
+                <p class="mt-2 text-3xl font-black text-slate-900">Три шага до игры</p>
               </div>
 
               <div
@@ -78,22 +78,22 @@ import { siteConfig } from '../config.site'
             <div class="mt-6 grid gap-3">
               <div class="info-row">
                 <span class="info-dot info-dot--blue"></span>
-                Создай аккаунт и укажи свой игровой ник.
+                Создай аккаунт и привяжи свой игровой ник.
               </div>
               <div class="info-row">
                 <span class="info-dot info-dot--emerald"></span>
-                Скачай официальный лаунчер и войди под теми же данными.
+                Скачай официальный лаунчер и войди под тем же аккаунтом.
               </div>
               <div class="info-row">
                 <span class="info-dot info-dot--violet"></span>
-                Запусти игру и заходи на сервер без лишней путаницы.
+                Нажми «Играть» — лаунчер сам подготовит клиент и запустит игру.
               </div>
             </div>
 
             <div class="mt-6 rounded-[24px] border border-slate-200 bg-white/80 p-4">
-              <p class="text-sm text-slate-500">Быстрый старт</p>
+              <p class="text-sm text-slate-500">Для игрока</p>
               <p class="mt-2 text-base leading-7 text-slate-700">
-                Здесь всё собрано так, чтобы игроку было понятно: зарегистрировался, скачал лаунчер и зашёл в игру.
+                Тебе не нужно вручную искать нужную версию, загрузчик или настройки. Основной путь уже подготовлен.
               </p>
             </div>
           </div>

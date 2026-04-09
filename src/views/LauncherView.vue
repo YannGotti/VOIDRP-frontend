@@ -7,12 +7,12 @@ import { siteConfig } from '../config.site'
     <div class="container-shell">
       <div class="cta-shell">
         <div class="max-w-3xl">
-          <div class="section-kicker section-kicker--light">Официальный вход</div>
+          <div class="section-kicker section-kicker--light">Официальный способ входа</div>
           <h2 class="text-3xl font-black leading-tight md:text-5xl">
-            Играй через официальный лаунчер {{ siteConfig.serverName }}
+            Лаунчер {{ siteConfig.serverName }} — основной путь в игру
           </h2>
           <p class="mt-4 text-lg leading-8 text-white/80">
-            Сначала войди или зарегистрируйся на сайте, потом скачай официальный лаунчер и используй те же данные для входа в игру.
+            Сначала войди или зарегистрируйся на сайте, затем скачай официальный лаунчер и используй тот же аккаунт для запуска игры.
           </p>
         </div>
 

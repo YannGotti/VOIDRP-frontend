@@ -43,7 +43,7 @@ async function submitResend() {
 
   try {
     const response = await resendVerification({ email: form.email })
-    resendMessage.value = `${response.message} Если письмо не приходит автоматически, обратись к администратору.`
+    resendMessage.value = `${response.message}`
   } catch (error) {
     errorMessage.value = error.message || 'Не удалось запросить новый код.'
   } finally {
@@ -58,9 +58,9 @@ async function submitResend() {
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="glass-card rounded-[32px] p-8 md:p-10">
           <div class="section-kicker">Подтверждение почты</div>
-          <h1 class="section-title">Подтверди свою почту</h1>
+          <h1 class="section-title">Подтвердить почту</h1>
           <p class="section-subtitle">
-            Вставь код подтверждения. Пока письмо может выдаваться вручную, если автоматическая отправка ещё не подключена.
+            Введи код подтверждения. Сейчас письма ещё не отправляются автоматически, поэтому код выдаётся во временном режиме.
           </p>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submitVerify">
@@ -93,7 +93,7 @@ async function submitResend() {
               Вернуться в профиль
             </RouterLink>
             <RouterLink v-else to="/login" class="btn btn-outline rounded-2xl">
-              Войти в аккаунт
+              Войти
             </RouterLink>
             <RouterLink to="/download-launcher" class="btn btn-ghost rounded-2xl">
               Скачать лаунчер
@@ -102,15 +102,15 @@ async function submitResend() {
         </div>
 
         <div class="glass-card rounded-[32px] p-8 md:p-10">
-          <div class="section-kicker">Новый код</div>
-          <h2 class="section-title">Запросить код повторно</h2>
+          <div class="section-kicker">Нужен новый код</div>
+          <h2 class="section-title">Запросить ещё раз</h2>
           <p class="section-subtitle">
-            Если первый код потерялся, можно запросить новый для той же почты.
+            Если предыдущий код потерялся, можно запросить новый на ту же почту.
           </p>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submitResend">
             <label class="form-control w-full">
-              <span class="label-text mb-2 font-semibold text-slate-700">Почта</span>
+              <span class="label-text mb-2 font-semibold text-slate-700">Email</span>
               <input v-model="form.email" type="email" class="input input-bordered w-full rounded-2xl" required />
             </label>
 
@@ -122,7 +122,7 @@ async function submitResend() {
             </p>
 
             <button type="submit" class="btn btn-outline rounded-2xl" :disabled="isResending">
-              {{ isResending ? 'Запрашиваем...' : 'Запросить новый код' }}
+              {{ isResending ? 'Запрашиваем...' : 'Получить новый код' }}
             </button>
           </form>
         </div>

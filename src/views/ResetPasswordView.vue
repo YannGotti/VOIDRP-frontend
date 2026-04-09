@@ -38,7 +38,7 @@ async function submit() {
     <div class="container-shell max-w-2xl">
       <div class="glass-card rounded-[32px] p-8 md:p-10">
         <div class="section-kicker">Новый пароль</div>
-        <h1 class="section-title">Придумай новый пароль</h1>
+        <h1 class="section-title">Сменить пароль</h1>
         <p class="section-subtitle">
           Вставь код восстановления и задай новый пароль для своего аккаунта.
         </p>
@@ -68,7 +68,7 @@ async function submit() {
           </p>
 
           <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Сохраняем...' : 'Сохранить новый пароль' }}
+            {{ isSubmitting ? 'Сохраняем...' : 'Сохранить пароль' }}
           </button>
         </form>
       </div>

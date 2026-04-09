@@ -6,10 +6,10 @@ import { siteConfig } from '../config.site'
   <section class="py-8 md:py-12">
     <div class="container-shell">
       <div class="mb-8 max-w-3xl">
-        <div class="section-kicker">Всё под рукой</div>
+        <div class="section-kicker">Все для старта</div>
         <h2 class="section-title">На сайте собрано всё, что нужно игроку</h2>
         <p class="section-subtitle">
-          Здесь можно создать аккаунт, скачать лаунчер, открыть карту мира и быстро найти полезные ссылки.
+          Зарегистрируйся, скачай лаунчер, открой карту мира и переходи по полезным ссылкам без лишнего поиска.
         </p>
       </div>
 

@@ -18,9 +18,9 @@ const auth = useAuthStore()
         <div class="container-shell max-w-2xl">
           <div class="glass-card rounded-[32px] p-8 md:p-10 text-center">
             <div class="section-kicker">VoidRP</div>
-            <h1 class="section-title">Подготавливаем сайт</h1>
+            <h1 class="section-title">Открываем сайт</h1>
             <p class="section-subtitle">
-              Проверяем вход и загружаем твою страницу.
+              Проверяем сохранённый вход и подготавливаем твой профиль.
             </p>
             <div class="mt-8 flex justify-center">
               <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -40,7 +40,7 @@ const auth = useAuthStore()
           <div>
             <p class="text-xl font-black tracking-wide text-slate-900">VoidRP</p>
             <p class="mt-2 text-sm leading-6 text-slate-600">
-              Лаунчер, карта мира и главная информация о сервере в одном месте.
+              Официальный лаунчер, карта мира и вся важная информация о сервере в одном месте.
             </p>
           </div>
 
@@ -57,7 +57,7 @@ const auth = useAuthStore()
         </div>
 
         <div class="mt-5 text-center text-xs text-slate-500">
-          © 2026 VoidRP. Все права защищены. @mironoouv.
+          © 2026 VoidRP. Все права защищены.
         </div>
       </div>
     </footer>
