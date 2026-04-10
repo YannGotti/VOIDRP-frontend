@@ -1,142 +1,107 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { siteConfig } from '../config.site'
 import { logoutCurrentSession, useAuthStore } from '../stores/authStore'
 
 const auth = useAuthStore()
+const route = useRoute()
+const mobileOpen = ref(false)
+
 const isAuthenticated = computed(() => auth.isAuthenticated.value)
+const displayName = computed(() => auth.displayName.value)
+
+watch(
+  () => route.fullPath,
+  () => {
+    mobileOpen.value = false
+  },
+)
+
+async function handleLogout() {
+  mobileOpen.value = false
+  await logoutCurrentSession()
+}
 </script>
 
 <template>
-  <header class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/72 backdrop-blur-xl">
-    <div class="container-shell navbar min-h-[82px] px-0">
-      <div class="navbar-start">
-        <RouterLink to="/" class="group flex items-center gap-3">
-          <div
-            class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-[0_8px_24px_rgba(79,70,229,0.08)] transition-transform duration-200 group-hover:scale-105"
-          >
+  <header class="nav-shell sticky top-0 z-50">
+    <div class="container-shell py-3">
+      <div class="flex min-h-[68px] items-center justify-between gap-3">
+        <RouterLink to="/" class="group flex min-w-0 items-center gap-3">
+          <div class="h-11 w-11 overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-[0_10px_30px_rgba(67,83,255,0.12)] transition-transform duration-200 group-hover:scale-[1.03]">
             <img src="/logo.jpg" alt="VoidRP" class="h-full w-full object-cover" />
           </div>
-          <div>
-            <p class="text-lg font-black leading-none tracking-wide text-slate-900">
-              {{ siteConfig.serverName }}
-            </p>
-            <p class="mt-1 text-xs uppercase tracking-[0.28em] text-slate-500">
+          <div class="min-w-0">
+            <div class="truncate text-base font-black tracking-tight text-slate-950 md:text-lg">{{ siteConfig.serverName }}</div>
+            <div class="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
               Better MC 5
-            </p>
+            </div>
           </div>
         </RouterLink>
-      </div>
 
-      <div class="navbar-center hidden lg:flex">
-        <ul
-          class="menu menu-horizontal rounded-2xl border border-slate-200 bg-white/90 p-1.5 text-sm text-slate-700 shadow-[0_10px_40px_rgba(15,23,42,0.06)]"
-        >
-          <li><RouterLink to="/" style="border-radius: 10px;">Главная</RouterLink></li>
-          <li><RouterLink to="/download-launcher" style="border-radius: 10px;">Лаунчер</RouterLink></li>
-          <li><RouterLink to="/links" style="border-radius: 10px;">Ссылки</RouterLink></li>
-          <li v-if="isAuthenticated"><RouterLink to="/profile" style="border-radius: 10px;">Кабинет</RouterLink></li>
-          <li v-if="isAuthenticated"><RouterLink to="/profile/public" style="border-radius: 10px;">Профиль</RouterLink></li>
-          <li v-if="isAuthenticated"><RouterLink to="/profile/referrals" style="border-radius: 10px;">Рефералы</RouterLink></li>
-          <li v-if="isAuthenticated"><RouterLink to="/profile/social" style="border-radius: 10px;">Друзья</RouterLink></li>
-          <li v-else><RouterLink to="/login" style="border-radius: 10px;">Войти</RouterLink></li>
-        </ul>
-      </div>
+        <nav class="nav-list hidden xl:flex">
+          <RouterLink to="/">Главная</RouterLink>
+          <RouterLink to="/launcher">О лаунчере</RouterLink>
+          <RouterLink to="/download-launcher">Скачать</RouterLink>
+          <RouterLink to="/links">Ссылки</RouterLink>
+          <RouterLink v-if="isAuthenticated" to="/profile">Кабинет</RouterLink>
+        </nav>
 
-      <div class="navbar-end hidden gap-2 lg:flex">
-        <a
-          :href="siteConfig.dynmapUrl"
-          target="_blank"
-          rel="noreferrer"
-          class="btn btn-ghost rounded-2xl text-slate-700"
-        >
-          Карта
-        </a>
+        <div class="hidden items-center gap-2 lg:flex">
+          <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="btn btn-ghost btn-sm">
+            Карта
+          </a>
 
-        <RouterLink
-          v-if="!isAuthenticated"
-          to="/register"
-          class="btn btn-ghost rounded-2xl text-slate-700"
-        >
-          Регистрация
-        </RouterLink>
+          <template v-if="!isAuthenticated">
+            <RouterLink to="/login" class="btn btn-outline btn-sm">Войти</RouterLink>
+            <RouterLink to="/register" class="btn btn-primary btn-sm">Создать аккаунт</RouterLink>
+          </template>
 
-        <RouterLink
-          v-if="!isAuthenticated"
-          to="/download-launcher"
-          class="btn btn-primary rounded-2xl shadow-[0_12px_36px_rgba(79,70,229,0.22)]"
-        >
-          Скачать лаунчер
-        </RouterLink>
-
-        <div v-else class="dropdown dropdown-end">
-          <div
-            tabindex="0"
-            role="button"
-            class="btn btn-primary rounded-2xl shadow-[0_12px_36px_rgba(79,70,229,0.22)]"
-          >
-            {{ auth.displayName.value }}
-          </div>
-
-          <ul
-            tabindex="0"
-            class="menu dropdown-content z-[1] mt-3 w-72 rounded-[24px] border border-slate-200 bg-white p-2 text-slate-700 shadow-2xl"
-          >
-            <li><RouterLink to="/profile">Кабинет</RouterLink></li>
-            <li><RouterLink to="/profile/public">Редактор профиля</RouterLink></li>
-            <li><RouterLink to="/profile/referrals">Реферальный центр</RouterLink></li>
-            <li><RouterLink to="/profile/social">Подписки и друзья</RouterLink></li>
-            <li><RouterLink to="/download-launcher">Скачать лаунчер</RouterLink></li>
-            <li><button type="button" @click="logoutCurrentSession">Выйти</button></li>
-          </ul>
+          <template v-else>
+            <RouterLink to="/profile" class="btn btn-outline btn-sm">
+              {{ displayName }}
+            </RouterLink>
+            <RouterLink to="/download-launcher" class="btn btn-primary btn-sm">Лаунчер</RouterLink>
+            <button type="button" class="btn btn-ghost btn-sm" @click="handleLogout">Выйти</button>
+          </template>
         </div>
+
+        <button
+          type="button"
+          class="btn btn-outline btn-sm lg:hidden"
+          :aria-expanded="mobileOpen"
+          @click="mobileOpen = !mobileOpen"
+        >
+          <span>{{ mobileOpen ? 'Закрыть' : 'Меню' }}</span>
+        </button>
       </div>
 
-      <div class="navbar-end lg:hidden">
-        <div class="dropdown dropdown-end">
-          <div
-            tabindex="0"
-            role="button"
-            class="btn btn-ghost rounded-2xl border border-slate-200 bg-white/85 text-slate-700"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+      <transition name="fade">
+        <div v-if="mobileOpen" class="mobile-menu lg:hidden">
+          <div class="grid gap-2">
+            <RouterLink to="/" class="menu-link">Главная</RouterLink>
+            <RouterLink to="/launcher" class="menu-link">О лаунчере</RouterLink>
+            <RouterLink to="/download-launcher" class="menu-link">Скачать лаунчер</RouterLink>
+            <RouterLink to="/links" class="menu-link">Полезные ссылки</RouterLink>
+            <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="menu-link">
+              Карта мира
+            </a>
           </div>
 
-          <ul
-            tabindex="0"
-            class="menu dropdown-content z-[1] mt-3 w-72 rounded-[24px] border border-slate-200 bg-white p-2 text-slate-700 shadow-2xl"
-          >
-            <li><RouterLink to="/">Главная</RouterLink></li>
-            <li><RouterLink to="/download-launcher">Скачать лаунчер</RouterLink></li>
-            <li><RouterLink to="/links">Ссылки</RouterLink></li>
-
-            <template v-if="isAuthenticated">
-              <li><RouterLink to="/profile">Кабинет</RouterLink></li>
-              <li><RouterLink to="/profile/public">Редактор профиля</RouterLink></li>
-              <li><RouterLink to="/profile/referrals">Рефералы</RouterLink></li>
-              <li><RouterLink to="/profile/social">Друзья</RouterLink></li>
-              <li><button type="button" @click="logoutCurrentSession">Выйти</button></li>
+          <div class="mt-3 grid gap-2 border-t border-slate-200 pt-3">
+            <template v-if="!isAuthenticated">
+              <RouterLink to="/login" class="btn btn-outline">Войти</RouterLink>
+              <RouterLink to="/register" class="btn btn-primary">Создать аккаунт</RouterLink>
             </template>
 
             <template v-else>
-              <li><RouterLink to="/login">Войти</RouterLink></li>
-              <li><RouterLink to="/register">Регистрация</RouterLink></li>
+              <RouterLink to="/profile" class="btn btn-outline">Кабинет</RouterLink>
+              <button type="button" class="btn btn-ghost" @click="handleLogout">Выйти</button>
             </template>
-
-            <li>
-              <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer">Карта мира</a>
-            </li>
-          </ul>
+          </div>
         </div>
-      </div>
+      </transition>
     </div>
   </header>
 </template>

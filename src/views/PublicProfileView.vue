@@ -14,47 +14,68 @@ const actionMessage = ref('')
 const followLoading = ref(false)
 const profile = ref(null)
 
+function hexToRgba(hex, alpha) {
+  if (!hex || typeof hex !== 'string') return `rgba(91, 108, 255, ${alpha})`
+  const value = hex.replace('#', '')
+  const normalized = value.length === 3 ? value.split('').map((x) => x + x).join('') : value
+
+  if (normalized.length !== 6) {
+    return `rgba(91, 108, 255, ${alpha})`
+  }
+
+  const intValue = Number.parseInt(normalized, 16)
+  const r = (intValue >> 16) & 255
+  const g = (intValue >> 8) & 255
+  const b = intValue & 255
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 const displayName = computed(() => {
-  return profile.value?.display_name || profile.value?.player_account?.minecraft_nickname || profile.value?.user?.site_login || 'Игрок'
+  return (
+    profile.value?.display_name ||
+    profile.value?.player_account?.minecraft_nickname ||
+    profile.value?.user?.site_login ||
+    'Игрок'
+  )
 })
 
 const avatarFallback = computed(() => displayName.value.slice(0, 1).toUpperCase())
 const accent = computed(() => profile.value?.accent_color || '#6d5df6')
-
-const bannerUrl = computed(() => {
-  return profile.value?.assets?.banner_url || profile.value?.assets?.banner_preview_url || ''
-})
-
-const backgroundUrl = computed(() => {
-  return profile.value?.assets?.background_url || profile.value?.assets?.background_preview_url || ''
-})
+const avatarUrl = computed(() => profile.value?.assets?.avatar_url || profile.value?.assets?.avatar_preview_url || '')
+const bannerUrl = computed(() => profile.value?.assets?.banner_url || profile.value?.assets?.banner_preview_url || '')
+const backgroundUrl = computed(() => profile.value?.assets?.background_url || profile.value?.assets?.background_preview_url || '')
 
 const pageShellStyle = computed(() => {
   if (!backgroundUrl.value) {
     return {
-      background: `linear-gradient(180deg, ${accent.value}0d 0%, #f8fafc 30%, #eef2ff 100%)`,
+      background:
+        `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.16)} 0%, transparent 28%), ` +
+        'linear-gradient(180deg, rgba(248,250,252,0.96) 0%, rgba(238,242,255,0.98) 100%)',
     }
   }
 
   return {
-    backgroundImage: `linear-gradient(180deg, rgba(248,250,252,0.84), rgba(241,245,249,0.94)), url(${backgroundUrl.value})`,
+    backgroundImage:
+      `linear-gradient(180deg, rgba(248,250,252,0.88), rgba(241,245,249,0.94)), url(${backgroundUrl.value})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    backgroundAttachment: 'fixed',
   }
 })
 
 const heroStyle = computed(() => {
   if (bannerUrl.value) {
     return {
-      backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.12), rgba(15,23,42,0.74)), url(${bannerUrl.value})`,
+      backgroundImage:
+        `linear-gradient(180deg, rgba(15,23,42,0.14), rgba(15,23,42,0.74)), url(${bannerUrl.value})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }
   }
 
   return {
-    background: `linear-gradient(135deg, ${accent.value}55, rgba(15,23,42,0.95) 60%, rgba(2,6,23,1))`,
+    background:
+      `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.28)} 0%, transparent 32%), ` +
+      'linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(17,24,39,0.98) 52%, rgba(31,45,99,1) 100%)',
   }
 })
 
@@ -75,7 +96,7 @@ const stats = computed(() => {
 
 const accentBadgeStyle = computed(() => ({
   borderColor: accent.value,
-  backgroundColor: `${accent.value}18`,
+  backgroundColor: hexToRgba(accent.value, 0.14),
   color: accent.value,
 }))
 
@@ -129,7 +150,7 @@ async function toggleFollow() {
 async function copyProfileLink() {
   try {
     await navigator.clipboard.writeText(window.location.href)
-    actionMessage.value = 'Ссылка скопирована.'
+    actionMessage.value = 'Ссылка на профиль скопирована.'
     error.value = ''
   } catch {
     error.value = 'Не удалось скопировать ссылку.'
@@ -151,56 +172,37 @@ onMounted(loadProfile)
         </div>
       </div>
 
-      <div
-        v-else-if="error"
-        class="mx-auto max-w-3xl rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700"
-      >
+      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">
         {{ error }}
       </div>
 
-      <div
-        v-else-if="profile"
-        class="overflow-hidden rounded-[32px] border border-slate-200 shadow-[0_22px_80px_rgba(15,23,42,0.10)]"
-        :style="pageShellStyle"
-      >
+      <div v-else-if="profile" class="page-backdrop rounded-[32px]" :style="pageShellStyle">
         <div class="p-3 md:p-4">
           <div class="space-y-5">
-            <section
-              class="relative overflow-hidden rounded-[28px] border border-white/40 shadow-[0_26px_100px_rgba(15,23,42,0.16)]"
-              :style="heroStyle"
-            >
-              <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/60"></div>
+            <section class="relative overflow-hidden rounded-[28px]" :style="heroStyle">
+              <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/65"></div>
 
               <div class="relative px-5 pb-6 pt-6 md:px-8 md:pb-8 md:pt-8">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/85 backdrop-blur-md">
+                  <span class="rounded-full border border-white/18 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/86 backdrop-blur-md">
                     Публичный профиль
                   </span>
-
-                  <span
-                    class="rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] bg-white/90"
-                    :style="accentBadgeStyle"
-                  >
+                  <span class="rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] bg-white/90" :style="accentBadgeStyle">
                     Акцент
                   </span>
                 </div>
 
-                <div class="mt-16 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <div class="mt-14 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
                   <div class="flex min-w-0 items-end gap-4">
                     <div class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[26px] border-4 border-white/90 bg-white text-3xl font-black uppercase text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.16)]">
-                      <img
-                        v-if="profile.assets?.avatar_url || profile.assets?.avatar_preview_url"
-                        :src="profile.assets.avatar_url || profile.assets.avatar_preview_url"
-                        alt="avatar"
-                        class="h-full w-full object-cover"
-                      />
+                      <img v-if="avatarUrl" :src="avatarUrl" alt="avatar" class="h-full w-full object-cover" />
                       <span v-else>{{ avatarFallback }}</span>
                     </div>
 
                     <div class="min-w-0 pb-1 text-white">
                       <div class="flex items-center gap-2">
                         <span class="h-2.5 w-2.5 rounded-full" :style="accentDotStyle"></span>
-                        <span class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/70">
+                        <span class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/72">
                           Цвет страницы
                         </span>
                       </div>
@@ -209,8 +211,11 @@ onMounted(loadProfile)
                         {{ displayName }}
                       </h1>
 
-                      <p class="mt-2 text-sm text-white/75 md:text-base">
-                        @{{ profile.slug }} · {{ profile.player_account?.minecraft_nickname }}
+                      <p class="mt-2 text-sm text-white/76 md:text-base">
+                        @{{ profile.slug }}
+                        <span v-if="profile.player_account?.minecraft_nickname">
+                          · {{ profile.player_account.minecraft_nickname }}
+                        </span>
                       </p>
 
                       <p v-if="profile.status_text" class="mt-3 max-w-2xl text-sm leading-6 text-white/88 md:text-[15px]">
@@ -222,27 +227,31 @@ onMounted(loadProfile)
                   <div class="flex flex-wrap gap-3">
                     <button
                       v-if="canFollow"
-                      class="btn btn-primary rounded-2xl border-0 bg-white text-slate-950 hover:bg-white/90"
+                      class="btn btn-outline rounded-2xl border-white/20 bg-white text-slate-950 hover:bg-white/90"
                       :disabled="followLoading"
                       @click="toggleFollow"
                     >
-                      <span v-if="followLoading" class="loading loading-spinner loading-sm"></span>
-                      <span v-else>{{ profile.viewer?.is_following ? 'Отписаться' : 'Подписаться' }}</span>
+                      <span v-if="followLoading" class="spinner"></span>
+                      <span>{{ profile.viewer?.is_following ? 'Отписаться' : 'Подписаться' }}</span>
                     </button>
+
+                    <RouterLink
+                      v-else-if="!profile.viewer?.is_self && !authStore.isAuthenticated.value"
+                      to="/login"
+                      class="btn btn-outline rounded-2xl border-white/20 bg-white text-slate-950 hover:bg-white/90"
+                    >
+                      Войти, чтобы подписаться
+                    </RouterLink>
 
                     <RouterLink
                       v-if="profile.viewer?.is_self"
                       to="/profile/public"
-                      class="btn btn-outline rounded-2xl border-white/20 bg-white/5 text-white hover:bg-white/10"
+                      class="btn btn-light rounded-2xl"
                     >
                       Редактировать
                     </RouterLink>
 
-                    <button
-                      type="button"
-                      class="btn btn-outline rounded-2xl border-white/20 bg-white/5 text-white hover:bg-white/10"
-                      @click="copyProfileLink"
-                    >
+                    <button type="button" class="btn btn-light rounded-2xl" @click="copyProfileLink">
                       Поделиться
                     </button>
                   </div>
@@ -250,12 +259,12 @@ onMounted(loadProfile)
               </div>
             </section>
 
-            <div v-if="actionMessage" class="rounded-[20px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            <div v-if="actionMessage" class="alert alert-success">
               {{ actionMessage }}
             </div>
 
             <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-              <section class="rounded-[28px] border border-white/50 bg-white/82 p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur md:p-6">
+              <section class="surface-card p-5 md:p-6">
                 <div class="section-kicker !mb-2">О себе</div>
                 <h2 class="text-xl font-black text-slate-950 md:text-2xl">Описание игрока</h2>
 
@@ -265,12 +274,8 @@ onMounted(loadProfile)
                   {{ profile.bio || 'Игрок пока не добавил описание.' }}
                 </p>
 
-                <div class="mt-6 grid gap-3 sm:grid-cols-3">
-                  <div
-                    v-for="item in stats"
-                    :key="item.label"
-                    class="rounded-[20px] border border-slate-200 bg-slate-50/90 px-4 py-4 text-center"
-                  >
+                <div class="metric-grid metric-grid-3 mt-6">
+                  <div v-for="item in stats" :key="item.label" class="metric-card text-center">
                     <p class="text-2xl font-black text-slate-950">{{ item.value }}</p>
                     <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
                       {{ item.label }}
@@ -280,25 +285,27 @@ onMounted(loadProfile)
               </section>
 
               <aside class="space-y-5">
-                <section class="rounded-[28px] border border-white/50 bg-white/82 p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur md:p-6">
-                  <div class="section-kicker !mb-2">Профиль</div>
-                  <h2 class="text-xl font-black text-slate-950">Кратко</h2>
+                <section class="surface-card p-5 md:p-6">
+                  <div class="section-kicker !mb-2">Кратко</div>
+                  <h2 class="text-xl font-black text-slate-950">О профиле</h2>
 
                   <div class="mt-4 space-y-3">
-                    <div class="rounded-[18px] border border-slate-200 bg-slate-50/90 px-4 py-3">
-                      <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Логин</p>
-                      <p class="mt-2 text-sm font-semibold text-slate-900 break-all">{{ profile.user?.site_login }}</p>
+                    <div class="action-card">
+                      <p class="metric-label">Логин</p>
+                      <p class="mt-2 break-all text-sm font-semibold text-slate-900">
+                        {{ profile.user?.site_login }}
+                      </p>
                     </div>
 
-                    <div class="rounded-[18px] border border-slate-200 bg-slate-50/90 px-4 py-3">
-                      <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Режим</p>
+                    <div class="action-card">
+                      <p class="metric-label">Видимость</p>
                       <p class="mt-2 text-sm font-semibold text-slate-900">
                         {{ profile.is_public ? 'Публичный' : 'Скрытый' }}
                       </p>
                     </div>
 
-                    <div v-if="profile.current_referral_rank" class="rounded-[18px] border border-slate-200 bg-slate-50/90 px-4 py-3">
-                      <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Ранг</p>
+                    <div v-if="profile.current_referral_rank" class="action-card">
+                      <p class="metric-label">Ранг</p>
                       <p class="mt-2 text-sm font-semibold text-slate-900">
                         {{ profile.current_referral_rank }}
                       </p>

@@ -25,42 +25,42 @@ async function submit() {
 </script>
 
 <template>
-  <section class="py-16 md:py-24">
-    <div class="container-shell max-w-2xl">
-      <div class="glass-card rounded-[32px] p-8 md:p-10">
-        <div class="section-kicker">Восстановление доступа</div>
-        <h1 class="section-title">Забыли пароль?</h1>
-        <p class="section-subtitle">
-          Укажи свою почту. Мы отправим письмо со ссылкой на страницу смены пароля.
-        </p>
+  <section class="py-12 md:py-20">
+    <div class="container-shell max-w-4xl">
+      <div class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <aside class="gradient-panel p-6 md:p-8">
+          <div class="section-kicker section-kicker--light">Восстановление доступа</div>
+          <h1 class="text-3xl font-black tracking-tight text-white md:text-4xl">Верни доступ к аккаунту спокойно</h1>
+          <p class="mt-4 text-base leading-8 text-white/78">
+            Укажи почту, и система отправит письмо со ссылкой на страницу смены пароля. Ответ всегда нейтральный — это нормально.
+          </p>
+        </aside>
 
-        <form class="mt-8 grid gap-4" @submit.prevent="submit">
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Email</span>
-            <input v-model="form.email" type="email" class="input input-bordered w-full rounded-2xl" required />
-          </label>
-
-          <p
-            v-if="errorMessage"
-            class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-          >
-            {{ errorMessage }}
+        <div class="surface-card p-6 md:p-8 lg:p-10">
+          <div class="section-kicker">Сброс пароля</div>
+          <h2 class="section-title">Забыли пароль?</h2>
+          <p class="section-subtitle">
+            Укажи свою почту. Мы отправим письмо со ссылкой на страницу смены пароля.
           </p>
 
-          <p
-            v-if="successMessage"
-            class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-          >
-            {{ successMessage }}
-          </p>
+          <form class="mt-8 grid gap-4" @submit.prevent="submit">
+            <label>
+              <span class="field-label">Email</span>
+              <input v-model="form.email" type="email" class="input" required />
+            </label>
 
-          <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Отправляем письмо...' : 'Отправить письмо' }}
-          </button>
-        </form>
+            <p v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+            <p v-if="successMessage" class="alert alert-success">{{ successMessage }}</p>
 
-        <div class="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
-          Для безопасности мы не показываем, существует ли аккаунт с этой почтой. Если письмо не пришло сразу, проверь папку «Спам».
+            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+              <span v-if="isSubmitting" class="spinner"></span>
+              <span>{{ isSubmitting ? 'Отправляем письмо...' : 'Отправить письмо' }}</span>
+            </button>
+          </form>
+
+          <div class="alert alert-info mt-6">
+            Для безопасности мы не показываем, существует ли аккаунт с этой почтой. Если письмо не пришло сразу, проверь папку «Спам».
+          </div>
         </div>
       </div>
     </div>

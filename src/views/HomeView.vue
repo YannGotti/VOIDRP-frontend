@@ -8,8 +8,8 @@ import CtaSection from '../components/CtaSection.vue'
 
 <template>
   <HeroSection />
-  <ServerStatusCard />
   <FeatureGrid />
   <BuildInfoSection />
+  <ServerStatusCard />
   <CtaSection />
 </template>

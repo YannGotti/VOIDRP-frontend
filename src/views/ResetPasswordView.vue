@@ -46,64 +46,41 @@ async function submit() {
 </script>
 
 <template>
-  <section class="py-16 md:py-24">
-    <div class="container-shell max-w-2xl">
-      <div class="glass-card rounded-[32px] p-8 md:p-10">
+  <section class="py-12 md:py-20">
+    <div class="container-shell max-w-4xl">
+      <div class="surface-card p-6 md:p-8 lg:p-10">
         <div class="section-kicker">Новый пароль</div>
         <h1 class="section-title">Сменить пароль</h1>
         <p class="section-subtitle">
-          Если ты открыл страницу из письма, токен уже подставлен автоматически. Осталось только задать новый пароль.
+          Если ты открыл страницу из письма, токен уже подставлен автоматически. Осталось только ввести новый пароль.
         </p>
 
-        <div
-          v-if="hasTokenFromLink"
-          class="mt-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800"
-        >
+        <div v-if="hasTokenFromLink" class="alert alert-info mt-6">
           Ссылка из письма распознана. Поле токена можно не заполнять вручную.
         </div>
 
         <form class="mt-8 grid gap-4" @submit.prevent="submit">
-          <label v-if="!hasTokenFromLink" class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Токен восстановления</span>
-            <input v-model="form.token" class="input input-bordered w-full rounded-2xl" required />
+          <label v-if="!hasTokenFromLink">
+            <span class="field-label">Токен восстановления</span>
+            <input v-model="form.token" class="input" required />
           </label>
 
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Новый пароль</span>
-            <input
-              v-model="form.new_password"
-              type="password"
-              class="input input-bordered w-full rounded-2xl"
-              required
-            />
+          <label>
+            <span class="field-label">Новый пароль</span>
+            <input v-model="form.new_password" type="password" class="input" required />
           </label>
 
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Повтори новый пароль</span>
-            <input
-              v-model="form.new_password_repeat"
-              type="password"
-              class="input input-bordered w-full rounded-2xl"
-              required
-            />
+          <label>
+            <span class="field-label">Повтори новый пароль</span>
+            <input v-model="form.new_password_repeat" type="password" class="input" required />
           </label>
 
-          <p
-            v-if="errorMessage"
-            class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-          >
-            {{ errorMessage }}
-          </p>
+          <p v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="alert alert-success">{{ successMessage }}</p>
 
-          <p
-            v-if="successMessage"
-            class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-          >
-            {{ successMessage }}
-          </p>
-
-          <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Сохраняем...' : 'Сохранить новый пароль' }}
+          <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+            <span v-if="isSubmitting" class="spinner"></span>
+            <span>{{ isSubmitting ? 'Сохраняем...' : 'Сохранить новый пароль' }}</span>
           </button>
         </form>
       </div>

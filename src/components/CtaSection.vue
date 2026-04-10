@@ -3,30 +3,24 @@ import { siteConfig } from '../config.site'
 </script>
 
 <template>
-  <section class="py-10 md:py-14">
+  <section class="py-8 md:py-12">
     <div class="container-shell">
-      <div class="cta-shell">
+      <div class="gradient-panel p-6 md:p-8">
         <div class="max-w-3xl">
-          <div class="section-kicker section-kicker--light">Готов начать</div>
-          <h2 class="text-3xl font-black leading-tight md:text-5xl">
-            Создай аккаунт {{ siteConfig.serverName }} и переходи к игре
+          <div class="section-kicker section-kicker--light">Готово к старту</div>
+          <h2 class="text-3xl font-black leading-tight tracking-tight text-white md:text-5xl">
+            Создай аккаунт {{ siteConfig.serverName }} и переходи к игре без лишних шагов
           </h2>
-          <p class="mt-4 text-lg leading-8 text-white/80">
-            Сначала регистрация, потом официальный лаунчер, а дальше — вход в игру без лишней ручной настройки.
+          <p class="mt-4 max-w-2xl text-base leading-8 text-white/78">
+            Регистрация, подтверждение почты, скачивание официального лаунчера и запуск собраны в цельный понятный путь.
           </p>
         </div>
 
         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-          <RouterLink
-            to="/register"
-            class="btn btn-primary btn-lg rounded-2xl bg-white text-slate-950 hover:bg-white/90"
-          >
+          <RouterLink to="/register" class="btn btn-primary bg-white !text-slate-950 shadow-none">
             Создать аккаунт
           </RouterLink>
-          <RouterLink
-            to="/download-launcher"
-            class="btn btn-outline btn-lg rounded-2xl border-white/20 bg-white/5 text-white hover:bg-white/10"
-          >
+          <RouterLink to="/download-launcher" class="btn btn-light">
             Скачать лаунчер
           </RouterLink>
         </div>

@@ -5,65 +5,52 @@ import { siteConfig } from '../config.site'
 <template>
   <section class="py-6 md:py-10">
     <div class="container-shell">
-      <div class="glass-card rounded-[32px] p-6 md:p-8">
-        <div class="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
+      <div class="surface-card p-5 md:p-7">
+        <div class="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:gap-8">
           <div>
-            <div
-              class="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-sm font-semibold text-slate-700"
-            >
-              <span class="h-2 w-2 rounded-full bg-primary"></span>
-              Активность сервера
-            </div>
-
-            <h2 class="section-title !mb-0">Посмотри, когда на сервере больше игроков</h2>
-            <p class="section-subtitle mt-4">
-              Это поможет понять, в какое время на сервере обычно оживлённее и когда легче встретить других игроков.
+            <div class="section-kicker">Активность сервера</div>
+            <h2 class="section-title">Посмотри, когда на сервере обычно оживлённее</h2>
+            <p class="section-subtitle">
+              График помогает понять, когда проще встретить других игроков и когда лучше заходить для совместной игры.
             </p>
 
             <div class="mt-6 grid gap-3">
-              <div class="soft-line-card">
-                <span class="soft-line-card__dot bg-primary"></span>
-                Смотри график активности прямо на сайте.
+              <div class="action-card flex items-start gap-3">
+                <span class="mt-2 h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+                <div>
+                  <p class="font-bold text-slate-900">График прямо на сайте</p>
+                  <p class="mt-1 text-sm leading-6 text-slate-600">Не нужно искать внешний мониторинг отдельно.</p>
+                </div>
               </div>
-              <div class="soft-line-card">
-                <span class="soft-line-card__dot bg-emerald-400"></span>
-                Переходи на карту мира и планируй свои путешествия.
-              </div>
-              <div class="soft-line-card">
-                <span class="soft-line-card__dot bg-violet-400"></span>
-                Создай аккаунт, скачай лаунчер и заходи в игру по официальному пути.
+              <div class="action-card flex items-start gap-3">
+                <span class="mt-2 h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                <div>
+                  <p class="font-bold text-slate-900">Карта мира рядом</p>
+                  <p class="mt-1 text-sm leading-6 text-slate-600">Переход на карту и в лаунчер доступен из этого же блока.</p>
+                </div>
               </div>
             </div>
 
             <div class="mt-6 flex flex-wrap gap-3">
-              <RouterLink to="/download-launcher" class="btn btn-primary rounded-2xl">
-                Скачать лаунчер
-              </RouterLink>
-              <a
-                :href="siteConfig.dynmapUrl"
-                target="_blank"
-                rel="noreferrer"
-                class="btn btn-outline rounded-2xl"
-              >
+              <RouterLink to="/download-launcher" class="btn btn-primary">Скачать лаунчер</RouterLink>
+              <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="btn btn-outline">
                 Открыть карту
               </a>
             </div>
           </div>
 
-          <div class="rounded-[28px] border border-slate-200 bg-white p-3 shadow-[0_15px_60px_rgba(15,23,42,0.08)]">
-            <div class="monitor-shell">
-              <iframe
-                :src="siteConfig.monitoringChartUrl"
-                width="100%"
-                height="300"
-                frameborder="0"
-                class="monitor-frame"
-              ></iframe>
+          <div class="overflow-hidden rounded-[1.8rem] border border-slate-200 bg-white shadow-[0_14px_45px_rgba(15,23,42,0.08)]">
+            <div class="border-b border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600">
+              Онлайн-график активности
             </div>
-
-            <div class="mt-4 rounded-[20px] border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-600">
-              Если график загрузился не сразу, просто обнови страницу чуть позже.
-            </div>
+            <iframe
+              :src="siteConfig.monitoringChartUrl"
+              width="100%"
+              height="320"
+              frameborder="0"
+              class="block w-full bg-white"
+              title="Server activity"
+            ></iframe>
           </div>
         </div>
       </div>

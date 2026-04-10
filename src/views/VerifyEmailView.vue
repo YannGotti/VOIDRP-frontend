@@ -61,123 +61,76 @@ async function submitResend() {
 </script>
 
 <template>
-  <section class="py-16 md:py-24">
-    <div class="container-shell max-w-5xl">
-      <div
-        v-if="isAlreadyVerified"
-        class="mb-6 rounded-[28px] border border-emerald-200 bg-emerald-50 px-6 py-5 text-sm leading-7 text-emerald-900"
-      >
+  <section class="py-12 md:py-20">
+    <div class="container-shell max-w-6xl">
+      <div v-if="isAlreadyVerified" class="alert alert-success mb-6">
         Почта уже подтверждена. Можно возвращаться в профиль или переходить к скачиванию лаунчера.
       </div>
 
       <div class="grid gap-6 lg:grid-cols-2">
-        <div class="glass-card rounded-[32px] p-8 md:p-10">
+        <div class="surface-card p-6 md:p-8 lg:p-10">
           <div class="section-kicker">Подтверждение почты</div>
           <h1 class="section-title">Проверь почту</h1>
           <p class="section-subtitle">
-            Обычно достаточно открыть письмо и нажать кнопку подтверждения. После этого backend сам завершит подтверждение и покажет страницу успеха.
+            Обычно достаточно открыть письмо и нажать кнопку подтверждения. Если нужно, токен можно вставить вручную.
           </p>
 
-          <div
-            v-if="sentFromRegister && hasEmail"
-            class="mt-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800"
-          >
+          <div v-if="sentFromRegister && hasEmail" class="alert alert-info mt-6">
             Мы отправили письмо на <strong>{{ form.email }}</strong>. Если его нет во входящих, проверь папку «Спам» или запроси отправку ещё раз.
           </div>
 
-          <div
-            v-else-if="hasEmail"
-            class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-          >
+          <div v-else-if="hasEmail" class="alert alert-info mt-6">
             Почта для подтверждения: <strong>{{ form.email }}</strong>
           </div>
 
-          <div class="mt-8 rounded-[24px] border border-slate-200 bg-white/70 p-5">
-            <p class="text-sm font-semibold text-slate-900">Ручное подтверждение</p>
-            <p class="mt-2 text-sm leading-7 text-slate-600">
-              Этот вариант нужен редко. Если у тебя есть токен отдельно, его можно вставить вручную.
-            </p>
+          <form class="mt-8 grid gap-4" @submit.prevent="submitVerify">
+            <label>
+              <span class="field-label">Токен подтверждения</span>
+              <input v-model="form.token" class="input" placeholder="Вставь токен, если нужно" />
+            </label>
 
-            <form class="mt-5 grid gap-4" @submit.prevent="submitVerify">
-              <label class="form-control w-full">
-                <span class="label-text mb-2 font-semibold text-slate-700">Токен подтверждения</span>
-                <input
-                  v-model="form.token"
-                  class="input input-bordered w-full rounded-2xl"
-                  placeholder="Вставь токен, если он у тебя есть"
-                />
-              </label>
+            <p v-if="verifyMessage" class="alert alert-success">{{ verifyMessage }}</p>
+            <p v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
 
-              <p
-                v-if="verifyMessage"
-                class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-              >
-                {{ verifyMessage }}
-              </p>
-
-              <p
-                v-if="errorMessage"
-                class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-              >
-                {{ errorMessage }}
-              </p>
-
-              <button
-                type="submit"
-                class="btn btn-primary rounded-2xl"
-                :disabled="isSubmitting || !hasToken"
-              >
-                {{ isSubmitting ? 'Проверяем...' : 'Подтвердить вручную' }}
-              </button>
-            </form>
-          </div>
+            <button type="submit" class="btn btn-primary" :disabled="isSubmitting || !hasToken">
+              <span v-if="isSubmitting" class="spinner"></span>
+              <span>{{ isSubmitting ? 'Проверяем...' : 'Подтвердить вручную' }}</span>
+            </button>
+          </form>
 
           <div class="mt-6 flex flex-wrap gap-3">
-            <RouterLink v-if="auth.isAuthenticated.value" to="/profile" class="btn btn-outline rounded-2xl">
+            <RouterLink v-if="auth.isAuthenticated.value" to="/profile" class="btn btn-outline">
               Вернуться в профиль
             </RouterLink>
-            <RouterLink v-else to="/login" class="btn btn-outline rounded-2xl">
+            <RouterLink v-else to="/login" class="btn btn-outline">
               Войти
             </RouterLink>
-            <RouterLink to="/download-launcher" class="btn btn-ghost rounded-2xl">
+            <RouterLink to="/download-launcher" class="btn btn-ghost">
               Скачать лаунчер
             </RouterLink>
           </div>
         </div>
 
-        <div class="glass-card rounded-[32px] p-8 md:p-10">
-          <div class="section-kicker">Отправить письмо ещё раз</div>
-          <h2 class="section-title">Не пришло письмо?</h2>
-          <p class="section-subtitle">
-            Можно запросить новое письмо подтверждения на ту же почту. Для безопасности мы всегда показываем нейтральный ответ.
+        <div class="gradient-panel p-6 md:p-8 lg:p-10">
+          <div class="section-kicker section-kicker--light">Не пришло письмо?</div>
+          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Запроси новое письмо подтверждения</h2>
+          <p class="mt-4 text-base leading-8 text-white/78">
+            Для безопасности мы всегда показываем нейтральный ответ. Даже если почта уже подтверждена, экран останется аккуратным и понятным.
           </p>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submitResend">
-            <label class="form-control w-full">
-              <span class="label-text mb-2 font-semibold text-slate-700">Email</span>
-              <input
-                v-model="form.email"
-                type="email"
-                class="input input-bordered w-full rounded-2xl"
-                required
-              />
+            <label>
+              <span class="field-label !text-white/88">Email</span>
+              <input v-model="form.email" type="email" class="input" required />
             </label>
 
-            <p
-              v-if="resendMessage"
-              class="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700"
-            >
-              {{ resendMessage }}
-            </p>
+            <p v-if="resendMessage" class="alert alert-success">{{ resendMessage }}</p>
 
-            <button type="submit" class="btn btn-outline rounded-2xl" :disabled="isResending">
-              {{ isResending ? 'Отправляем...' : 'Отправить письмо повторно' }}
+            <button type="submit" class="btn btn-light" :disabled="isResending">
+              <span v-if="isResending" class="spinner"></span>
+              <span>{{ isResending ? 'Отправляем...' : 'Отправить письмо повторно' }}</span>
             </button>
           </form>
-
-          <div class="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
-            Иногда письмо приходит не сразу. Подожди немного, затем проверь входящие, «Спам» и «Промоакции».
-          </div>
         </div>
       </div>
     </div>

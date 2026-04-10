@@ -19,7 +19,6 @@ const form = reactive({
 const isSubmitting = ref(false)
 const isCheckingReferral = ref(false)
 const errorMessage = ref('')
-const successMessage = ref('')
 const referralMessage = ref('')
 const referralError = ref('')
 const referralPreview = ref(null)
@@ -64,7 +63,6 @@ async function resolveReferralCode(code) {
 
 async function submit() {
   errorMessage.value = ''
-  successMessage.value = ''
   isSubmitting.value = true
 
   try {
@@ -115,129 +113,105 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="py-16 md:py-24">
-    <div class="container-shell max-w-3xl">
-      <div class="glass-card rounded-[32px] p-8 md:p-10">
-        <div class="section-kicker">Регистрация</div>
-        <h1 class="section-title">Создать аккаунт VoidRP</h1>
-        <p class="section-subtitle">
-          Этот аккаунт нужен для сайта, личного кабинета и официального лаунчера. После регистрации мы сразу отправим письмо для подтверждения почты.
-        </p>
+  <section class="py-12 md:py-20">
+    <div class="container-shell max-w-6xl">
+      <div class="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+        <div class="surface-card p-6 md:p-8 lg:p-10">
+          <div class="section-kicker">Регистрация</div>
+          <h1 class="section-title">Создать аккаунт VoidRP</h1>
+          <p class="section-subtitle">
+            Этот аккаунт нужен для сайта, кабинета и официального лаунчера. После регистрации письмо для подтверждения почты отправится автоматически.
+          </p>
 
-        <form class="mt-8 grid gap-4 md:grid-cols-2" @submit.prevent="submit">
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Логин</span>
-            <input
-              v-model="form.site_login"
-              class="input input-bordered w-full rounded-2xl"
-              required
-            />
-          </label>
+          <form class="mt-8 grid gap-4 md:grid-cols-2" @submit.prevent="submit">
+            <label>
+              <span class="field-label">Логин</span>
+              <input v-model="form.site_login" class="input" required />
+            </label>
 
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Игровой ник</span>
-            <input
-              v-model="form.minecraft_nickname"
-              class="input input-bordered w-full rounded-2xl"
-              required
-            />
-          </label>
+            <label>
+              <span class="field-label">Игровой ник</span>
+              <input v-model="form.minecraft_nickname" class="input" required />
+            </label>
 
-          <label class="form-control w-full md:col-span-2">
-            <span class="label-text mb-2 font-semibold text-slate-700">Email</span>
-            <input
-              v-model="form.email"
-              type="email"
-              class="input input-bordered w-full rounded-2xl"
-              required
-            />
-          </label>
+            <label class="md:col-span-2">
+              <span class="field-label">Email</span>
+              <input v-model="form.email" type="email" class="input" required />
+            </label>
 
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Пароль</span>
-            <input
-              v-model="form.password"
-              type="password"
-              class="input input-bordered w-full rounded-2xl"
-              required
-            />
-          </label>
+            <label>
+              <span class="field-label">Пароль</span>
+              <input v-model="form.password" type="password" class="input" required />
+            </label>
 
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Повтори пароль</span>
-            <input
-              v-model="form.password_repeat"
-              type="password"
-              class="input input-bordered w-full rounded-2xl"
-              required
-            />
-          </label>
+            <label>
+              <span class="field-label">Повтори пароль</span>
+              <input v-model="form.password_repeat" type="password" class="input" required />
+            </label>
 
-          <div class="md:col-span-2 rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-            <div class="flex flex-col gap-4 md:flex-row md:items-end">
-              <label class="form-control w-full">
-                <span class="label-text mb-2 font-semibold text-slate-700">Referral code</span>
-                <input
-                  v-model="form.referral_code"
-                  class="input input-bordered w-full rounded-2xl"
-                  placeholder="Необязательно"
-                />
-              </label>
+            <div class="md:col-span-2 rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-5">
+              <div class="flex flex-col gap-3 md:flex-row md:items-end">
+                <label class="flex-1">
+                  <span class="field-label">Referral code</span>
+                  <input
+                    v-model="form.referral_code"
+                    class="input"
+                    placeholder="Необязательно"
+                  />
+                </label>
 
-              <button
-                type="button"
-                class="btn btn-outline rounded-2xl"
-                :disabled="isCheckingReferral || !form.referral_code.trim()"
-                @click="resolveReferralCode(form.referral_code)"
-              >
-                {{ isCheckingReferral ? 'Проверяем...' : 'Проверить код' }}
-              </button>
+                <button
+                  type="button"
+                  class="btn btn-outline"
+                  :disabled="isCheckingReferral || !form.referral_code.trim()"
+                  @click="resolveReferralCode(form.referral_code)"
+                >
+                  <span v-if="isCheckingReferral" class="spinner"></span>
+                  <span>{{ isCheckingReferral ? 'Проверяем...' : 'Проверить код' }}</span>
+                </button>
+              </div>
+
+              <p class="helper-text">
+                Если тебя пригласил другой игрок, укажи его код. Это зачтётся в его реферальный прогресс.
+              </p>
+
+              <p v-if="referralMessage" class="alert alert-success mt-4">{{ referralMessage }}</p>
+              <p v-if="referralError" class="alert alert-warn mt-4">{{ referralError }}</p>
             </div>
 
-            <p class="mt-3 text-sm leading-6 text-slate-600">
-              Если тебя пригласил другой игрок, укажи его код. Это засчитается в его реферальный прогресс.
-            </p>
+            <p v-if="errorMessage" class="alert alert-error md:col-span-2">{{ errorMessage }}</p>
 
-            <p
-              v-if="referralMessage"
-              class="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-            >
-              {{ referralMessage }}
-            </p>
+            <div class="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+                <span v-if="isSubmitting" class="spinner"></span>
+                <span>{{ isSubmitting ? 'Создаём аккаунт...' : 'Создать аккаунт' }}</span>
+              </button>
+              <RouterLink to="/login" class="font-semibold text-indigo-700">
+                Уже зарегистрирован? Войти
+              </RouterLink>
+            </div>
+          </form>
+        </div>
 
-            <p
-              v-if="referralError"
-              class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
-            >
-              {{ referralError }}
-            </p>
-          </div>
-
-          <p
-            v-if="errorMessage"
-            class="md:col-span-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-          >
-            {{ errorMessage }}
+        <aside class="gradient-panel p-6 md:p-8">
+          <div class="section-kicker section-kicker--light">Что получит игрок</div>
+          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Нормальный старт без ручной настройки</h2>
+          <p class="mt-4 text-base leading-8 text-white/78">
+            После регистрации у тебя появится кабинет, публичный профиль и прямой путь к скачиванию лаунчера.
           </p>
 
-          <p
-            v-if="successMessage"
-            class="md:col-span-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
-          >
-            {{ successMessage }}
-          </p>
-
-          <div
-            class="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <button type="submit" class="btn btn-primary rounded-2xl" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Создаём аккаунт...' : 'Создать аккаунт' }}
-            </button>
-            <RouterLink to="/login" class="font-semibold text-primary">
-              Уже зарегистрирован? Войти
-            </RouterLink>
+          <div class="mt-8 grid gap-3">
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
+              Один аккаунт для сайта и официального лаунчера.
+            </div>
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
+              Письмо подтверждения отправится автоматически.
+            </div>
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
+              Ник, баннер, фон и статус можно будет настроить в удобном редакторе.
+            </div>
           </div>
-        </form>
+        </aside>
       </div>
     </div>
   </section>

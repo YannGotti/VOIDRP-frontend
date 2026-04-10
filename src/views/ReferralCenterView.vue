@@ -1,135 +1,11 @@
-<template>
-  <div class="min-h-screen bg-base-200">
-    <div class="mx-auto max-w-6xl px-4 py-8">
-      <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 class="text-3xl font-black tracking-tight">Реферальный центр</h1>
-          <p class="mt-2 text-base-content/70">
-            Управляй кодом приглашения, смотри прогресс и текущий месячный ранг.
-          </p>
-        </div>
-        <RouterLink to="/profile/public" class="btn btn-outline rounded-2xl">Публичный профиль</RouterLink>
-      </div>
-
-      <div v-if="loading" class="space-y-4">
-        <div class="skeleton h-40 rounded-3xl"></div>
-        <div class="skeleton h-72 rounded-3xl"></div>
-      </div>
-
-      <div v-else class="space-y-6">
-        <div v-if="error" class="alert alert-error rounded-2xl shadow-lg">
-          <span>{{ error }}</span>
-        </div>
-
-        <div v-if="success" class="alert alert-success rounded-2xl shadow-lg">
-          <span>{{ success }}</span>
-        </div>
-
-        <section class="grid gap-6 lg:grid-cols-[1.3fr,.9fr]">
-          <div class="card rounded-[2rem] bg-base-100 shadow-xl border border-base-300">
-            <div class="card-body">
-              <h2 class="card-title text-xl">Твой код</h2>
-              <div class="rounded-[1.5rem] bg-base-200 p-5">
-                <div class="text-sm text-base-content/60">Referral code</div>
-                <div class="mt-2 break-all text-3xl font-black tracking-wider">{{ dashboard?.my_code.code || '—' }}</div>
-                <div class="mt-4 text-sm text-base-content/65 break-all">{{ dashboard?.my_code.invite_url || '—' }}</div>
-              </div>
-              <div class="mt-4 flex flex-wrap gap-3">
-                <button class="btn btn-primary rounded-2xl" @click="copyInviteUrl">Скопировать ссылку</button>
-                <button class="btn btn-outline rounded-2xl" :disabled="regenerating" @click="regenerateCode">
-                  <span v-if="regenerating" class="loading loading-spinner loading-sm"></span>
-                  <span v-else>Сгенерировать новый код</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="card rounded-[2rem] bg-base-100 shadow-xl border border-base-300">
-            <div class="card-body">
-              <h2 class="card-title text-xl">Прогресс</h2>
-              <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-                <div class="rounded-[1.5rem] bg-base-200 p-4 text-center">
-                  <div class="text-sm text-base-content/60">Pending</div>
-                  <div class="mt-2 text-3xl font-black text-primary">{{ dashboard?.totals.pending || 0 }}</div>
-                </div>
-                <div class="rounded-[1.5rem] bg-base-200 p-4 text-center">
-                  <div class="text-sm text-base-content/60">Qualified</div>
-                  <div class="mt-2 text-3xl font-black text-secondary">{{ dashboard?.totals.qualified || 0 }}</div>
-                </div>
-                <div class="rounded-[1.5rem] bg-base-200 p-4 text-center">
-                  <div class="text-sm text-base-content/60">Текущий ранг</div>
-                  <div class="mt-2 text-xl font-black">{{ rankLabel }}</div>
-                </div>
-              </div>
-
-              <div class="mt-4 rounded-[1.5rem] bg-base-200 p-4">
-                <div class="text-sm text-base-content/60">Лестница рангов</div>
-                <div class="mt-3 space-y-2 text-sm">
-                  <div class="flex items-center justify-between rounded-xl bg-base-100 px-3 py-2">
-                    <span>1 приглашённый</span>
-                    <span class="font-bold">Ранг III</span>
-                  </div>
-                  <div class="flex items-center justify-between rounded-xl bg-base-100 px-3 py-2">
-                    <span>5 приглашённых</span>
-                    <span class="font-bold">Ранг II</span>
-                  </div>
-                  <div class="flex items-center justify-between rounded-xl bg-base-100 px-3 py-2">
-                    <span>10 приглашённых</span>
-                    <span class="font-bold">Ранг I</span>
-                  </div>
-                </div>
-                <div v-if="dashboard?.current_reward?.expires_at" class="mt-4 text-sm text-base-content/65">
-                  Действует до {{ formatDate(dashboard.current_reward.expires_at) }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="card rounded-[2rem] bg-base-100 shadow-xl border border-base-300">
-          <div class="card-body">
-            <h2 class="card-title text-xl">Последние приглашения</h2>
-            <div v-if="!dashboard?.recent_links?.length" class="rounded-[1.5rem] bg-base-200 p-6 text-base-content/65">
-              Пока приглашений нет.
-            </div>
-            <div v-else class="overflow-x-auto">
-              <table class="table table-zebra">
-                <thead>
-                  <tr>
-                    <th>Site login</th>
-                    <th>Minecraft</th>
-                    <th>Статус</th>
-                    <th>Создано</th>
-                    <th>Qualified</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="item in dashboard.recent_links" :key="`${item.site_login}-${item.created_at}`">
-                    <td>{{ item.site_login }}</td>
-                    <td>{{ item.minecraft_nickname }}</td>
-                    <td>
-                      <span class="badge" :class="badgeClass(item.status)">{{ item.status }}</span>
-                    </td>
-                    <td>{{ formatDate(item.created_at) }}</td>
-                    <td>{{ item.qualified_at ? formatDate(item.qualified_at) : '—' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import AccountTabs from '../components/AccountTabs.vue'
 import { getMyReferralDashboard, regenerateMyReferralCode } from '../services/referralApi'
 import { useAuthStore } from '../stores/authStore'
 
-const authStore = useAuthStore()
+const auth = useAuthStore()
 
 const loading = ref(true)
 const regenerating = ref(false)
@@ -137,23 +13,19 @@ const error = ref('')
 const success = ref('')
 const dashboard = ref(null)
 
-const rankLabel = computed(() => {
-  const rank = dashboard.value?.current_reward?.referral_rank || dashboard.value?.totals?.current_rank
-  if (rank === 'rank_1') return 'Ранг I'
-  if (rank === 'rank_2') return 'Ранг II'
-  if (rank === 'rank_3') return 'Ранг III'
-  return 'Без ранга'
-})
+const rankLabel = computed(() => dashboard.value?.current_reward?.rank_name || dashboard.value?.current_reward?.rank || 'Без ранга')
 
 function formatDate(value) {
   if (!value) return '—'
-  return new Date(value).toLocaleString('ru-RU')
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return new Intl.DateTimeFormat('ru-RU', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
 
 function badgeClass(status) {
-  if (status === 'qualified') return 'badge-success'
-  if (status === 'pending') return 'badge-warning'
-  return 'badge-ghost'
+  if (status === 'qualified') return 'badge badge-success'
+  if (status === 'pending') return 'badge badge-warning'
+  return 'badge badge-ghost'
 }
 
 async function loadDashboard() {
@@ -161,9 +33,9 @@ async function loadDashboard() {
   error.value = ''
 
   try {
-    dashboard.value = await getMyReferralDashboard(authStore.accessToken)
+    dashboard.value = await getMyReferralDashboard(auth.accessToken)
   } catch (err) {
-    error.value = err.message || 'Не удалось загрузить реферальный кабинет.'
+    error.value = err.message || 'Не удалось загрузить реферальный центр.'
   } finally {
     loading.value = false
   }
@@ -175,11 +47,10 @@ async function regenerateCode() {
   success.value = ''
 
   try {
-    const payload = await regenerateMyReferralCode(authStore.accessToken)
-    success.value = payload.message || 'Код обновлён.'
-    await loadDashboard()
+    dashboard.value = await regenerateMyReferralCode(auth.accessToken)
+    success.value = 'Новый реферальный код создан.'
   } catch (err) {
-    error.value = err.message || 'Не удалось обновить код.'
+    error.value = err.message || 'Не удалось сгенерировать новый код.'
   } finally {
     regenerating.value = false
   }
@@ -189,6 +60,7 @@ async function copyInviteUrl() {
   try {
     await navigator.clipboard.writeText(dashboard.value?.my_code?.invite_url || '')
     success.value = 'Ссылка приглашения скопирована.'
+    error.value = ''
   } catch {
     error.value = 'Не удалось скопировать ссылку.'
   }
@@ -196,3 +68,142 @@ async function copyInviteUrl() {
 
 onMounted(loadDashboard)
 </script>
+
+<template>
+  <section class="py-8 md:py-10">
+    <div class="container-shell space-y-5">
+      <section class="surface-card p-5 md:p-7">
+        <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <div class="section-kicker !mb-2">Реферальный центр</div>
+            <h1 class="text-2xl font-black tracking-tight text-slate-950 md:text-4xl">
+              Приглашай игроков без лишней путаницы
+            </h1>
+            <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-[15px]">
+              Здесь твой код приглашения, прогресс и недавние регистрации. Всё собрано компактно и по делу.
+            </p>
+          </div>
+
+          <RouterLink to="/profile/public" class="btn btn-outline rounded-2xl">
+            Публичный профиль
+          </RouterLink>
+        </div>
+      </section>
+
+      <AccountTabs />
+
+      <div v-if="error" class="alert alert-error">{{ error }}</div>
+      <div v-if="success" class="alert alert-success">{{ success }}</div>
+
+      <div v-if="loading" class="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <div class="skeleton h-[260px] rounded-[28px]"></div>
+        <div class="skeleton h-[260px] rounded-[28px]"></div>
+      </div>
+
+      <template v-else>
+        <div class="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Твой код</div>
+            <h2 class="text-xl font-black text-slate-950 md:text-2xl">Личная ссылка приглашения</h2>
+
+            <div class="action-card mt-5">
+              <p class="metric-label">Referral code</p>
+              <p class="mt-2 break-all text-3xl font-black tracking-[0.12em] text-slate-950">
+                {{ dashboard?.my_code?.code || '—' }}
+              </p>
+              <p class="mt-4 break-all text-sm leading-6 text-slate-600">
+                {{ dashboard?.my_code?.invite_url || '—' }}
+              </p>
+            </div>
+
+            <div class="mt-4 flex flex-wrap gap-3">
+              <button class="btn btn-primary rounded-2xl" @click="copyInviteUrl">Скопировать ссылку</button>
+              <button class="btn btn-outline rounded-2xl" :disabled="regenerating" @click="regenerateCode">
+                <span v-if="regenerating" class="spinner"></span>
+                <span>{{ regenerating ? 'Создаём...' : 'Новый код' }}</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Прогресс</div>
+            <h2 class="text-xl font-black text-slate-950 md:text-2xl">Текущее состояние</h2>
+
+            <div class="metric-grid metric-grid-3 mt-5">
+              <div class="metric-card text-center">
+                <p class="metric-label">Pending</p>
+                <p class="metric-value">{{ dashboard?.totals?.pending || 0 }}</p>
+              </div>
+              <div class="metric-card text-center">
+                <p class="metric-label">Qualified</p>
+                <p class="metric-value">{{ dashboard?.totals?.qualified || 0 }}</p>
+              </div>
+              <div class="metric-card text-center">
+                <p class="metric-label">Ранг</p>
+                <p class="metric-value !text-[1.2rem] md:!text-[1.5rem]">{{ rankLabel }}</p>
+              </div>
+            </div>
+
+            <div class="action-card mt-5">
+              <p class="metric-label">Лестница рангов</p>
+              <div class="mt-3 space-y-2 text-sm text-slate-700">
+                <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <span>1 приглашённый</span>
+                  <strong>Ранг III</strong>
+                </div>
+                <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <span>5 приглашённых</span>
+                  <strong>Ранг II</strong>
+                </div>
+                <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <span>10 приглашённых</span>
+                  <strong>Ранг I</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <section class="surface-card p-5 md:p-6">
+          <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div class="section-kicker !mb-2">История</div>
+              <h2 class="text-xl font-black text-slate-950 md:text-2xl">Последние приглашения</h2>
+            </div>
+            <p class="text-sm text-slate-500">Показываем только недавние регистрации и их текущий статус.</p>
+          </div>
+
+          <div v-if="!dashboard?.recent_links?.length" class="action-card mt-5 text-sm text-slate-600">
+            Пока ещё нет приглашённых игроков.
+          </div>
+
+          <div v-else class="table-shell mt-5 overflow-x-auto">
+            <table class="data-table min-w-[720px]">
+              <thead>
+                <tr>
+                  <th>Игрок</th>
+                  <th>Дата</th>
+                  <th>Статус</th>
+                  <th>Премия</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in dashboard.recent_links" :key="item.link_id || `${item.slug}-${item.created_at}`">
+                  <td>
+                    <div class="font-semibold text-slate-900">{{ item.display_name || item.slug || 'Новый игрок' }}</div>
+                    <div class="mt-1 text-sm text-slate-500">@{{ item.slug || 'unknown' }}</div>
+                  </td>
+                  <td>{{ formatDate(item.created_at) }}</td>
+                  <td>
+                    <span :class="badgeClass(item.status)">{{ item.status || 'unknown' }}</span>
+                  </td>
+                  <td>{{ item.reward_name || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </template>
+    </div>
+  </section>
+</template>

@@ -3,36 +3,25 @@ import { siteConfig } from '../config.site'
 </script>
 
 <template>
-  <section class="relative overflow-hidden py-16 md:py-24 xl:py-28">
-    <div class="container-shell grid items-center gap-10 lg:grid-cols-[1.08fr_0.92fr]">
+  <section class="relative overflow-hidden py-14 md:py-20 xl:py-24">
+    <div class="container-shell grid items-center gap-6 lg:grid-cols-[1.06fr_0.94fr] lg:gap-10">
       <div class="relative z-10">
-        <div
-          class="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary"
-        >
-          <span class="h-2 w-2 rounded-full bg-primary"></span>
-          {{ siteConfig.hero.badge }}
-        </div>
+        <div class="section-kicker">{{ siteConfig.hero.badge }}</div>
 
-        <h1 class="max-w-5xl text-4xl font-black leading-[1.05] md:text-6xl xl:text-7xl">
-          {{ siteConfig.serverName }}
-          <span class="text-gradient mt-2 block">{{ siteConfig.hero.title }}</span>
+        <h1 class="max-w-5xl text-4xl font-black leading-[0.96] tracking-[-0.05em] text-slate-950 md:text-6xl xl:text-7xl">
+          Сайт и старт в игру
+          <span class="text-gradient mt-2 block">без лишней возни и перегруза</span>
         </h1>
 
-        <p class="mt-6 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">
-          {{ siteConfig.hero.description }}
+        <p class="section-subtitle mt-6 max-w-2xl">
+          {{ siteConfig.hero.description }} Всё сделано так, чтобы игрок видел только нужные шаги: аккаунт, лаунчер, вход в игру и полезные ссылки.
         </p>
 
         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-          <RouterLink
-            to="/register"
-            class="btn btn-primary btn-lg rounded-2xl shadow-[0_12px_45px_rgba(56,189,248,0.20)]"
-          >
+          <RouterLink to="/register" class="btn btn-primary">
             Создать аккаунт
           </RouterLink>
-          <RouterLink
-            to="/download-launcher"
-            class="btn btn-outline btn-lg rounded-2xl"
-          >
+          <RouterLink to="/download-launcher" class="btn btn-outline">
             Скачать лаунчер
           </RouterLink>
         </div>
@@ -44,57 +33,50 @@ import { siteConfig } from '../config.site'
         </div>
       </div>
 
-      <div class="relative">
-        <div class="glass-card rounded-[32px] p-5 md:p-6">
-          <div class="hero-preview">
-            <div class="hero-preview__top">
-              <div>
-                <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Начать легко</p>
-                <p class="mt-2 text-3xl font-black text-slate-900">Три шага до игры</p>
-              </div>
+      <div class="gradient-panel p-5 md:p-6">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p class="text-sm font-bold uppercase tracking-[0.22em] text-white/60">Путь игрока</p>
+            <h2 class="mt-2 text-3xl font-black tracking-tight text-white md:text-[2.15rem]">Три понятных шага</h2>
+          </div>
 
-              <div
-                class="rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700"
-              >
-                Better MC 5
-              </div>
+          <div class="inline-chip border-white/12 bg-white/10 text-white">
+            Player-first UI
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-[1.4rem] border border-white/10 bg-white/8 p-4">
+            <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/55">Шаг 1</p>
+            <p class="mt-2 text-lg font-black text-white">Аккаунт</p>
+            <p class="mt-2 text-sm leading-6 text-white/72">Создай аккаунт и укажи игровой ник один раз.</p>
+          </div>
+          <div class="rounded-[1.4rem] border border-white/10 bg-white/8 p-4">
+            <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/55">Шаг 2</p>
+            <p class="mt-2 text-lg font-black text-white">Лаунчер</p>
+            <p class="mt-2 text-sm leading-6 text-white/72">Скачай официальный лаунчер и войди тем же аккаунтом.</p>
+          </div>
+          <div class="rounded-[1.4rem] border border-white/10 bg-white/8 p-4">
+            <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/55">Шаг 3</p>
+            <p class="mt-2 text-lg font-black text-white">Игра</p>
+            <p class="mt-2 text-sm leading-6 text-white/72">Нажми «Играть», остальное лаунчер сделает сам.</p>
+          </div>
+        </div>
+
+        <div class="mt-6 rounded-[1.6rem] border border-white/10 bg-white/10 p-4 md:p-5">
+          <p class="text-sm font-semibold text-white/60">Почему это удобно</p>
+          <div class="mt-3 grid gap-3">
+            <div class="flex items-start gap-3 rounded-[1.1rem] bg-black/10 px-4 py-3 text-sm leading-6 text-white/82">
+              <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-sky-300"></span>
+              Не нужно вручную искать нужную сборку и настраивать клиент.
             </div>
-
-            <div class="mt-6 grid gap-4 sm:grid-cols-3">
-              <div class="hero-stat">
-                <p class="hero-stat__label">Шаг 1</p>
-                <p class="hero-stat__value" style="font-size: 16px;">Регистрация</p>
-              </div>
-              <div class="hero-stat">
-                <p class="hero-stat__label">Шаг 2</p>
-                <p class="hero-stat__value" style="font-size: 16px;">Лаунчер</p>
-              </div>
-              <div class="hero-stat">
-                <p class="hero-stat__label">Шаг 3</p>
-                <p class="hero-stat__value" style="font-size: 16px;">Игра</p>
-              </div>
+            <div class="flex items-start gap-3 rounded-[1.1rem] bg-black/10 px-4 py-3 text-sm leading-6 text-white/82">
+              <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-300"></span>
+              Все важные действия находятся в одном кабинете без мусора и лишних блоков.
             </div>
-
-            <div class="mt-6 grid gap-3">
-              <div class="info-row">
-                <span class="info-dot info-dot--blue"></span>
-                Создай аккаунт и привяжи свой игровой ник.
-              </div>
-              <div class="info-row">
-                <span class="info-dot info-dot--emerald"></span>
-                Скачай официальный лаунчер и войди под тем же аккаунтом.
-              </div>
-              <div class="info-row">
-                <span class="info-dot info-dot--violet"></span>
-                Нажми «Играть» — лаунчер сам подготовит клиент и запустит игру.
-              </div>
-            </div>
-
-            <div class="mt-6 rounded-[24px] border border-slate-200 bg-white/80 p-4">
-              <p class="text-sm text-slate-500">Для игрока</p>
-              <p class="mt-2 text-base leading-7 text-slate-700">
-                Тебе не нужно вручную искать нужную версию, загрузчик или настройки. Основной путь уже подготовлен.
-              </p>
+            <div class="flex items-start gap-3 rounded-[1.1rem] bg-black/10 px-4 py-3 text-sm leading-6 text-white/82">
+              <span class="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-violet-300"></span>
+              Публичный профиль выглядит как игровая страница, а не как анкета.
             </div>
           </div>
         </div>

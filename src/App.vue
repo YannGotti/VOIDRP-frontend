@@ -21,16 +21,16 @@ const hidePublicNavbar = computed(() => {
     <SiteNavbar v-if="!hidePublicNavbar" />
 
     <main class="relative z-10">
-      <section v-if="!auth.ready.value && !hidePublicNavbar" class="py-20 md:py-28">
-        <div class="container-shell max-w-2xl">
-          <div class="glass-card rounded-[32px] p-8 md:p-10 text-center">
+      <section v-if="!auth.ready.value && !hidePublicNavbar" class="py-24 md:py-32">
+        <div class="container-shell max-w-3xl">
+          <div class="surface-card p-8 text-center md:p-12">
             <div class="section-kicker">VoidRP</div>
-            <h1 class="section-title">Открываем сайт</h1>
-            <p class="section-subtitle">
-              Проверяем сохранённый вход и подготавливаем твой профиль.
+            <h1 class="section-title">Подготавливаем сайт</h1>
+            <p class="section-subtitle mx-auto max-w-2xl">
+              Проверяем сохранённый вход и собираем интерфейс игрока, чтобы страница открылась сразу в нормальном состоянии.
             </p>
-            <div class="mt-8 flex justify-center">
-              <span class="loading loading-spinner loading-lg text-primary"></span>
+            <div class="mt-8 flex justify-center text-indigo-600">
+              <span class="spinner spinner-lg"></span>
             </div>
           </div>
         </div>
@@ -39,18 +39,13 @@ const hidePublicNavbar = computed(() => {
       <RouterView v-else />
     </main>
 
-    <footer
-      v-if="!hidePublicNavbar"
-      class="relative z-10 mt-16 border-t border-slate-200/80 bg-white/70 backdrop-blur-xl"
-    >
-      <div class="container-shell py-10">
-        <div
-          class="flex flex-col gap-6 rounded-[28px] border border-slate-200 bg-white/85 p-6 shadow-[0_20px_80px_rgba(15,23,42,0.08)] md:flex-row md:items-center md:justify-between"
-        >
+    <footer v-if="!hidePublicNavbar" class="relative z-10 mt-16 pb-10 pt-4">
+      <div class="container-shell">
+        <div class="surface-card flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between md:p-7">
           <div>
-            <p class="text-xl font-black tracking-wide text-slate-900">VoidRP</p>
-            <p class="mt-2 text-sm leading-6 text-slate-600">
-              Официальный лаунчер, карта мира и вся важная информация о сервере в одном месте.
+            <p class="text-xl font-black tracking-tight text-slate-950">VoidRP</p>
+            <p class="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
+              Официальный лаунчер, карта мира, публичные профили и понятный путь к игре без визуального перегруза.
             </p>
           </div>
 
@@ -66,8 +61,8 @@ const hidePublicNavbar = computed(() => {
           </div>
         </div>
 
-        <div class="mt-5 text-center text-xs text-slate-500">
-          © 2026 VoidRP. Все права защищены.
+        <div class="mt-4 text-center text-xs text-slate-500">
+          © 2026 VoidRP. Player-first сайт и профильная система.
         </div>
       </div>
     </footer>

@@ -35,53 +35,63 @@ async function submit() {
 </script>
 
 <template>
-  <section class="py-16 md:py-24">
-    <div class="container-shell max-w-2xl">
-      <div class="glass-card rounded-[32px] p-8 md:p-10">
-        <div class="section-kicker">Вход</div>
-        <h1 class="section-title">Войти в аккаунт</h1>
-        <p class="section-subtitle">
-          Используй логин или email и пароль от аккаунта VoidRP. Эти же данные подойдут для официального лаунчера.
-        </p>
-
-        <div
-          v-if="route.query.redirect"
-          class="mt-6 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700"
-        >
-          Сначала нужно войти в аккаунт, а потом страница откроется автоматически.
-        </div>
-
-        <form class="mt-8 grid gap-4" @submit.prevent="submit">
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Логин или email</span>
-            <input v-model="form.login" class="input input-bordered w-full rounded-2xl" required />
-          </label>
-
-          <label class="form-control w-full">
-            <span class="label-text mb-2 font-semibold text-slate-700">Пароль</span>
-            <input
-              v-model="form.password"
-              type="password"
-              class="input input-bordered w-full rounded-2xl"
-              required
-            />
-          </label>
-
-          <p
-            v-if="errorMessage"
-            class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
-          >
-            {{ errorMessage }}
+  <section class="py-12 md:py-20">
+    <div class="container-shell max-w-6xl">
+      <div class="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+        <aside class="gradient-panel p-6 md:p-8">
+          <div class="section-kicker section-kicker--light">Вход в аккаунт</div>
+          <h1 class="text-3xl font-black tracking-tight text-white md:text-5xl">Возвращайся в игру без путаницы</h1>
+          <p class="mt-4 text-base leading-8 text-white/78">
+            Один аккаунт работает для сайта, кабинета и официального лаунчера. После входа ты сразу попадёшь туда, куда собирался перейти.
           </p>
 
-          <button type="submit" class="btn btn-primary mt-2 rounded-2xl" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Входим...' : 'Войти' }}
-          </button>
-        </form>
+          <div class="mt-8 grid gap-3">
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
+              Логин или email подойдут одинаково.
+            </div>
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
+              Почта и ник уже будут связаны с твоим аккаунтом.
+            </div>
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
+              После входа можно сразу скачать лаунчер и перейти к игре.
+            </div>
+          </div>
+        </aside>
 
-        <div class="mt-6 flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <RouterLink to="/forgot-password" class="font-semibold text-primary">Забыли пароль?</RouterLink>
-          <RouterLink to="/register" class="font-semibold text-primary">Нет аккаунта? Создать</RouterLink>
+        <div class="surface-card p-6 md:p-8 lg:p-10">
+          <div class="section-kicker">Вход</div>
+          <h2 class="section-title">Войти в аккаунт</h2>
+          <p class="section-subtitle">
+            Используй логин или email и пароль от аккаунта VoidRP. Эти же данные подойдут для официального лаунчера.
+          </p>
+
+          <div v-if="route.query.redirect" class="alert alert-info mt-6">
+            Сначала нужно войти, а затем страница откроется автоматически.
+          </div>
+
+          <form class="mt-8 grid gap-4" @submit.prevent="submit">
+            <label>
+              <span class="field-label">Логин или email</span>
+              <input v-model="form.login" class="input" required />
+            </label>
+
+            <label>
+              <span class="field-label">Пароль</span>
+              <input v-model="form.password" type="password" class="input" required />
+            </label>
+
+            <p v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+
+            <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+              <span v-if="isSubmitting" class="spinner"></span>
+              <span>{{ isSubmitting ? 'Входим...' : 'Войти' }}</span>
+            </button>
+          </form>
+
+          <div class="mt-6 flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+            <RouterLink to="/forgot-password" class="font-semibold text-indigo-700">Забыли пароль?</RouterLink>
+            <RouterLink to="/register" class="font-semibold text-indigo-700">Нет аккаунта? Создать</RouterLink>
+          </div>
         </div>
       </div>
     </div>
