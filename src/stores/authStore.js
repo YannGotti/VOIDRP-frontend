@@ -64,7 +64,7 @@ function applyTokenResponse(payload) {
   authState.refreshToken = payload.refresh_token
   authState.user = payload.user
   authState.playerAccount = payload.player_account
-  authState.security = null
+  authState.security = payload.security || null
   persistAuth()
 }
 
@@ -105,7 +105,7 @@ export async function bootstrapAuth() {
 }
 
 export async function registerAndOptionallyStay(payload) {
-  return registerAccount(payload)
+  return await registerAccount(payload)
 }
 
 export async function loginWithPassword(payload) {
@@ -159,11 +159,22 @@ export async function logoutCurrentSession() {
 export function useAuthStore() {
   return {
     state: authState,
+
+    get accessToken() {
+      return authState.accessToken
+    },
+
+    get refreshToken() {
+      return authState.refreshToken
+    },
+
     ready: computed(() => authState.ready),
     isAuthenticated: computed(() => getIsAuthenticated()),
+
     displayName: computed(
       () => authState.playerAccount?.minecraft_nickname || authState.user?.site_login || 'Игрок',
     ),
+
     emailVerified: computed(() => Boolean(authState.user?.email_verified)),
     nicknameLocked: computed(() => Boolean(authState.playerAccount?.nickname_locked)),
     legacyAuthEnabled: computed(() => Boolean(authState.playerAccount?.legacy_auth_enabled)),
@@ -171,6 +182,7 @@ export function useAuthStore() {
     mustUseLauncher: computed(() => Boolean(authState.security?.must_use_launcher)),
     legacyReady: computed(() => Boolean(authState.security?.legacy_ready)),
     legacyHashPresent: computed(() => Boolean(authState.security?.legacy_hash_present)),
+
     accountModeText: computed(() => {
       if (authState.security?.must_use_launcher) return 'Только официальный лаунчер'
       if (authState.playerAccount?.legacy_auth_enabled) return 'Смешанный режим: лаунчер + legacy'

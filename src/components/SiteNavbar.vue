@@ -5,10 +5,6 @@ import { logoutCurrentSession, useAuthStore } from '../stores/authStore'
 
 const auth = useAuthStore()
 const isAuthenticated = computed(() => auth.isAuthenticated.value)
-
-async function onLogout() {
-  await logoutCurrentSession()
-}
 </script>
 
 <template>
@@ -39,7 +35,10 @@ async function onLogout() {
           <li><RouterLink to="/" style="border-radius: 10px;">Главная</RouterLink></li>
           <li><RouterLink to="/download-launcher" style="border-radius: 10px;">Лаунчер</RouterLink></li>
           <li><RouterLink to="/links" style="border-radius: 10px;">Ссылки</RouterLink></li>
-          <li v-if="isAuthenticated"><RouterLink to="/profile" style="border-radius: 10px;">Мой профиль</RouterLink></li>
+          <li v-if="isAuthenticated"><RouterLink to="/profile" style="border-radius: 10px;">Кабинет</RouterLink></li>
+          <li v-if="isAuthenticated"><RouterLink to="/profile/public" style="border-radius: 10px;">Профиль</RouterLink></li>
+          <li v-if="isAuthenticated"><RouterLink to="/profile/referrals" style="border-radius: 10px;">Рефералы</RouterLink></li>
+          <li v-if="isAuthenticated"><RouterLink to="/profile/social" style="border-radius: 10px;">Друзья</RouterLink></li>
           <li v-else><RouterLink to="/login" style="border-radius: 10px;">Войти</RouterLink></li>
         </ul>
       </div>
@@ -53,6 +52,7 @@ async function onLogout() {
         >
           Карта
         </a>
+
         <RouterLink
           v-if="!isAuthenticated"
           to="/register"
@@ -60,6 +60,7 @@ async function onLogout() {
         >
           Регистрация
         </RouterLink>
+
         <RouterLink
           v-if="!isAuthenticated"
           to="/download-launcher"
@@ -67,21 +68,28 @@ async function onLogout() {
         >
           Скачать лаунчер
         </RouterLink>
-        <RouterLink
-          v-else
-          to="/profile"
-          class="btn btn-primary rounded-2xl shadow-[0_12px_36px_rgba(79,70,229,0.22)]"
-        >
-          {{ auth.displayName.value }}
-        </RouterLink>
-        <button
-          v-if="isAuthenticated"
-          type="button"
-          class="btn btn-outline rounded-2xl"
-          @click="onLogout"
-        >
-          Выйти
-        </button>
+
+        <div v-else class="dropdown dropdown-end">
+          <div
+            tabindex="0"
+            role="button"
+            class="btn btn-primary rounded-2xl shadow-[0_12px_36px_rgba(79,70,229,0.22)]"
+          >
+            {{ auth.displayName.value }}
+          </div>
+
+          <ul
+            tabindex="0"
+            class="menu dropdown-content z-[1] mt-3 w-72 rounded-[24px] border border-slate-200 bg-white p-2 text-slate-700 shadow-2xl"
+          >
+            <li><RouterLink to="/profile">Кабинет</RouterLink></li>
+            <li><RouterLink to="/profile/public">Редактор профиля</RouterLink></li>
+            <li><RouterLink to="/profile/referrals">Реферальный центр</RouterLink></li>
+            <li><RouterLink to="/profile/social">Подписки и друзья</RouterLink></li>
+            <li><RouterLink to="/download-launcher">Скачать лаунчер</RouterLink></li>
+            <li><button type="button" @click="logoutCurrentSession">Выйти</button></li>
+          </ul>
+        </div>
       </div>
 
       <div class="navbar-end lg:hidden">
@@ -109,14 +117,22 @@ async function onLogout() {
             <li><RouterLink to="/">Главная</RouterLink></li>
             <li><RouterLink to="/download-launcher">Скачать лаунчер</RouterLink></li>
             <li><RouterLink to="/links">Ссылки</RouterLink></li>
-            <li v-if="isAuthenticated"><RouterLink to="/profile">Мой профиль</RouterLink></li>
-            <li v-else><RouterLink to="/login">Войти</RouterLink></li>
-            <li v-if="!isAuthenticated"><RouterLink to="/register">Регистрация</RouterLink></li>
+
+            <template v-if="isAuthenticated">
+              <li><RouterLink to="/profile">Кабинет</RouterLink></li>
+              <li><RouterLink to="/profile/public">Редактор профиля</RouterLink></li>
+              <li><RouterLink to="/profile/referrals">Рефералы</RouterLink></li>
+              <li><RouterLink to="/profile/social">Друзья</RouterLink></li>
+              <li><button type="button" @click="logoutCurrentSession">Выйти</button></li>
+            </template>
+
+            <template v-else>
+              <li><RouterLink to="/login">Войти</RouterLink></li>
+              <li><RouterLink to="/register">Регистрация</RouterLink></li>
+            </template>
+
             <li>
               <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer">Карта мира</a>
-            </li>
-            <li v-if="isAuthenticated">
-              <button type="button" @click="onLogout">Выйти</button>
             </li>
           </ul>
         </div>
