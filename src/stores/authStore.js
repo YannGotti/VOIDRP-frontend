@@ -5,6 +5,7 @@ import {
   logoutSession,
   refreshSession,
   registerAccount,
+  revokeOtherSessions,
 } from '../services/authApi'
 
 const STORAGE_KEY = 'voidrp_auth_v1'
@@ -14,6 +15,7 @@ export const authState = reactive({
   refreshToken: null,
   user: null,
   playerAccount: null,
+  security: null,
   ready: false,
 })
 
@@ -29,6 +31,7 @@ function loadStoredAuth() {
     authState.refreshToken = parsed.refreshToken || null
     authState.user = parsed.user || null
     authState.playerAccount = parsed.playerAccount || null
+    authState.security = parsed.security || null
   } catch {
     clearAuthState()
   }
@@ -42,6 +45,7 @@ function persistAuth() {
       refreshToken: authState.refreshToken,
       user: authState.user,
       playerAccount: authState.playerAccount,
+      security: authState.security,
     }),
   )
 }
@@ -51,6 +55,7 @@ function clearAuthState() {
   authState.refreshToken = null
   authState.user = null
   authState.playerAccount = null
+  authState.security = null
   localStorage.removeItem(STORAGE_KEY)
 }
 
@@ -59,6 +64,7 @@ function applyTokenResponse(payload) {
   authState.refreshToken = payload.refresh_token
   authState.user = payload.user
   authState.playerAccount = payload.player_account
+  authState.security = null
   persistAuth()
 }
 
@@ -118,7 +124,21 @@ export async function reloadMe() {
   const response = await getMe(authState.accessToken)
   authState.user = response.user
   authState.playerAccount = response.player_account
+  authState.security = response.security || null
   persistAuth()
+  return response
+}
+
+export async function revokeOtherSessionsForCurrentAccount() {
+  if (!authState.accessToken || !authState.refreshToken) {
+    throw new Error('Нет активной сессии для управления другими входами.')
+  }
+
+  const response = await revokeOtherSessions(authState.accessToken, {
+    refresh_token: authState.refreshToken,
+  })
+
+  await reloadMe()
   return response
 }
 
@@ -145,5 +165,16 @@ export function useAuthStore() {
       () => authState.playerAccount?.minecraft_nickname || authState.user?.site_login || 'Игрок',
     ),
     emailVerified: computed(() => Boolean(authState.user?.email_verified)),
+    nicknameLocked: computed(() => Boolean(authState.playerAccount?.nickname_locked)),
+    legacyAuthEnabled: computed(() => Boolean(authState.playerAccount?.legacy_auth_enabled)),
+    activeSessions: computed(() => Number(authState.security?.active_refresh_sessions || 0)),
+    mustUseLauncher: computed(() => Boolean(authState.security?.must_use_launcher)),
+    legacyReady: computed(() => Boolean(authState.security?.legacy_ready)),
+    legacyHashPresent: computed(() => Boolean(authState.security?.legacy_hash_present)),
+    accountModeText: computed(() => {
+      if (authState.security?.must_use_launcher) return 'Только официальный лаунчер'
+      if (authState.playerAccount?.legacy_auth_enabled) return 'Смешанный режим: лаунчер + legacy'
+      return 'Режим не определён'
+    }),
   }
 }

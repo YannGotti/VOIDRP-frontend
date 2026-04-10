@@ -36,6 +36,16 @@ export function getMe(accessToken) {
   })
 }
 
+export function revokeOtherSessions(accessToken, payload) {
+  return apiRequest('/account/revoke-other-sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
 export function verifyEmail(payload) {
   return apiRequest('/auth/verify-email', {
     method: 'POST',
