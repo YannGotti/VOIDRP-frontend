@@ -52,10 +52,10 @@ async function resolveReferralCode(code) {
     const payload = await previewReferralCode(normalized)
     referralPreview.value = payload
     referralMessage.value = referralPreviewLabel.value
-      ? `Приглашение найдено: ${referralPreviewLabel.value}.`
+      ? `Код найден: ${referralPreviewLabel.value}.`
       : 'Код приглашения найден.'
   } catch (error) {
-    referralError.value = error.message || 'Не удалось проверить referral code.'
+    referralError.value = error.message || 'Не удалось проверить код приглашения.'
   } finally {
     isCheckingReferral.value = false
   }
@@ -119,8 +119,8 @@ onMounted(async () => {
         <div class="surface-card p-6 md:p-8 lg:p-10">
           <div class="section-kicker">Регистрация</div>
           <h1 class="section-title">Создать аккаунт VoidRP</h1>
-          <p class="section-subtitle">
-            Этот аккаунт нужен для сайта, кабинета и официального лаунчера. После регистрации письмо для подтверждения почты отправится автоматически.
+          <p class="section-subtitle max-w-3xl">
+            Один аккаунт нужен для сайта, кабинета и официального лаунчера. После регистрации письмо для подтверждения почты отправится автоматически.
           </p>
 
           <form class="mt-8 grid gap-4 md:grid-cols-2" @submit.prevent="submit">
@@ -149,10 +149,10 @@ onMounted(async () => {
               <input v-model="form.password_repeat" type="password" class="input" required />
             </label>
 
-            <div class="md:col-span-2 rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-5">
+            <div class="md:col-span-2 rounded-[1.5rem] border border-white/10 bg-slate-950/65 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
               <div class="flex flex-col gap-3 md:flex-row md:items-end">
                 <label class="flex-1">
-                  <span class="field-label">Referral code</span>
+                  <span class="field-label">Код приглашения</span>
                   <input
                     v-model="form.referral_code"
                     class="input"
@@ -162,7 +162,7 @@ onMounted(async () => {
 
                 <button
                   type="button"
-                  class="btn btn-outline"
+                  class="btn btn-outline md:min-w-[12.5rem]"
                   :disabled="isCheckingReferral || !form.referral_code.trim()"
                   @click="resolveReferralCode(form.referral_code)"
                 >
@@ -171,8 +171,8 @@ onMounted(async () => {
                 </button>
               </div>
 
-              <p class="helper-text">
-                Если тебя пригласил другой игрок, укажи его код. Это зачтётся в его реферальный прогресс.
+              <p class="helper-text mt-3">
+                Если тебя пригласил другой игрок, укажи его код. Это засчитается в его реферальный прогресс.
               </p>
 
               <p v-if="referralMessage" class="alert alert-success mt-4">{{ referralMessage }}</p>
@@ -181,12 +181,12 @@ onMounted(async () => {
 
             <p v-if="errorMessage" class="alert alert-error md:col-span-2">{{ errorMessage }}</p>
 
-            <div class="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="md:col-span-2 flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
                 <span v-if="isSubmitting" class="spinner"></span>
                 <span>{{ isSubmitting ? 'Создаём аккаунт...' : 'Создать аккаунт' }}</span>
               </button>
-              <RouterLink to="/login" class="font-semibold text-indigo-700">
+              <RouterLink to="/login" class="text-sm font-semibold text-violet-300 transition hover:text-violet-200">
                 Уже зарегистрирован? Войти
               </RouterLink>
             </div>
@@ -197,18 +197,18 @@ onMounted(async () => {
           <div class="section-kicker section-kicker--light">Что получит игрок</div>
           <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Нормальный старт без ручной настройки</h2>
           <p class="mt-4 text-base leading-8 text-white/78">
-            После регистрации у тебя появится кабинет, публичный профиль и прямой путь к скачиванию лаунчера.
+            После регистрации откроется кабинет, публичный профиль и прямой путь к скачиванию лаунчера.
           </p>
 
           <div class="mt-8 grid gap-3">
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/8 p-4 text-sm leading-7 text-white/80">
               Один аккаунт для сайта и официального лаунчера.
             </div>
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/8 p-4 text-sm leading-7 text-white/80">
               Письмо подтверждения отправится автоматически.
             </div>
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
-              Ник, баннер, фон и статус можно будет настроить в удобном редакторе.
+            <div class="rounded-[1.3rem] border border-white/10 bg-white/8 p-4 text-sm leading-7 text-white/80">
+              Аватар, баннер, фон и описание можно будет настроить позже в профиле.
             </div>
           </div>
         </aside>

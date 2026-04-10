@@ -15,25 +15,25 @@ const isAuthenticated = computed(() => auth.isAuthenticated.value)
           <div class="section-kicker">Лаунчер</div>
           <h1 class="section-title">Скачать официальный лаунчер VoidRP</h1>
           <p class="section-subtitle">
-            Это основной способ входа на сервер. Лаунчер сам подготовит игру и запустит нужную сборку без лишней ручной настройки.
+            Это основной способ входа на сервер. Лаунчер сам подготовит игру и запустит нужную сборку.
           </p>
 
-          <div class="mt-8 rounded-[1.6rem] border border-slate-200 bg-slate-50/90 p-5">
-            <div class="metric-label">Твой статус</div>
-            <div class="mt-3 text-2xl font-black tracking-tight text-slate-950">
-              {{ isAuthenticated ? 'Можно скачивать и заходить' : 'Сначала создай аккаунт или войди' }}
+          <div class="mt-6 rounded-[1.6rem] border border-white/10 bg-black/20 p-5">
+            <div class="metric-label">Сейчас</div>
+            <div class="mt-3 text-2xl font-black tracking-tight text-slate-50">
+              {{ isAuthenticated ? 'Всё готово для скачивания' : 'Сначала нужен вход в аккаунт' }}
             </div>
-            <p class="mt-3 text-sm leading-7 text-slate-600">
+            <p class="mt-3 text-sm leading-7 text-slate-300">
               <template v-if="isAuthenticated">
-                Ты вошёл как <strong>{{ auth.displayName.value }}</strong>. Теперь можно скачать лаунчер и использовать тот же аккаунт для входа.
+                Ты вошёл как <strong>{{ auth.displayName.value }}</strong>. Можешь скачать лаунчер и запускать игру этим же аккаунтом.
               </template>
               <template v-else>
-                Сначала зарегистрируйся или войди в уже существующий аккаунт. После этого путь к игре станет прямым и понятным.
+                Зарегистрируйся или войди в существующий аккаунт. После этого скачивание и вход в игру станут доступными.
               </template>
             </p>
 
             <div v-if="isAuthenticated && !auth.emailVerified.value" class="alert alert-warn mt-4">
-              Почта ещё не подтверждена. Играть это обычно не мешает, но лучше завершить этот шаг заранее.
+              Почта ещё не подтверждена. Лучше завершить этот шаг заранее.
             </div>
           </div>
 
@@ -50,28 +50,28 @@ const isAuthenticated = computed(() => auth.isAuthenticated.value)
             <RouterLink v-else to="/register" class="btn btn-primary">Создать аккаунт</RouterLink>
             <RouterLink v-if="!isAuthenticated" to="/login" class="btn btn-outline">Войти</RouterLink>
             <RouterLink v-if="isAuthenticated" to="/profile" class="btn btn-outline">Открыть кабинет</RouterLink>
-            <RouterLink v-if="isAuthenticated && !auth.emailVerified.value" to="/verify-email" class="btn btn-ghost">
+            <RouterLink v-if="isAuthenticated && !auth.emailVerified.value" to="/verify-email" class="btn btn-outline">
               Подтвердить почту
             </RouterLink>
           </div>
         </div>
 
-        <div class="gradient-panel p-6 md:p-8 lg:p-10">
-          <div class="section-kicker section-kicker--light">Как начать</div>
-          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Что делать дальше</h2>
+        <div class="surface-card p-6 md:p-8 lg:p-10">
+          <div class="section-kicker">Что дальше</div>
+          <h2 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">Три простых шага</h2>
 
           <div class="mt-6 grid gap-3">
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4">
-              <p class="text-sm font-black text-white">1. Аккаунт</p>
-              <p class="mt-2 text-sm leading-7 text-white/78">Укажи логин, почту и свой игровой ник.</p>
+            <div class="action-card">
+              <p class="text-sm font-black text-slate-50">1. Войти на сайте</p>
+              <p class="mt-2 text-sm leading-7 text-slate-300">Используй свой аккаунт VoidRP.</p>
             </div>
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4">
-              <p class="text-sm font-black text-white">2. Лаунчер</p>
-              <p class="mt-2 text-sm leading-7 text-white/78">Скачай его и войди под тем же аккаунтом.</p>
+            <div class="action-card">
+              <p class="text-sm font-black text-slate-50">2. Скачать лаунчер</p>
+              <p class="mt-2 text-sm leading-7 text-slate-300">Получишь актуальную и уже настроенную сборку.</p>
             </div>
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4">
-              <p class="text-sm font-black text-white">3. Играй</p>
-              <p class="mt-2 text-sm leading-7 text-white/78">Лаунчер проверит файлы, подготовит клиент и запустит игру.</p>
+            <div class="action-card">
+              <p class="text-sm font-black text-slate-50">3. Нажать «Играть»</p>
+              <p class="mt-2 text-sm leading-7 text-slate-300">Лаунчер всё проверит и запустит игру.</p>
             </div>
           </div>
         </div>

@@ -12,12 +12,12 @@ import { siteConfig } from '../config.site'
             Создай аккаунт {{ siteConfig.serverName }} и переходи к игре без лишних шагов
           </h2>
           <p class="mt-4 max-w-2xl text-base leading-8 text-white/78">
-            Регистрация, подтверждение почты, скачивание официального лаунчера и запуск собраны в цельный понятный путь.
+            Регистрация, подтверждение почты, скачивание официального лаунчера и запуск собраны в один понятный dark-flow.
           </p>
         </div>
 
         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-          <RouterLink to="/register" class="btn btn-primary bg-white !text-slate-950 shadow-none">
+          <RouterLink to="/register" class="btn btn-primary">
             Создать аккаунт
           </RouterLink>
           <RouterLink to="/download-launcher" class="btn btn-light">

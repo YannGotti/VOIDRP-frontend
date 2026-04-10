@@ -1,6 +1,7 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { getNationsList } from '../services/nationsApi'
 import { getPublicProfileBySlug } from '../services/profileApi'
 import { followProfile, unfollowProfile } from '../services/socialApi'
 import { useAuthStore } from '../stores/authStore'
@@ -13,14 +14,15 @@ const error = ref('')
 const actionMessage = ref('')
 const followLoading = ref(false)
 const profile = ref(null)
+const publicNation = ref(null)
 
 function hexToRgba(hex, alpha) {
-  if (!hex || typeof hex !== 'string') return `rgba(91, 108, 255, ${alpha})`
+  if (!hex || typeof hex !== 'string') return `rgba(139, 92, 246, ${alpha})`
   const value = hex.replace('#', '')
   const normalized = value.length === 3 ? value.split('').map((x) => x + x).join('') : value
 
   if (normalized.length !== 6) {
-    return `rgba(91, 108, 255, ${alpha})`
+    return `rgba(139, 92, 246, ${alpha})`
   }
 
   const intValue = Number.parseInt(normalized, 16)
@@ -31,53 +33,74 @@ function hexToRgba(hex, alpha) {
 }
 
 const displayName = computed(() => {
-  return (
-    profile.value?.display_name ||
-    profile.value?.player_account?.minecraft_nickname ||
-    profile.value?.user?.site_login ||
-    'Игрок'
-  )
+  return profile.value?.display_name || profile.value?.player_account?.minecraft_nickname || profile.value?.user?.site_login || 'Игрок'
 })
 
 const avatarFallback = computed(() => displayName.value.slice(0, 1).toUpperCase())
-const accent = computed(() => profile.value?.accent_color || '#6d5df6')
+const accent = computed(() => profile.value?.accent_color || '#8b5cf6')
 const avatarUrl = computed(() => profile.value?.assets?.avatar_url || profile.value?.assets?.avatar_preview_url || '')
 const bannerUrl = computed(() => profile.value?.assets?.banner_url || profile.value?.assets?.banner_preview_url || '')
 const backgroundUrl = computed(() => profile.value?.assets?.background_url || profile.value?.assets?.background_preview_url || '')
+const nationLink = computed(() => (publicNation.value?.slug ? `/nation/${publicNation.value.slug}` : ''))
 
-const pageShellStyle = computed(() => {
+const routeBackground = computed(() => {
+  const accentGlow = hexToRgba(accent.value, 0.22)
   if (!backgroundUrl.value) {
-    return {
-      background:
-        `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.16)} 0%, transparent 28%), ` +
-        'linear-gradient(180deg, rgba(248,250,252,0.96) 0%, rgba(238,242,255,0.98) 100%)',
-    }
+    return [
+      `radial-gradient(circle at top left, ${accentGlow} 0%, transparent 24%)`,
+      `radial-gradient(circle at top right, ${hexToRgba(accent.value, 0.16)} 0%, transparent 28%)`,
+      'linear-gradient(180deg, #05070f 0%, #0a0f1c 48%, #10192c 100%)',
+    ].join(', ')
   }
 
-  return {
-    backgroundImage:
-      `linear-gradient(180deg, rgba(248,250,252,0.88), rgba(241,245,249,0.94)), url(${backgroundUrl.value})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-  }
+  return [
+    'linear-gradient(180deg, rgba(4,6,11,0.62), rgba(4,6,11,0.9))',
+    `radial-gradient(circle at top left, ${accentGlow} 0%, transparent 28%)`,
+    `url(${backgroundUrl.value})`,
+  ].join(', ')
 })
+
+const pageShellStyle = computed(() => ({
+  borderColor: hexToRgba(accent.value, 0.2),
+  boxShadow: `0 28px 80px ${hexToRgba(accent.value, 0.16)}`,
+  background: 'linear-gradient(180deg, rgba(7,11,20,0.48), rgba(7,11,20,0.32))',
+}))
 
 const heroStyle = computed(() => {
   if (bannerUrl.value) {
     return {
-      backgroundImage:
-        `linear-gradient(180deg, rgba(15,23,42,0.14), rgba(15,23,42,0.74)), url(${bannerUrl.value})`,
+      backgroundImage: [
+        'linear-gradient(180deg, rgba(4,6,11,0.05), rgba(4,6,11,0.74))',
+        `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.28)} 0%, transparent 32%)`,
+        `url(${bannerUrl.value})`,
+      ].join(', '),
       backgroundSize: 'cover',
       backgroundPosition: 'center',
     }
   }
 
   return {
-    background:
-      `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.28)} 0%, transparent 32%), ` +
-      'linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(17,24,39,0.98) 52%, rgba(31,45,99,1) 100%)',
+    background: [
+      `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.36)} 0%, transparent 32%)`,
+      'linear-gradient(135deg, rgba(6,9,19,0.96) 0%, rgba(10,15,27,0.98) 56%, rgba(22,28,48,1) 100%)',
+    ].join(', '),
   }
 })
+
+const cardStyle = computed(() => ({
+  borderColor: hexToRgba(accent.value, 0.16),
+  background: `linear-gradient(180deg, rgba(10,15,27,0.84), ${hexToRgba(accent.value, 0.08)})`,
+}))
+
+const accentBadgeStyle = computed(() => ({
+  borderColor: accent.value,
+  backgroundColor: hexToRgba(accent.value, 0.12),
+  color: accent.value,
+}))
+
+const accentLineStyle = computed(() => ({
+  background: `linear-gradient(90deg, ${accent.value}, ${hexToRgba(accent.value, 0.12)})`,
+}))
 
 const canFollow = computed(() => {
   if (!profile.value) return false
@@ -94,19 +117,45 @@ const stats = computed(() => {
   ]
 })
 
-const accentBadgeStyle = computed(() => ({
-  borderColor: accent.value,
-  backgroundColor: hexToRgba(accent.value, 0.14),
-  color: accent.value,
-}))
+const profileFacts = computed(() => {
+  const items = []
 
-const accentDotStyle = computed(() => ({
-  backgroundColor: accent.value,
-}))
+  if (profile.value?.player_account?.minecraft_nickname) {
+    items.push({ label: 'Игровой ник', value: profile.value.player_account.minecraft_nickname })
+  }
 
-const accentLineStyle = computed(() => ({
-  background: `linear-gradient(90deg, ${accent.value}, transparent)`,
-}))
+  if (publicNation.value?.title) {
+    items.push({
+      label: 'Государство',
+      value: publicNation.value.title,
+      hint: publicNation.value.tag ? `[${publicNation.value.tag}]` : '',
+      to: nationLink.value,
+    })
+  }
+
+  if (profile.value?.status_text) {
+    items.push({ label: 'Статус', value: profile.value.status_text })
+  }
+
+  return items
+})
+
+function applyRouteBackground(value) {
+  document.documentElement.style.setProperty('--route-bg', value)
+}
+
+async function resolvePublicNation(userId) {
+  publicNation.value = null
+  if (!userId) return
+
+  try {
+    const payload = await getNationsList(authStore.accessToken || null)
+    const items = Array.isArray(payload?.items) ? payload.items : []
+    publicNation.value = items.find((item) => Array.isArray(item.members) && item.members.some((member) => member.user_id === userId)) || null
+  } catch {
+    publicNation.value = null
+  }
+}
 
 async function loadProfile() {
   loading.value = true
@@ -114,7 +163,9 @@ async function loadProfile() {
   actionMessage.value = ''
 
   try {
-    profile.value = await getPublicProfileBySlug(route.params.slug, authStore.accessToken || null)
+    const payload = await getPublicProfileBySlug(route.params.slug, authStore.accessToken || null)
+    profile.value = payload
+    await resolvePublicNation(payload?.user?.id)
   } catch (err) {
     error.value = err.message || 'Не удалось загрузить профиль.'
   } finally {
@@ -158,67 +209,67 @@ async function copyProfileLink() {
 }
 
 watch(() => route.params.slug, loadProfile)
+watch(routeBackground, (value) => applyRouteBackground(value), { immediate: true })
 onMounted(loadProfile)
+onBeforeUnmount(() => {
+  document.documentElement.style.removeProperty('--route-bg')
+})
 </script>
 
 <template>
-  <section class="py-8 md:py-10">
+  <section class="py-6 md:py-8">
     <div class="container-shell">
       <div v-if="loading" class="space-y-5">
-        <div class="skeleton h-[320px] rounded-[30px]"></div>
-        <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <div class="skeleton h-[300px] rounded-[28px]"></div>
+        <div class="skeleton h-[280px] rounded-[30px]"></div>
+        <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div class="skeleton h-[220px] rounded-[28px]"></div>
+          <div class="skeleton h-[180px] rounded-[28px]"></div>
         </div>
       </div>
 
-      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">
-        {{ error }}
-      </div>
+      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">{{ error }}</div>
 
-      <div v-else-if="profile" class="page-backdrop rounded-[32px]" :style="pageShellStyle">
+      <div v-else-if="profile" class="page-backdrop route-shell overflow-hidden rounded-[32px] border" :style="pageShellStyle">
         <div class="p-3 md:p-4">
-          <div class="space-y-5">
-            <section class="relative overflow-hidden rounded-[28px]" :style="heroStyle">
-              <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/65"></div>
+          <div class="space-y-4">
+            <section class="relative overflow-hidden rounded-[28px] shadow-[0_26px_100px_rgba(0,0,0,0.36)]" :style="heroStyle">
+              <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/72"></div>
 
-              <div class="relative px-5 pb-6 pt-6 md:px-8 md:pb-8 md:pt-8">
+              <div class="relative px-5 pb-5 pt-5 md:px-7 md:pb-7 md:pt-7">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="rounded-full border border-white/18 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/86 backdrop-blur-md">
-                    Публичный профиль
+                  <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
+                    Профиль игрока
                   </span>
-                  <span class="rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] bg-white/90" :style="accentBadgeStyle">
+                  <span class="rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em]" :style="accentBadgeStyle">
                     Акцент
                   </span>
+                  <RouterLink
+                    v-if="publicNation?.slug"
+                    :to="nationLink"
+                    class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md transition hover:bg-black/40"
+                  >
+                    {{ publicNation.title }}
+                  </RouterLink>
                 </div>
 
-                <div class="mt-14 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                <div class="mt-12 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                   <div class="flex min-w-0 items-end gap-4">
-                    <div class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[26px] border-4 border-white/90 bg-white text-3xl font-black uppercase text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.16)]">
+                    <div class="flex h-22 w-22 items-center justify-center overflow-hidden rounded-[24px] border-4 border-white/90 bg-slate-900 text-3xl font-black uppercase text-slate-100 shadow-[0_18px_50px_rgba(0,0,0,0.4)] md:h-24 md:w-24">
                       <img v-if="avatarUrl" :src="avatarUrl" alt="avatar" class="h-full w-full object-cover" />
                       <span v-else>{{ avatarFallback }}</span>
                     </div>
 
                     <div class="min-w-0 pb-1 text-white">
-                      <div class="flex items-center gap-2">
-                        <span class="h-2.5 w-2.5 rounded-full" :style="accentDotStyle"></span>
-                        <span class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/72">
-                          Цвет страницы
-                        </span>
-                      </div>
-
-                      <h1 class="truncate text-3xl font-black tracking-tight md:text-4xl">
+                      <h1 class="break-words text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] md:text-4xl">
                         {{ displayName }}
                       </h1>
 
                       <p class="mt-2 text-sm text-white/76 md:text-base">
                         @{{ profile.slug }}
-                        <span v-if="profile.player_account?.minecraft_nickname">
-                          · {{ profile.player_account.minecraft_nickname }}
-                        </span>
+                        <template v-if="profile.player_account?.minecraft_nickname">· {{ profile.player_account.minecraft_nickname }}</template>
                       </p>
 
-                      <p v-if="profile.status_text" class="mt-3 max-w-2xl text-sm leading-6 text-white/88 md:text-[15px]">
+                      <p v-if="profile.status_text" class="mt-3 max-w-2xl text-sm leading-6 text-white/90 md:text-[15px]">
                         {{ profile.status_text }}
                       </p>
                     </div>
@@ -227,31 +278,19 @@ onMounted(loadProfile)
                   <div class="flex flex-wrap gap-3">
                     <button
                       v-if="canFollow"
-                      class="btn btn-outline rounded-2xl border-white/20 bg-white text-slate-950 hover:bg-white/90"
+                      class="btn btn-light rounded-2xl"
                       :disabled="followLoading"
                       @click="toggleFollow"
                     >
                       <span v-if="followLoading" class="spinner"></span>
-                      <span>{{ profile.viewer?.is_following ? 'Отписаться' : 'Подписаться' }}</span>
+                      <span v-else>{{ profile.viewer?.is_following ? 'Отписаться' : 'Подписаться' }}</span>
                     </button>
 
-                    <RouterLink
-                      v-else-if="!profile.viewer?.is_self && !authStore.isAuthenticated.value"
-                      to="/login"
-                      class="btn btn-outline rounded-2xl border-white/20 bg-white text-slate-950 hover:bg-white/90"
-                    >
-                      Войти, чтобы подписаться
-                    </RouterLink>
-
-                    <RouterLink
-                      v-if="profile.viewer?.is_self"
-                      to="/profile/public"
-                      class="btn btn-light rounded-2xl"
-                    >
+                    <RouterLink v-if="profile.viewer?.is_self" to="/profile/public" class="btn btn-outline rounded-2xl">
                       Редактировать
                     </RouterLink>
 
-                    <button type="button" class="btn btn-light rounded-2xl" @click="copyProfileLink">
+                    <button type="button" class="btn btn-outline rounded-2xl" @click="copyProfileLink">
                       Поделиться
                     </button>
                   </div>
@@ -263,53 +302,47 @@ onMounted(loadProfile)
               {{ actionMessage }}
             </div>
 
-            <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-              <section class="surface-card p-5 md:p-6">
+            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <section class="surface-card p-4 md:p-5" :style="cardStyle">
                 <div class="section-kicker !mb-2">О себе</div>
-                <h2 class="text-xl font-black text-slate-950 md:text-2xl">Описание игрока</h2>
-
-                <div class="mt-4 h-[2px] w-full rounded-full" :style="accentLineStyle"></div>
-
-                <p class="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700 md:text-[15px]">
-                  {{ profile.bio || 'Игрок пока не добавил описание.' }}
-                </p>
-
-                <div class="metric-grid metric-grid-3 mt-6">
-                  <div v-for="item in stats" :key="item.label" class="metric-card text-center">
-                    <p class="text-2xl font-black text-slate-950">{{ item.value }}</p>
-                    <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                      {{ item.label }}
+                <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div class="min-w-0 flex-1">
+                    <h2 class="text-lg font-black text-slate-50 md:text-xl">Описание игрока</h2>
+                    <div class="mt-3 h-[2px] w-full rounded-full" :style="accentLineStyle"></div>
+                    <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300 md:text-[15px]">
+                      {{ profile.bio || 'Игрок пока ничего о себе не написал.' }}
                     </p>
+                  </div>
+
+                  <div class="grid min-w-0 gap-3 sm:grid-cols-3 md:w-[360px]">
+                    <div v-for="item in stats" :key="item.label" class="metric-card profile-stat-card text-center" :style="cardStyle">
+                      <p class="text-[1.7rem] font-black leading-none text-slate-50">{{ item.value }}</p>
+                      <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">
+                        {{ item.label }}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </section>
 
-              <aside class="space-y-5">
-                <section class="surface-card p-5 md:p-6">
-                  <div class="section-kicker !mb-2">Кратко</div>
-                  <h2 class="text-xl font-black text-slate-950">О профиле</h2>
+              <aside class="space-y-4">
+                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                  <div class="section-kicker !mb-2">Игрок</div>
+                  <h2 class="text-lg font-black text-slate-50">Коротко</h2>
 
                   <div class="mt-4 space-y-3">
-                    <div class="action-card">
-                      <p class="metric-label">Логин</p>
-                      <p class="mt-2 break-all text-sm font-semibold text-slate-900">
-                        {{ profile.user?.site_login }}
-                      </p>
-                    </div>
-
-                    <div class="action-card">
-                      <p class="metric-label">Видимость</p>
-                      <p class="mt-2 text-sm font-semibold text-slate-900">
-                        {{ profile.is_public ? 'Публичный' : 'Скрытый' }}
-                      </p>
-                    </div>
-
-                    <div v-if="profile.current_referral_rank" class="action-card">
-                      <p class="metric-label">Ранг</p>
-                      <p class="mt-2 text-sm font-semibold text-slate-900">
-                        {{ profile.current_referral_rank }}
-                      </p>
-                    </div>
+                    <component
+                      :is="item.to ? RouterLink : 'div'"
+                      v-for="item in profileFacts"
+                      :key="item.label"
+                      :to="item.to"
+                      class="action-card block transition"
+                      :style="cardStyle"
+                    >
+                      <p class="metric-label">{{ item.label }}</p>
+                      <p class="mt-2 text-sm font-semibold text-slate-100">{{ item.value }}</p>
+                      <p v-if="item.hint" class="mt-1 text-sm leading-6 text-slate-400">{{ item.hint }}</p>
+                    </component>
                   </div>
                 </section>
               </aside>

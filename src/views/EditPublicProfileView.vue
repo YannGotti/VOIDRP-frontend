@@ -41,21 +41,13 @@ const form = reactive({
   bio: '',
   status_text: '',
   theme_mode: 'default',
-  accent_color: '#6d5df6',
+  accent_color: '#8b5cf6',
   is_public: true,
   allow_followers_list_public: true,
   allow_friends_list_public: true,
 })
 
-const colorPresets = [
-  '#6d5df6',
-  '#4f46e5',
-  '#2563eb',
-  '#0f766e',
-  '#0f172a',
-  '#b91c1c',
-  '#f59e0b',
-]
+const colorPresets = ['#8b5cf6', '#7c3aed', '#3b82f6', '#14b8a6', '#ef4444', '#f59e0b', '#ec4899']
 
 const selectedFileNames = computed(() => ({
   avatar: selectedFiles.avatar?.name || '',
@@ -72,49 +64,13 @@ const publicProfileUrl = computed(() => {
 const completionItems = computed(() => {
   const assets = profile.value?.assets || {}
   return [
-    {
-      key: 'slug',
-      label: 'Ссылка профиля',
-      ready: Boolean(form.slug?.trim()),
-      missingText: 'Добавь slug, чтобы страница открывалась по красивой ссылке.',
-    },
-    {
-      key: 'display_name',
-      label: 'Имя профиля',
-      ready: Boolean(form.display_name?.trim()),
-      missingText: 'Укажи отображаемое имя.',
-    },
-    {
-      key: 'status_text',
-      label: 'Короткий статус',
-      ready: Boolean(form.status_text?.trim()),
-      missingText: 'Добавь короткую строку под именем.',
-    },
-    {
-      key: 'bio',
-      label: 'Описание',
-      ready: Boolean(form.bio?.trim()),
-      missingText: 'Заполни блок «О себе».',
-    },
-    {
-      key: 'avatar',
-      label: 'Аватар',
-      ready: Boolean(assets.avatar_url || assets.avatar_preview_url),
-      missingText: 'Загрузи аватар.',
-    },
-    {
-      key: 'banner',
-      label: 'Баннер',
-      ready: Boolean(assets.banner_url || assets.banner_preview_url),
-      missingText: 'Загрузи баннер.',
-    },
-    {
-      key: 'background',
-      label: 'Фон страницы',
-      ready: Boolean(assets.background_url || assets.background_preview_url),
-      missingText: 'Фон необязателен, но он делает страницу богаче.',
-      optional: true,
-    },
+    { key: 'slug', label: 'Ссылка', ready: Boolean(form.slug?.trim()), missingText: 'Добавь slug, чтобы страница открывалась по красивой ссылке.' },
+    { key: 'display_name', label: 'Имя', ready: Boolean(form.display_name?.trim()), missingText: 'Укажи отображаемое имя.' },
+    { key: 'status_text', label: 'Статус', ready: Boolean(form.status_text?.trim()), missingText: 'Добавь короткую строку под именем.' },
+    { key: 'bio', label: 'Описание', ready: Boolean(form.bio?.trim()), missingText: 'Заполни блок «О себе».' },
+    { key: 'avatar', label: 'Аватар', ready: Boolean(assets.avatar_url || assets.avatar_preview_url), missingText: 'Загрузи аватар.' },
+    { key: 'banner', label: 'Баннер', ready: Boolean(assets.banner_url || assets.banner_preview_url), missingText: 'Загрузи баннер.' },
+    { key: 'background', label: 'Фон', ready: Boolean(assets.background_url || assets.background_preview_url), missingText: 'Фон необязателен, но делает страницу богаче.', optional: true },
   ]
 })
 
@@ -123,9 +79,9 @@ const completion = computed(() => {
   return Math.round((done / completionItems.value.length) * 100)
 })
 
-const missingItems = computed(() => {
-  return completionItems.value.filter((item) => !item.ready)
-})
+const requiredMissingItems = computed(() => completionItems.value.filter((item) => !item.ready && !item.optional))
+const showCompletionHints = computed(() => requiredMissingItems.value.length > 0)
+const showCompletionPanel = computed(() => completion.value < 100)
 
 function hydrateForm(payload) {
   profile.value = payload
@@ -134,7 +90,7 @@ function hydrateForm(payload) {
   form.bio = payload?.bio || ''
   form.status_text = payload?.status_text || ''
   form.theme_mode = payload?.theme_mode || 'default'
-  form.accent_color = payload?.accent_color || '#6d5df6'
+  form.accent_color = payload?.accent_color || '#8b5cf6'
   form.is_public = Boolean(payload?.is_public)
   form.allow_followers_list_public = Boolean(payload?.allow_followers_list_public)
   form.allow_friends_list_public = Boolean(payload?.allow_friends_list_public)
@@ -196,13 +152,11 @@ async function uploadSelected(slot) {
 
   try {
     let payload = null
-
     if (slot === 'avatar') payload = await uploadAvatar(authStore.accessToken, file)
     if (slot === 'banner') payload = await uploadBanner(authStore.accessToken, file)
     if (slot === 'background') payload = await uploadBackground(authStore.accessToken, file)
 
     selectedFiles[slot] = null
-
     if (payload) hydrateForm(payload)
     else await loadProfile()
 
@@ -221,13 +175,11 @@ async function removeAsset(slot) {
 
   try {
     let payload = null
-
     if (slot === 'avatar') payload = await deleteAvatar(authStore.accessToken)
     if (slot === 'banner') payload = await deleteBanner(authStore.accessToken)
     if (slot === 'background') payload = await deleteBackground(authStore.accessToken)
 
     selectedFiles[slot] = null
-
     if (payload) hydrateForm(payload)
     else await loadProfile()
 
@@ -269,50 +221,35 @@ onMounted(loadProfile)
       </div>
 
       <div v-else class="space-y-5">
-        <section class="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] md:px-7 md:py-6">
+        <section class="surface-card px-5 py-5 md:px-7 md:py-6">
           <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div class="max-w-3xl">
               <div class="section-kicker !mb-2">Редактор профиля</div>
-              <h1 class="text-2xl font-black tracking-tight text-slate-950 md:text-3xl">
+              <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
                 Внешний вид профиля
               </h1>
-              <p class="mt-2 text-sm leading-6 text-slate-600 md:text-[15px]">
-                Баннер отвечает только за верхнюю обложку. Фон — за весь холст страницы. Акцентный цвет
-                работает отдельно и не должен теряться даже при загруженных картинках.
+              <p class="mt-2 text-sm leading-6 text-slate-400 md:text-[15px]">
+                Баннер отвечает только за верхнюю обложку. Фон меняет весь холст публичной страницы. Акцентный цвет должен быть заметен и на превью, и на реальном профиле.
               </p>
             </div>
 
             <div class="flex flex-wrap gap-3">
-              <RouterLink to="/profile" class="btn btn-outline rounded-2xl">
-                Кабинет
-              </RouterLink>
-
-              <button
-                v-if="publicProfileUrl"
-                type="button"
-                class="btn btn-outline rounded-2xl"
-                @click="copyPublicLink"
-              >
-                Копировать ссылку
-              </button>
-
+              <RouterLink to="/profile" class="btn btn-outline rounded-2xl">Кабинет</RouterLink>
+              <button v-if="publicProfileUrl" type="button" class="btn btn-outline rounded-2xl" @click="copyPublicLink">Копировать ссылку</button>
               <button type="button" class="btn btn-primary rounded-2xl" :disabled="saving" @click="saveProfile">
-                <span v-if="saving" class="loading loading-spinner loading-sm"></span>
+                <span v-if="saving" class="spinner"></span>
                 <span v-else>Сохранить</span>
               </button>
             </div>
           </div>
 
-          <div class="mt-5 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4">
+          <div v-if="showCompletionPanel" class="mt-5 rounded-[20px] border border-white/10 bg-black/20 px-4 py-4">
             <div class="flex items-center justify-between gap-3">
-              <span class="text-sm font-semibold text-slate-800">Готовность профиля</span>
-              <span class="text-sm font-bold text-slate-700">{{ completion }}%</span>
+              <span class="text-sm font-semibold text-slate-200">Готовность профиля</span>
+              <span class="text-sm font-bold text-slate-300">{{ completion }}%</span>
             </div>
-            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-              <div
-                class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 transition-all"
-                :style="{ width: `${completion}%` }"
-              ></div>
+            <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
+              <div class="h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500 transition-all" :style="{ width: `${completion}%` }"></div>
             </div>
 
             <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -320,7 +257,7 @@ onMounted(loadProfile)
                 v-for="item in completionItems"
                 :key="item.key"
                 class="rounded-[18px] border px-4 py-3 text-sm"
-                :class="item.ready ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-700'"
+                :class="item.ready ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300' : 'border-white/10 bg-slate-950/50 text-slate-300'"
               >
                 <p class="font-semibold">{{ item.label }}</p>
                 <p class="mt-1 text-xs uppercase tracking-[0.14em]">
@@ -329,60 +266,40 @@ onMounted(loadProfile)
               </div>
             </div>
 
-            <div v-if="missingItems.length" class="mt-4 rounded-[18px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div v-if="showCompletionHints" class="mt-4 rounded-[18px] border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
               <p class="font-semibold">Что ещё можно дополнить:</p>
-              <ul class="mt-2 space-y-1 list-disc pl-5">
-                <li v-for="item in missingItems" :key="`missing-${item.key}`">
-                  {{ item.missingText }}
-                </li>
+              <ul class="mt-2 list-disc space-y-1 pl-5">
+                <li v-for="item in requiredMissingItems" :key="`missing-${item.key}`">{{ item.missingText }}</li>
               </ul>
             </div>
           </div>
 
-          <p v-if="error" class="mt-4 rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {{ error }}
-          </p>
-
-          <p v-if="success" class="mt-4 rounded-[18px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {{ success }}
-          </p>
+          <p v-if="error" class="alert alert-error mt-4">{{ error }}</p>
+          <p v-if="success" class="alert alert-success mt-4">{{ success }}</p>
         </section>
 
         <div class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
           <aside class="space-y-5">
-            <section class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] md:p-6">
+            <section class="surface-card p-5 md:p-6">
               <div class="section-kicker !mb-2">Превью</div>
-              <h2 class="text-xl font-black text-slate-950 md:text-2xl">Как страница выглядит</h2>
-              <p class="mt-2 text-sm leading-6 text-slate-600">
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Как страница выглядит</h2>
+              <p class="mt-2 text-sm leading-6 text-slate-400">
                 Здесь фон страницы отделён от баннера. Баннер влияет только на hero, а фон — на весь профиль.
               </p>
 
               <div class="mt-5">
-                <PublicProfileStudioPreview
-                  :profile="profile"
-                  :form="form"
-                  :public-profile-url="publicProfileUrl"
-                />
+                <PublicProfileStudioPreview :profile="profile" :form="form" :public-profile-url="publicProfileUrl" />
               </div>
             </section>
 
-            <section class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] md:p-6">
+            <section class="surface-card p-5 md:p-6">
               <div class="section-kicker !mb-2">Акцент</div>
-              <h2 class="text-xl font-black text-slate-950 md:text-2xl">Цвет страницы</h2>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Цвет страницы</h2>
 
-              <div class="mt-5 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <div class="mt-5 rounded-[22px] border border-white/10 bg-black/20 p-4">
                 <div class="flex items-center gap-4">
-                  <input
-                    v-model="form.accent_color"
-                    type="color"
-                    class="h-14 w-16 cursor-pointer rounded-2xl border border-slate-200 bg-white p-1"
-                  />
-                  <input
-                    v-model="form.accent_color"
-                    type="text"
-                    class="input input-bordered h-14 flex-1 rounded-2xl"
-                    placeholder="#6d5df6"
-                  />
+                  <input v-model="form.accent_color" type="color" class="h-14 w-16 cursor-pointer rounded-2xl border border-white/10 bg-transparent p-1" />
+                  <input v-model="form.accent_color" type="text" class="input h-14 flex-1 rounded-2xl" placeholder="#8b5cf6" />
                 </div>
 
                 <div class="mt-4 flex flex-wrap gap-3">
@@ -390,7 +307,7 @@ onMounted(loadProfile)
                     v-for="color in colorPresets"
                     :key="color"
                     type="button"
-                    class="h-10 w-10 rounded-full border border-slate-200 shadow-sm transition hover:scale-105"
+                    class="h-10 w-10 rounded-full border border-white/10 shadow-sm transition hover:scale-105"
                     :style="{ backgroundColor: color }"
                     @click="form.accent_color = color"
                   ></button>
@@ -400,9 +317,9 @@ onMounted(loadProfile)
           </aside>
 
           <div class="space-y-5">
-            <section class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] md:p-6">
+            <section class="surface-card p-5 md:p-6">
               <div class="section-kicker !mb-2">Оформление</div>
-              <h2 class="text-xl font-black text-slate-950 md:text-2xl">Картинки профиля</h2>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Картинки профиля</h2>
 
               <div class="mt-5 space-y-4">
                 <ProfileMediaSlotCard
@@ -452,92 +369,60 @@ onMounted(loadProfile)
               </div>
             </section>
 
-            <section class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] md:p-6">
+            <section class="surface-card p-5 md:p-6">
               <div class="section-kicker !mb-2">Текст</div>
-              <h2 class="text-xl font-black text-slate-950 md:text-2xl">Имя и описание</h2>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Имя и описание</h2>
 
               <div class="mt-5 grid gap-4">
                 <label class="form-control">
-                  <span class="mb-2 text-sm font-semibold text-slate-700">Отображаемое имя</span>
-                  <input
-                    v-model="form.display_name"
-                    type="text"
-                    maxlength="32"
-                    class="input input-bordered rounded-2xl"
-                    placeholder="mironoouv"
-                  />
+                  <span class="mb-2 text-sm font-semibold text-slate-300">Отображаемое имя</span>
+                  <input v-model="form.display_name" type="text" maxlength="32" class="input rounded-2xl" placeholder="mironoouv" />
                 </label>
 
                 <label class="form-control">
-                  <span class="mb-2 text-sm font-semibold text-slate-700">Slug профиля</span>
-                  <input
-                    v-model="form.slug"
-                    type="text"
-                    maxlength="32"
-                    class="input input-bordered rounded-2xl"
-                    placeholder="mironoouv"
-                  />
+                  <span class="mb-2 text-sm font-semibold text-slate-300">Slug профиля</span>
+                  <input v-model="form.slug" type="text" maxlength="32" class="input rounded-2xl" placeholder="mironoouv" />
                 </label>
 
                 <label class="form-control">
-                  <span class="mb-2 text-sm font-semibold text-slate-700">Короткий статус</span>
-                  <input
-                    v-model="form.status_text"
-                    type="text"
-                    maxlength="120"
-                    class="input input-bordered rounded-2xl"
-                    placeholder="Строю, исследую, собираю команду"
-                  />
+                  <span class="mb-2 text-sm font-semibold text-slate-300">Короткий статус</span>
+                  <input v-model="form.status_text" type="text" maxlength="120" class="input rounded-2xl" placeholder="Строю, исследую, собираю команду" />
                 </label>
 
                 <label class="form-control">
-                  <span class="mb-2 text-sm font-semibold text-slate-700">Описание</span>
-                  <textarea
-                    v-model="form.bio"
-                    rows="5"
-                    maxlength="1200"
-                    class="textarea textarea-bordered rounded-2xl"
-                    placeholder="Расскажи немного о себе и стиле игры."
-                  ></textarea>
+                  <span class="mb-2 text-sm font-semibold text-slate-300">Описание</span>
+                  <textarea v-model="form.bio" rows="5" maxlength="1200" class="textarea rounded-2xl" placeholder="Расскажи немного о себе и стиле игры."></textarea>
                 </label>
               </div>
             </section>
 
-            <section class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_60px_rgba(15,23,42,0.08)] md:p-6">
+            <section class="surface-card p-5 md:p-6">
               <div class="section-kicker !mb-2">Приватность</div>
-              <h2 class="text-xl font-black text-slate-950 md:text-2xl">Настройки видимости</h2>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Настройки видимости</h2>
 
               <div class="mt-5 grid gap-4">
-                <label class="flex items-start gap-4 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4">
-                  <input v-model="form.is_public" type="checkbox" class="toggle toggle-primary mt-1" />
+                <label class="panel-card flex items-center justify-between gap-4 p-4">
                   <div>
-                    <p class="font-semibold text-slate-900">Публичный профиль</p>
-                    <p class="mt-1 text-sm leading-6 text-slate-600">
-                      Если выключить, страница не будет открываться другим игрокам.
-                    </p>
+                    <p class="font-semibold text-slate-100">Публичный профиль</p>
+                    <p class="mt-1 text-sm leading-6 text-slate-400">Страница будет доступна другим игрокам по ссылке.</p>
                   </div>
+                  <input v-model="form.is_public" type="checkbox" class="toggle" />
                 </label>
 
-                <label class="flex items-start gap-4 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4">
-                  <input
-                    v-model="form.allow_followers_list_public"
-                    type="checkbox"
-                    class="toggle toggle-primary mt-1"
-                  />
+                <label class="panel-card flex items-center justify-between gap-4 p-4">
                   <div>
-                    <p class="font-semibold text-slate-900">Показывать подписчиков</p>
+                    <p class="font-semibold text-slate-100">Список подписчиков</p>
+                    <p class="mt-1 text-sm leading-6 text-slate-400">Разрешить показывать другим игрокам подписчиков профиля.</p>
                   </div>
+                  <input v-model="form.allow_followers_list_public" type="checkbox" class="toggle" />
                 </label>
 
-                <label class="flex items-start gap-4 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4">
-                  <input
-                    v-model="form.allow_friends_list_public"
-                    type="checkbox"
-                    class="toggle toggle-primary mt-1"
-                  />
+                <label class="panel-card flex items-center justify-between gap-4 p-4">
                   <div>
-                    <p class="font-semibold text-slate-900">Показывать друзей</p>
+                    <p class="font-semibold text-slate-100">Список друзей</p>
+                    <p class="mt-1 text-sm leading-6 text-slate-400">Разрешить показывать друзьям и другим игрокам этот блок.</p>
                   </div>
+                  <input v-model="form.allow_friends_list_public" type="checkbox" class="toggle" />
                 </label>
               </div>
             </section>

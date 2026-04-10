@@ -13,11 +13,7 @@ const hidePublicNavbar = computed(() => {
 </script>
 
 <template>
-  <div data-theme="light" class="site-root min-h-screen text-slate-900">
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-grid"></div>
-
+  <div data-theme="dark" class="site-root min-h-screen text-slate-100">
     <SiteNavbar v-if="!hidePublicNavbar" />
 
     <main class="relative z-10">
@@ -27,9 +23,9 @@ const hidePublicNavbar = computed(() => {
             <div class="section-kicker">VoidRP</div>
             <h1 class="section-title">Подготавливаем сайт</h1>
             <p class="section-subtitle mx-auto max-w-2xl">
-              Проверяем сохранённый вход и собираем интерфейс игрока, чтобы страница открылась сразу в нормальном состоянии.
+              Проверяем сохранённый вход и собираем тёмный player-first интерфейс, чтобы страница открылась сразу в нормальном состоянии.
             </p>
-            <div class="mt-8 flex justify-center text-indigo-600">
+            <div class="mt-8 flex justify-center text-violet-400">
               <span class="spinner spinner-lg"></span>
             </div>
           </div>
@@ -39,13 +35,13 @@ const hidePublicNavbar = computed(() => {
       <RouterView v-else />
     </main>
 
-    <footer v-if="!hidePublicNavbar" class="relative z-10 mt-16 pb-10 pt-4">
+    <footer v-if="!hidePublicNavbar" class="relative z-10 mt-12 pb-10 pt-4">
       <div class="container-shell">
         <div class="surface-card flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between md:p-7">
           <div>
-            <p class="text-xl font-black tracking-tight text-slate-950">VoidRP</p>
-            <p class="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-              Официальный лаунчер, карта мира, публичные профили и понятный путь к игре без визуального перегруза.
+            <p class="text-xl font-black tracking-tight text-slate-50">VoidRP</p>
+            <p class="mt-2 max-w-2xl text-sm leading-7 text-slate-400">
+              Официальный лаунчер, карта мира, публичные профили и понятный путь к игре — теперь в цельной тёмной теме.
             </p>
           </div>
 
@@ -62,7 +58,7 @@ const hidePublicNavbar = computed(() => {
         </div>
 
         <div class="mt-4 text-center text-xs text-slate-500">
-          © 2026 VoidRP. Player-first сайт и профильная система.
+          © 2026 VoidRP. Dark player-first сайт.
         </div>
       </div>
     </footer>

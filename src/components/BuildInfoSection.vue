@@ -9,7 +9,7 @@ import { siteConfig } from '../config.site'
         <div class="section-kicker">О сервере</div>
         <h2 class="section-title">Что игрок увидит с первых минут</h2>
         <p class="section-subtitle">
-          Мы оставили только полезную основу: сайт для входа, официальный лаунчер, карту мира и красивый публичный профиль.
+          Тёмная тема не меняет логику: сайт для входа, официальный лаунчер, карта мира и красивый публичный профиль всё так же остаются в центре.
         </p>
 
         <div class="mt-6 grid gap-3 sm:grid-cols-2">
@@ -35,25 +35,25 @@ import { siteConfig } from '../config.site'
       <article class="gradient-panel p-6 md:p-7">
         <div class="section-kicker section-kicker--light">Почему это проще</div>
         <h3 class="text-3xl font-black tracking-tight text-white md:text-[2.35rem]">
-          Интерфейс не мешает игроку, а ведёт его по шагам
+          Интерфейс теперь выглядит цельно и не выбивается в светлые блоки
         </h3>
 
         <div class="mt-6 grid gap-3">
-          <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4">
+          <div class="dark-list-card">
             <p class="text-sm font-black text-white">01 — Один аккаунт</p>
-            <p class="mt-2 text-sm leading-7 text-white/78">Сайт, профиль и лаунчер работают через одну точку входа.</p>
+            <p class="mt-2 text-sm leading-7 text-white/74">Сайт, профиль и лаунчер работают через одну точку входа.</p>
           </div>
-          <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4">
+          <div class="dark-list-card">
             <p class="text-sm font-black text-white">02 — Нормальный кабинет</p>
-            <p class="mt-2 text-sm leading-7 text-white/78">Без служебного шума. Только нужные данные и полезные кнопки.</p>
+            <p class="mt-2 text-sm leading-7 text-white/74">Без служебного шума. Только нужные данные и полезные кнопки.</p>
           </div>
-          <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4">
-            <p class="text-sm font-black text-white">03 — Красивый публичный профиль</p>
-            <p class="mt-2 text-sm leading-7 text-white/78">Баннер, фон, аватар и статус работают как игровая страница, а не как анкета.</p>
+          <div class="dark-list-card">
+            <p class="text-sm font-black text-white">03 — Живой публичный профиль</p>
+            <p class="mt-2 text-sm leading-7 text-white/74">Баннер, фон, аватар и статус теперь действительно меняют вид страницы.</p>
           </div>
-          <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4">
+          <div class="dark-list-card">
             <p class="text-sm font-black text-white">04 — Всё рядом</p>
-            <p class="mt-2 text-sm leading-7 text-white/78">Карта мира, новости и скачивание доступны без лишнего поиска по меню.</p>
+            <p class="mt-2 text-sm leading-7 text-white/74">Карта мира, новости и скачивание доступны без лишнего поиска по меню.</p>
           </div>
         </div>
       </article>

@@ -15,6 +15,9 @@ import PublicProfileView from '../views/PublicProfileView.vue'
 import EditPublicProfileView from '../views/EditPublicProfileView.vue'
 import ReferralCenterView from '../views/ReferralCenterView.vue'
 import SocialHubView from '../views/SocialHubView.vue'
+import NationsListView from '../views/NationsListView.vue'
+import NationPublicView from '../views/NationPublicView.vue'
+import NationStudioView from '../views/NationStudioView.vue'
 import AdminLegacyView from '../views/AdminLegacyView.vue'
 
 const router = createRouter({
@@ -23,38 +26,23 @@ const router = createRouter({
     { path: '/', name: 'home', component: HomeView },
     { path: '/launcher', name: 'launcher', component: LauncherView },
     { path: '/links', name: 'links', component: LinksView },
-
     { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { guestOnly: true } },
     { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView, meta: { guestOnly: true } },
-
     { path: '/reset-password', name: 'reset-password', component: ResetPasswordView },
     { path: '/verify-email', name: 'verify-email', component: VerifyEmailView },
     { path: '/download-launcher', name: 'download-launcher', component: DownloadLauncherView },
 
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
-    {
-      path: '/profile/public',
-      name: 'edit-public-profile',
-      component: EditPublicProfileView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/profile/referrals',
-      name: 'profile-referrals',
-      component: ReferralCenterView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/profile/social',
-      name: 'profile-social',
-      component: SocialHubView,
-      meta: { requiresAuth: true },
-    },
+    { path: '/profile/public', name: 'edit-public-profile', component: EditPublicProfileView, meta: { requiresAuth: true } },
+    { path: '/profile/referrals', name: 'profile-referrals', component: ReferralCenterView, meta: { requiresAuth: true } },
+    { path: '/profile/social', name: 'profile-social', component: SocialHubView, meta: { requiresAuth: true } },
 
     { path: '/u/:slug', name: 'public-profile', component: PublicProfileView },
+    { path: '/nations', name: 'nations', component: NationsListView },
+    { path: '/nation/:slug', name: 'nation-public', component: NationPublicView },
+    { path: '/nation/studio', name: 'nation-studio', component: NationStudioView, meta: { requiresAuth: true } },
 
-    // internal admin
     { path: '/internal-admin', name: 'internal-admin', component: AdminLegacyView },
   ],
   scrollBehavior() {
@@ -64,16 +52,10 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   await bootstrapAuth()
-
   const isAuthenticated = getIsAuthenticated()
 
   if (to.meta.requiresAuth && !isAuthenticated) {
-    return {
-      path: '/login',
-      query: {
-        redirect: to.fullPath,
-      },
-    }
+    return { path: '/login', query: { redirect: to.fullPath } }
   }
 
   if (to.meta.guestOnly && isAuthenticated) {

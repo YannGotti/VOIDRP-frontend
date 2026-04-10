@@ -1,44 +1,103 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://api.void-rp.ru/api/v1').replace(/\/$/, '')
+const DEFAULT_REMOTE_API_BASE_URL = 'https://api.void-rp.ru/api/v1'
 
-async function parseError(response) {
-  let detail = `HTTP ${response.status}`
+function normalizeBaseUrl(value) {
+  return String(value || '').trim().replace(/\/$/, '')
+}
 
-  try {
-    const payload = await response.json()
-    if (payload?.detail) {
-      detail = payload.detail
-    } else if (payload?.message) {
-      detail = payload.message
-    }
-  } catch {
-    // ignore json parse error
+function resolveApiBaseUrl() {
+  const envBaseUrl = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL)
+  if (envBaseUrl) {
+    return envBaseUrl
   }
 
-  throw new Error(detail)
+  if (import.meta.env.DEV) {
+    return '/api/v1'
+  }
+
+  return DEFAULT_REMOTE_API_BASE_URL
+}
+
+const API_BASE_URL = resolveApiBaseUrl()
+
+function buildUrl(path) {
+  const normalizedPath = String(path || '')
+  return `${API_BASE_URL}${normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`}`
+}
+
+async function readResponseBody(response) {
+  const contentType = response.headers.get('content-type') || ''
+
+  if (contentType.includes('application/json')) {
+    try {
+      return await response.json()
+    } catch {
+      return null
+    }
+  }
+
+  try {
+    const text = await response.text()
+    return text || null
+  } catch {
+    return null
+  }
+}
+
+function buildRequestOptions(options = {}) {
+  const headers = { ...(options.headers || {}) }
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
+
+  if (!isFormData && options.body != null) {
+    const hasContentType = Object.keys(headers).some((key) => key.toLowerCase() === 'content-type')
+    if (!hasContentType) {
+      headers['Content-Type'] = 'application/json'
+    }
+  }
+
+  return {
+    ...options,
+    headers,
+  }
+}
+
+function buildErrorMessage(response, body) {
+  if (typeof body === 'string' && body.trim()) {
+    return body.trim()
+  }
+
+  if (body && typeof body === 'object') {
+    if (typeof body.detail === 'string' && body.detail.trim()) {
+      return body.detail.trim()
+    }
+
+    if (typeof body.message === 'string' && body.message.trim()) {
+      return body.message.trim()
+    }
+  }
+
+  if (response.status >= 500) {
+    return 'Сервер вернул внутреннюю ошибку. Проверь backend и миграции.'
+  }
+
+  return `HTTP ${response.status}`
 }
 
 export async function apiRequest(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-    },
-  })
+  let response
+
+  try {
+    response = await fetch(buildUrl(path), buildRequestOptions(options))
+  } catch {
+    throw new Error('Не удалось связаться с API. Для локальной разработки проверь Vite proxy и CORS.')
+  }
+
+  const body = response.status === 204 ? null : await readResponseBody(response)
 
   if (!response.ok) {
-    await parseError(response)
+    throw new Error(buildErrorMessage(response, body))
   }
 
-  if (response.status === 204) {
-    return null
-  }
-
-  const contentType = response.headers.get('content-type') || ''
-  if (!contentType.includes('application/json')) {
-    return null
-  }
-
-  return await response.json()
+  return body
 }
 
 export function buildAuthHeaders(token, extraHeaders = {}) {
