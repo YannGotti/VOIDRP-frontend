@@ -10,6 +10,7 @@ import ResetPasswordView from '../views/ResetPasswordView.vue'
 import VerifyEmailView from '../views/VerifyEmailView.vue'
 import DownloadLauncherView from '../views/DownloadLauncherView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import AdminLegacyView from '../views/AdminLegacyView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,6 +25,9 @@ const router = createRouter({
     { path: '/verify-email', name: 'verify-email', component: VerifyEmailView },
     { path: '/download-launcher', name: 'download-launcher', component: DownloadLauncherView },
     { path: '/profile', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
+
+    // internal admin
+    { path: '/internal-admin', name: 'internal-admin', component: AdminLegacyView },
   ],
   scrollBehavior() {
     return { top: 0 }

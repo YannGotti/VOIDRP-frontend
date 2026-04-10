@@ -1,8 +1,15 @@
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import SiteNavbar from './components/SiteNavbar.vue'
 import { useAuthStore } from './stores/authStore'
 
 const auth = useAuthStore()
+const route = useRoute()
+
+const hidePublicNavbar = computed(() => {
+  return route.path === '/internal-admin' || route.path.startsWith('/internal-admin/')
+})
 </script>
 
 <template>
@@ -11,10 +18,10 @@ const auth = useAuthStore()
     <div class="bg-orb bg-orb-2"></div>
     <div class="bg-grid"></div>
 
-    <SiteNavbar />
+    <SiteNavbar v-if="!hidePublicNavbar" />
 
     <main class="relative z-10">
-      <section v-if="!auth.ready.value" class="py-20 md:py-28">
+      <section v-if="!auth.ready.value && !hidePublicNavbar" class="py-20 md:py-28">
         <div class="container-shell max-w-2xl">
           <div class="glass-card rounded-[32px] p-8 md:p-10 text-center">
             <div class="section-kicker">VoidRP</div>
@@ -32,7 +39,10 @@ const auth = useAuthStore()
       <RouterView v-else />
     </main>
 
-    <footer class="relative z-10 mt-16 border-t border-slate-200/80 bg-white/70 backdrop-blur-xl">
+    <footer
+      v-if="!hidePublicNavbar"
+      class="relative z-10 mt-16 border-t border-slate-200/80 bg-white/70 backdrop-blur-xl"
+    >
       <div class="container-shell py-10">
         <div
           class="flex flex-col gap-6 rounded-[28px] border border-slate-200 bg-white/85 p-6 shadow-[0_20px_80px_rgba(15,23,42,0.08)] md:flex-row md:items-center md:justify-between"
