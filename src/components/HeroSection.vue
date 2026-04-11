@@ -9,8 +9,8 @@ import { siteConfig } from '../config.site'
         <div class="section-kicker">{{ siteConfig.hero.badge }}</div>
 
         <h1 class="max-w-5xl text-[3rem] font-black leading-[1.06] tracking-[-0.05em] text-slate-50 md:text-[4.35rem] xl:text-[5.05rem]">
-          Сайт и старт в игру
-          <span class="text-gradient mt-3 block pb-[0.18em]">в цельной тёмной теме</span>
+          Регистрация и вход в игру
+          <span class="text-gradient mt-3 block pb-[0.18em]">на сайте и в лаунчере</span>
         </h1>
 
         <p class="section-subtitle mt-6 max-w-2xl text-[1.02rem] leading-8 md:text-[1.08rem]">

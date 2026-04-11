@@ -58,7 +58,7 @@ const hidePublicNavbar = computed(() => {
         </div>
 
         <div class="mt-4 text-center text-xs text-slate-500">
-          © 2026 VoidRP. Dark player-first сайт.
+          © 2026 VoidRP. mironoouv.
         </div>
       </div>
     </footer>

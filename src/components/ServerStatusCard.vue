@@ -48,7 +48,7 @@ import { siteConfig } from '../config.site'
               width="100%"
               height="320"
               frameborder="0"
-              class="block w-full"
+              class="block w-full bg-dark"
               title="Server activity"
             ></iframe>
           </div>

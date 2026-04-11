@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { bootstrapAuth, getIsAuthenticated } from '../stores/authStore'
 
 import HomeView from '../views/HomeView.vue'
-import LauncherView from '../views/LauncherView.vue'
 import LinksView from '../views/LinksView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
@@ -24,7 +23,6 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: HomeView },
-    { path: '/launcher', name: 'launcher', component: LauncherView },
     { path: '/links', name: 'links', component: LinksView },
     { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { guestOnly: true } },

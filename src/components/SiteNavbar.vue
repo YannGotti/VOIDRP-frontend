@@ -44,10 +44,9 @@ async function handleLogout() {
 
         <nav class="desktop-nav nav-list">
           <RouterLink to="/">Главная</RouterLink>
-          <RouterLink to="/launcher">Лаунчер</RouterLink>
           <RouterLink to="/download-launcher">Скачать</RouterLink>
           <RouterLink to="/links">Ссылки</RouterLink>
-          <RouterLink v-if="isAuthenticated" to="/profile">Кабинет</RouterLink>
+          <RouterLink v-if="isAuthenticated" to="/profile">Профиль</RouterLink>
         </nav>
 
         <div class="desktop-actions items-center gap-2">
