@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import { bootstrapAuth } from './stores/authStore'
 import './styles.css'
+import './styles.toast-nations.css'
 
 ;(async () => {
   await bootstrapAuth()

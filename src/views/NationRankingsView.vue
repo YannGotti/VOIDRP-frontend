@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { getNationRankings } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
+import { formatCompactHoursFromMinutes, formatNumber } from '../utils/formatters'
 
 const auth = useAuthStore()
 const loading = ref(true)
@@ -21,11 +22,6 @@ async function loadRankings() {
   } finally {
     loading.value = false
   }
-}
-
-function playtimeText(minutes) {
-  const hours = Math.floor((minutes || 0) / 60)
-  return `${hours} ч`
 }
 
 onMounted(loadRankings)
@@ -96,29 +92,29 @@ onMounted(loadRankings)
                   {{ item.title }}
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-slate-400">
-                  [{{ item.tag }}] · Участники: {{ item.members_count ?? 0 }}
+                  [{{ item.tag }}] · Участники: {{ formatNumber(item.members_count ?? 0) }}
                 </p>
               </div>
             </div>
 
-            <div class="grid gap-3 sm:grid-cols-2 xl:min-w-[560px] xl:grid-cols-4">
+            <div class="grid gap-3 sm:grid-cols-2 xl:min-w-[620px] xl:grid-cols-4">
               <div class="metric-card text-center">
-                <p class="metric-value !text-[1.15rem]">{{ item.score ?? 0 }}</p>
+                <p class="metric-value !text-[1.15rem]">{{ formatNumber(item.score ?? 0) }}</p>
                 <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Score</p>
               </div>
 
               <div class="metric-card text-center">
-                <p class="metric-value !text-[1.15rem]">{{ item.treasury_balance ?? 0 }}</p>
+                <p class="metric-value !text-[1.15rem]">{{ formatNumber(item.treasury_balance ?? 0) }}</p>
                 <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Баланс</p>
               </div>
 
               <div class="metric-card text-center">
-                <p class="metric-value !text-[1.15rem]">{{ item.territory_points ?? 0 }}</p>
+                <p class="metric-value !text-[1.15rem]">{{ formatNumber(item.territory_points ?? 0) }}</p>
                 <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Территория</p>
               </div>
 
               <div class="metric-card text-center">
-                <p class="metric-value !text-[1.15rem]">{{ playtimeText(item.total_playtime_minutes ?? 0) }}</p>
+                <p class="metric-value !text-[1.15rem]">{{ formatCompactHoursFromMinutes(item.total_playtime_minutes ?? 0) }}</p>
                 <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Онлайн</p>
               </div>
             </div>

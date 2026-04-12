@@ -4,6 +4,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { approveNationRequest, getNationBySlug, joinNation, rejectNationRequest } from '../services/nationsApi'
 import { getNationStatsBySlug } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
+import { formatCompactHoursFromMinutes, formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -107,17 +108,6 @@ const joinLabel = computed(() => {
 
 function applyRouteBackground(value) {
   document.documentElement.style.setProperty('--route-bg', value)
-}
-
-function recruitmentLabel(value) {
-  if (value === 'open') return 'Свободное вступление'
-  if (value === 'request') return 'По заявке'
-  return 'Только по приглашению'
-}
-
-function playtimeText(minutes) {
-  const hours = Math.floor((minutes || 0) / 60)
-  return `${hours} ч`
 }
 
 async function loadNation() {
@@ -231,7 +221,7 @@ onBeforeUnmount(() => {
                     Государство
                   </span>
                   <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
-                    {{ recruitmentLabel(nation.recruitment_policy) }}
+                    {{ formatRecruitmentLabel(nation.recruitment_policy) }}
                   </span>
                 </div>
 
@@ -304,7 +294,7 @@ onBeforeUnmount(() => {
                       </p>
                       <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
                       <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                        {{ member.role }}
+                        {{ formatRoleLabel(member.role) }}
                       </p>
                     </div>
                   </div>
@@ -323,27 +313,27 @@ onBeforeUnmount(() => {
 
                   <div v-else class="metric-grid metric-grid-2 mt-4">
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ stats?.treasury_balance ?? 0 }}</p>
+                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.treasury_balance ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Баланс</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ stats?.territory_points ?? 0 }}</p>
+                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.territory_points ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Территория</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ playtimeText(stats?.total_playtime_minutes ?? 0) }}</p>
+                      <p class="metric-value !text-[1.2rem]">{{ formatCompactHoursFromMinutes(stats?.total_playtime_minutes ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Онлайн</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ stats?.pvp_kills ?? 0 }}</p>
+                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.pvp_kills ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">PvP</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ stats?.mob_kills ?? 0 }}</p>
+                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.mob_kills ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Mobs</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ stats?.prestige_score ?? 0 }}</p>
+                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.prestige_score ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Престиж</p>
                     </div>
                   </div>

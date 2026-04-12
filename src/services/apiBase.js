@@ -1,3 +1,5 @@
+import { toastError } from './toast'
+
 const DEFAULT_REMOTE_API_BASE_URL = 'https://api.void-rp.ru/api/v1'
 
 function normalizeBaseUrl(value) {
@@ -75,6 +77,18 @@ function buildErrorMessage(response, body) {
     }
   }
 
+  if (response.status === 401) {
+    return 'Нужна авторизация. Войди в аккаунт и попробуй снова.'
+  }
+
+  if (response.status === 403) {
+    return 'У тебя нет прав для этого действия.'
+  }
+
+  if (response.status === 404) {
+    return 'Нужный объект не найден.'
+  }
+
   if (response.status >= 500) {
     return 'Сервер вернул внутреннюю ошибку. Проверь backend и миграции.'
   }
@@ -88,13 +102,21 @@ export async function apiRequest(path, options = {}) {
   try {
     response = await fetch(buildUrl(path), buildRequestOptions(options))
   } catch {
-    throw new Error('Не удалось связаться с API. Для локальной разработки проверь Vite proxy и CORS.')
+    const error = new Error('Не удалось связаться с API. Для локальной разработки проверь Vite proxy и CORS.')
+    if (options.toast !== false) {
+      toastError(error.message, 'Ошибка сети')
+    }
+    throw error
   }
 
   const body = response.status === 204 ? null : await readResponseBody(response)
 
   if (!response.ok) {
-    throw new Error(buildErrorMessage(response, body))
+    const error = new Error(buildErrorMessage(response, body))
+    if (options.toast !== false) {
+      toastError(error.message)
+    }
+    throw error
   }
 
   return body
