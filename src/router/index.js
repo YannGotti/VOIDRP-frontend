@@ -18,107 +18,35 @@ import NationsListView from '../views/NationsListView.vue'
 import NationPublicView from '../views/NationPublicView.vue'
 import NationStudioView from '../views/NationStudioView.vue'
 import NationRankingsView from '../views/NationRankingsView.vue'
+import AllianceHubView from '../views/AllianceHubView.vue'
 import AdminLegacyView from '../views/AdminLegacyView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
   { path: '/links', name: 'links', component: LinksView, meta: { title: 'Ссылки' } },
-  {
-    path: '/login',
-    name: 'login',
-    component: LoginView,
-    meta: { guestOnly: true, title: 'Вход' },
-  },
-  {
-    path: '/register',
-    name: 'register',
-    component: RegisterView,
-    meta: { guestOnly: true, title: 'Регистрация' },
-  },
-  {
-    path: '/forgot-password',
-    name: 'forgot-password',
-    component: ForgotPasswordView,
-    meta: { guestOnly: true, title: 'Восстановление доступа' },
-  },
-  {
-    path: '/reset-password',
-    name: 'reset-password',
-    component: ResetPasswordView,
-    meta: { guestOnly: true, title: 'Новый пароль' },
-  },
-  {
-    path: '/verify-email',
-    name: 'verify-email',
-    component: VerifyEmailView,
-    meta: { guestOnly: true, title: 'Подтверждение почты' },
-  },
-  {
-    path: '/download-launcher',
-    name: 'download-launcher',
-    component: DownloadLauncherView,
-    meta: { title: 'Скачать лаунчер' },
-  },
-  {
-    path: '/profile',
-    name: 'profile',
-    component: ProfileView,
-    meta: { requiresAuth: true, title: 'Кабинет' },
-  },
-  {
-    path: '/profile/public',
-    name: 'edit-public-profile',
-    component: EditPublicProfileView,
-    meta: { requiresAuth: true, title: 'Публичный профиль' },
-  },
-  {
-    path: '/profile/referrals',
-    name: 'profile-referrals',
-    component: ReferralCenterView,
-    meta: { requiresAuth: true, title: 'Рефералы' },
-  },
-  {
-    path: '/profile/social',
-    name: 'profile-social',
-    component: SocialHubView,
-    meta: { requiresAuth: true, title: 'Друзья и подписки' },
-  },
-  {
-    path: '/u/:slug',
-    name: 'public-profile',
-    component: PublicProfileView,
-    meta: { title: 'Профиль игрока' },
-  },
-  {
-    path: '/nations',
-    name: 'nations',
-    component: NationsListView,
-    meta: { title: 'Государства' },
-  },
-  {
-    path: '/nations/rankings',
-    name: 'nation-rankings',
-    component: NationRankingsView,
-    meta: { title: 'Рейтинг государств' },
-  },
-  {
-    path: '/nation/:slug',
-    name: 'nation-public',
-    component: NationPublicView,
-    meta: { title: 'Государство' },
-  },
-  {
-    path: '/nation/studio',
-    name: 'nation-studio',
-    component: NationStudioView,
-    meta: { requiresAuth: true, title: 'Управление государством' },
-  },
-  {
-    path: '/internal-admin',
-    name: 'internal-admin',
-    component: AdminLegacyView,
-    meta: { hidePublicShell: true, title: 'Legacy Admin' },
-  },
+
+  { path: '/login', name: 'login', component: LoginView, meta: { title: 'Вход', guestOnly: true } },
+  { path: '/register', name: 'register', component: RegisterView, meta: { title: 'Регистрация', guestOnly: true } },
+  { path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView, meta: { title: 'Восстановление пароля', guestOnly: true } },
+  { path: '/reset-password', name: 'reset-password', component: ResetPasswordView, meta: { title: 'Смена пароля', guestOnly: true } },
+  { path: '/verify-email', name: 'verify-email', component: VerifyEmailView, meta: { title: 'Подтверждение почты' } },
+  { path: '/download-launcher', name: 'download-launcher', component: DownloadLauncherView, meta: { title: 'Скачать лаунчер' } },
+
+  { path: '/profile', name: 'profile', component: ProfileView, meta: { title: 'Профиль', requiresAuth: true } },
+  { path: '/profile/public', name: 'edit-public-profile', component: EditPublicProfileView, meta: { title: 'Публичный профиль', requiresAuth: true } },
+  { path: '/profile/referrals', name: 'referrals', component: ReferralCenterView, meta: { title: 'Реферальный центр', requiresAuth: true } },
+  { path: '/profile/social', name: 'social', component: SocialHubView, meta: { title: 'Социальный центр', requiresAuth: true } },
+
+  { path: '/u/:slug', name: 'public-profile', component: PublicProfileView, meta: { title: 'Профиль игрока' } },
+
+  { path: '/nations', name: 'nations', component: NationsListView, meta: { title: 'Государства' } },
+  { path: '/nation/:slug', name: 'nation-public', component: NationPublicView, meta: { title: 'Государство' } },
+  { path: '/nation/studio', name: 'nation-studio', component: NationStudioView, meta: { title: 'Студия государства', requiresAuth: true } },
+  { path: '/nations/rankings', name: 'nation-rankings', component: NationRankingsView, meta: { title: 'Рейтинг государств' } },
+
+  { path: '/alliances', name: 'alliances', component: AllianceHubView, meta: { title: 'Альянсы', requiresAuth: true } },
+
+  { path: '/internal-admin', name: 'admin-legacy', component: AdminLegacyView, meta: { title: 'Legacy Admin', hidePublicShell: true } },
 ]
 
 const router = createRouter({
@@ -134,26 +62,24 @@ router.beforeEach(async (to) => {
 
   const isAuthenticated = getIsAuthenticated()
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
+  if (to.meta?.requiresAuth && !isAuthenticated) {
     return {
       path: '/login',
       query: { redirect: to.fullPath },
     }
   }
 
-  if (to.meta.guestOnly && isAuthenticated) {
+  if (to.meta?.guestOnly && isAuthenticated) {
     return { path: '/profile' }
   }
 
+  if (typeof to.meta?.title === 'string' && to.meta.title.length > 0) {
+    document.title = `${to.meta.title} — VoidRP`
+  } else {
+    document.title = 'VoidRP'
+  }
+
   return true
-})
-
-router.afterEach((to) => {
-  const pageTitle = typeof to.meta?.title === 'string' && to.meta.title.trim()
-    ? to.meta.title.trim()
-    : 'VoidRP'
-
-  document.title = pageTitle === 'VoidRP' ? 'VoidRP' : `${pageTitle} • VoidRP`
 })
 
 export default router

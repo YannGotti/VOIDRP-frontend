@@ -1,7 +1,9 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import { approveNationRequest, getNationBySlug, joinNation, rejectNationRequest } from '../services/nationsApi'
+import { getNationActivity } from '../services/nationActivityApi'
 import { getNationStatsBySlug } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
 import { formatCompactHoursFromMinutes, formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
@@ -11,31 +13,38 @@ const auth = useAuthStore()
 
 const loading = ref(true)
 const statsLoading = ref(true)
+const activityLoading = ref(true)
 const error = ref('')
 const actionMessage = ref('')
 const joinLoading = ref(false)
 const requestMessage = ref('')
 const nation = ref(null)
 const stats = ref(null)
+const activity = ref([])
 
 function hexToRgba(hex, alpha) {
-  if (!hex || typeof hex !== 'string') {
-    return `rgba(109, 93, 246, ${alpha})`
-  }
-
+  if (!hex || typeof hex !== 'string') return `rgba(109, 93, 246, ${alpha})`
   const value = hex.replace('#', '')
   const normalized = value.length === 3 ? value.split('').map((item) => item + item).join('') : value
-
-  if (normalized.length !== 6) {
-    return `rgba(109, 93, 246, ${alpha})`
-  }
-
+  if (normalized.length !== 6) return `rgba(109, 93, 246, ${alpha})`
   const intValue = Number.parseInt(normalized, 16)
   const r = (intValue >> 16) & 255
   const g = (intValue >> 8) & 255
   const b = intValue & 255
-
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+function formatAllianceType(value) {
+  switch (String(value || '').toLowerCase()) {
+    case 'nato':
+      return 'Военный блок'
+    case 'economic':
+      return 'Экономический союз'
+    case 'un':
+      return 'Политический союз'
+    default:
+      return 'Альянс'
+  }
 }
 
 const accent = computed(() => nation.value?.accent_color || '#6d5df6')
@@ -43,10 +52,15 @@ const iconUrl = computed(() => nation.value?.assets?.icon_url || nation.value?.a
 const bannerUrl = computed(() => nation.value?.assets?.banner_url || nation.value?.assets?.banner_preview_url || '')
 const backgroundUrl = computed(() => nation.value?.assets?.background_url || nation.value?.assets?.background_preview_url || '')
 const tagText = computed(() => nation.value?.tag || 'TAG')
+const allianceSummary = computed(() => nation.value?.alliance_summary || null)
+
+const allianceMembersPreview = computed(() => {
+  const members = Array.isArray(allianceSummary.value?.members) ? allianceSummary.value.members : []
+  return members.filter((item) => item.slug !== nation.value?.slug).slice(0, 6)
+})
 
 const routeBackground = computed(() => {
   const accentGlow = hexToRgba(accent.value, 0.22)
-
   if (!backgroundUrl.value) {
     return [
       `radial-gradient(circle at top left, ${accentGlow} 0%, transparent 24%)`,
@@ -54,7 +68,6 @@ const routeBackground = computed(() => {
       'linear-gradient(180deg, #05070f 0%, #0a0f1c 48%, #10192c 100%)',
     ].join(', ')
   }
-
   return [
     'linear-gradient(180deg, rgba(4,6,11,0.62), rgba(4,6,11,0.9))',
     `radial-gradient(circle at top left, ${accentGlow} 0%, transparent 28%)`,
@@ -80,7 +93,6 @@ const heroStyle = computed(() => {
       backgroundPosition: 'center',
     }
   }
-
   return {
     background: [
       `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.36)} 0%, transparent 32%)`,
@@ -114,7 +126,6 @@ async function loadNation() {
   loading.value = true
   error.value = ''
   actionMessage.value = ''
-
   try {
     nation.value = await getNationBySlug(route.params.slug, auth.accessToken || null)
   } catch (err) {
@@ -126,7 +137,6 @@ async function loadNation() {
 
 async function loadStats() {
   statsLoading.value = true
-
   try {
     stats.value = await getNationStatsBySlug(route.params.slug, auth.accessToken || null)
   } catch {
@@ -136,21 +146,29 @@ async function loadStats() {
   }
 }
 
+async function loadActivity() {
+  activityLoading.value = true
+  try {
+    const payload = await getNationActivity(route.params.slug, auth.accessToken || null)
+    activity.value = Array.isArray(payload?.items) ? payload.items : []
+  } catch {
+    activity.value = []
+  } finally {
+    activityLoading.value = false
+  }
+}
+
 async function handleJoin() {
   if (!nation.value || !auth.accessToken) return
-
   joinLoading.value = true
   error.value = ''
   actionMessage.value = ''
-
   try {
-    const response = await joinNation(auth.accessToken, nation.value.slug, {
-      message: requestMessage.value || null,
-    })
-
+    const response = await joinNation(auth.accessToken, nation.value.slug, { message: requestMessage.value || null })
     nation.value = response?.nation || nation.value
     actionMessage.value = response?.message || 'Действие выполнено.'
     requestMessage.value = ''
+    await loadActivity()
   } catch (err) {
     error.value = err.message || 'Не удалось отправить действие.'
   } finally {
@@ -162,6 +180,7 @@ async function handleApprove(requestId) {
   try {
     nation.value = await approveNationRequest(auth.accessToken, nation.value.slug, requestId)
     actionMessage.value = 'Заявка одобрена.'
+    await loadActivity()
   } catch (err) {
     error.value = err.message || 'Не удалось одобрить заявку.'
   }
@@ -171,22 +190,19 @@ async function handleReject(requestId) {
   try {
     nation.value = await rejectNationRequest(auth.accessToken, nation.value.slug, requestId)
     actionMessage.value = 'Заявка отклонена.'
+    await loadActivity()
   } catch (err) {
     error.value = err.message || 'Не удалось отклонить заявку.'
   }
 }
 
-watch(
-  () => route.params.slug,
-  async () => {
-    await Promise.all([loadNation(), loadStats()])
-  },
-)
-
+watch(() => route.params.slug, async () => {
+  await Promise.all([loadNation(), loadStats(), loadActivity()])
+})
 watch(routeBackground, (value) => applyRouteBackground(value), { immediate: true })
 
 onMounted(async () => {
-  await Promise.all([loadNation(), loadStats()])
+  await Promise.all([loadNation(), loadStats(), loadActivity()])
 })
 
 onBeforeUnmount(() => {
@@ -205,16 +221,13 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">
-        {{ error }}
-      </div>
+      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">{{ error }}</div>
 
       <div v-else-if="nation" class="page-backdrop route-shell overflow-hidden rounded-[32px] border" :style="pageShellStyle">
         <div class="p-3 md:p-4">
           <div class="space-y-4">
             <section class="relative overflow-hidden rounded-[28px] shadow-[0_26px_100px_rgba(0,0,0,0.36)]" :style="heroStyle">
               <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/72"></div>
-
               <div class="relative px-5 pb-5 pt-5 md:px-7 md:pb-7 md:pt-7">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
@@ -222,6 +235,12 @@ onBeforeUnmount(() => {
                   </span>
                   <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
                     {{ formatRecruitmentLabel(nation.recruitment_policy) }}
+                  </span>
+                  <span
+                    v-if="allianceSummary"
+                    class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md"
+                  >
+                    Альянс: {{ allianceSummary.tag }}
                   </span>
                 </div>
 
@@ -236,7 +255,6 @@ onBeforeUnmount(() => {
                       <h1 class="break-words text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] md:text-4xl">
                         {{ nation.title }}
                       </h1>
-
                       <p class="mt-2 text-sm text-white/76 md:text-base">
                         [{{ nation.tag }}] · {{ nation.short_description || 'Описание пока не добавлено' }}
                       </p>
@@ -247,7 +265,6 @@ onBeforeUnmount(() => {
                     <RouterLink v-if="nation.viewer_can_manage" to="/nation/studio" class="btn btn-light rounded-2xl">
                       Управлять
                     </RouterLink>
-
                     <button
                       v-if="canJoin"
                       type="button"
@@ -263,9 +280,7 @@ onBeforeUnmount(() => {
               </div>
             </section>
 
-            <div v-if="actionMessage" class="alert alert-success">
-              {{ actionMessage }}
-            </div>
+            <div v-if="actionMessage" class="alert alert-success">{{ actionMessage }}</div>
 
             <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
               <section class="surface-card p-4 md:p-5" :style="cardStyle">
@@ -289,9 +304,7 @@ onBeforeUnmount(() => {
                   <div class="section-kicker !mb-2">Участники</div>
                   <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     <div v-for="member in nation.members" :key="member.user_id" class="action-card" :style="cardStyle">
-                      <p class="font-semibold text-slate-100">
-                        {{ member.minecraft_nickname || member.site_login }}
-                      </p>
+                      <p class="font-semibold text-slate-100">{{ member.minecraft_nickname || member.site_login }}</p>
                       <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
                       <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
                         {{ formatRoleLabel(member.role) }}
@@ -343,6 +356,85 @@ onBeforeUnmount(() => {
                   </RouterLink>
                 </section>
 
+                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                  <div class="section-kicker !mb-2">Альянс</div>
+                  <h2 class="text-lg font-black text-slate-50">
+                    {{ allianceSummary ? allianceSummary.title : 'Надгосударственный блок' }}
+                  </h2>
+
+                  <div v-if="!allianceSummary" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
+                    Это государство пока не состоит ни в одном альянсе.
+                  </div>
+
+                  <div v-else class="mt-4 space-y-4">
+                    <div class="action-card" :style="cardStyle">
+                      <p class="font-semibold text-slate-100">[{{ allianceSummary.tag }}] · {{ formatAllianceType(allianceSummary.alliance_type) }}</p>
+                      <p class="mt-2 text-sm leading-6 text-slate-400">
+                        {{ allianceSummary.description || 'Описание альянса пока не добавлено.' }}
+                      </p>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                      <div class="metric-card text-center">
+                        <p class="metric-value !text-[1.12rem]">{{ allianceSummary.members_count }}</p>
+                        <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Государств</p>
+                      </div>
+                      <div class="metric-card text-center">
+                        <p class="metric-value !text-[1.12rem]">{{ formatNumber(allianceSummary.treasury_balance ?? 0) }}</p>
+                        <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Казна</p>
+                      </div>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                      <div class="action-card" :style="cardStyle">
+                        <p class="metric-label">Внутренние переводы</p>
+                        <p class="mt-2 text-sm font-semibold text-slate-100">
+                          {{ allianceSummary.allow_internal_transfers ? 'Разрешены' : 'Отключены' }}
+                        </p>
+                      </div>
+                      <div class="action-card" :style="cardStyle">
+                        <p class="metric-label">Совместная защита</p>
+                        <p class="mt-2 text-sm font-semibold text-slate-100">
+                          {{ allianceSummary.allow_joint_defense ? 'Активна' : 'Отключена' }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div v-if="allianceMembersPreview.length">
+                      <div class="section-kicker !mb-2">Союзные государства</div>
+                      <div class="grid gap-3">
+                        <RouterLink
+                          v-for="member in allianceMembersPreview"
+                          :key="member.nation_id"
+                          :to="`/nation/${member.slug}`"
+                          class="action-card transition hover:-translate-y-[1px]"
+                          :style="cardStyle"
+                        >
+                          <div class="flex items-center gap-3">
+                            <div class="preview-avatar h-12 w-12 border border-white/10 text-sm">
+                              <img
+                                v-if="member.icon_url || member.icon_preview_url"
+                                :src="member.icon_url || member.icon_preview_url"
+                                :alt="member.title"
+                                class="h-full w-full object-cover"
+                              />
+                              <span v-else>{{ member.tag?.slice(0, 2).toUpperCase() }}</span>
+                            </div>
+                            <div class="min-w-0">
+                              <p class="truncate font-semibold text-slate-100">{{ member.title }}</p>
+                              <p class="mt-1 text-sm text-slate-400">[{{ member.tag }}]</p>
+                            </div>
+                          </div>
+                        </RouterLink>
+                      </div>
+                    </div>
+
+                    <RouterLink to="/alliances" class="btn btn-outline rounded-2xl">
+                      Открыть центр альянсов
+                    </RouterLink>
+                  </div>
+                </section>
+
                 <section v-if="nation.viewer_can_manage" class="surface-card p-4 md:p-5" :style="cardStyle">
                   <div class="section-kicker !mb-2">Заявки</div>
                   <h2 class="text-lg font-black text-slate-50">Управление вступлением</h2>
@@ -353,13 +445,8 @@ onBeforeUnmount(() => {
 
                   <div v-else class="mt-4 space-y-3">
                     <div v-for="item in nation.join_requests" :key="item.id" class="action-card" :style="cardStyle">
-                      <p class="font-semibold text-slate-100">
-                        {{ item.minecraft_nickname || item.site_login }}
-                      </p>
-                      <p class="mt-1 text-sm leading-6 text-slate-400">
-                        {{ item.message || 'Сообщение не указано.' }}
-                      </p>
-
+                      <p class="font-semibold text-slate-100">{{ item.minecraft_nickname || item.site_login }}</p>
+                      <p class="mt-1 text-sm leading-6 text-slate-400">{{ item.message || 'Сообщение не указано.' }}</p>
                       <div class="mt-3 flex flex-wrap gap-2">
                         <button type="button" class="btn btn-primary btn-sm rounded-2xl" @click="handleApprove(item.id)">
                           Одобрить
@@ -373,6 +460,13 @@ onBeforeUnmount(() => {
                 </section>
               </aside>
             </div>
+
+            <NationActivityFeed
+              :items="activity"
+              :loading="activityLoading"
+              title="Последние события"
+              subtitle="Вступления, заявки, смена ролей и оформление сохраняются в журнале."
+            />
           </div>
         </div>
       </div>
