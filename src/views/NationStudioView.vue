@@ -2,12 +2,14 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
+  approveNationRequest,
   createNation,
   deleteNationBackground,
   deleteNationBanner,
   deleteNationIcon,
   getMyNation,
   leaveMyNation,
+  rejectNationRequest,
   removeNationMember,
   transferNationLeadership,
   updateMyNation,
@@ -17,34 +19,21 @@ import {
   uploadNationIcon,
 } from '../services/nationsApi'
 import { useAuthStore } from '../stores/authStore'
-import { formatRecruitmentLabel, formatRoleLabel } from '../utils/formatters'
-import { toastError, toastSuccess } from '../services/toast'
+import { formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
 
 const auth = useAuthStore()
 
 const loading = ref(true)
 const saving = ref(false)
-const leaving = ref(false)
+const actionLoading = ref(false)
+const error = ref('')
+const success = ref('')
 const nation = ref(null)
+const memberSearch = ref('')
 
-const selectedFiles = reactive({
-  icon: null,
-  banner: null,
-  background: null,
-})
-
-const uploading = reactive({
-  icon: false,
-  banner: false,
-  background: false,
-})
-
-const memberBusy = reactive({})
-const roleDrafts = reactive({})
-
-const form = reactive({
-  title: '',
+const createForm = reactive({
   slug: '',
+  title: '',
   tag: '',
   short_description: '',
   description: '',
@@ -53,714 +42,512 @@ const form = reactive({
   is_public: true,
 })
 
-const colorPresets = ['#6d5df6', '#4f46e5', '#2563eb', '#0f766e', '#0f172a', '#b91c1c', '#f59e0b']
+const editForm = reactive({
+  slug: '',
+  title: '',
+  tag: '',
+  short_description: '',
+  description: '',
+  accent_color: '#6d5df6',
+  recruitment_policy: 'request',
+  is_public: true,
+})
 
-const selectedFileNames = computed(() => ({
-  icon: selectedFiles.icon?.name || '',
-  banner: selectedFiles.banner?.name || '',
-  background: selectedFiles.background?.name || '',
-}))
+const selectedFiles = reactive({ icon: null, banner: null, background: null })
+const uploadState = reactive({ icon: false, banner: false, background: false })
 
 const isEditMode = computed(() => Boolean(nation.value))
 const viewerRole = computed(() => nation.value?.viewer_role || null)
-const isLeader = computed(() => viewerRole.value === 'leader')
-const isOfficer = computed(() => viewerRole.value === 'officer')
-const canManageMembers = computed(() => isLeader.value || isOfficer.value)
+const canManage = computed(() => Boolean(nation.value?.viewer_can_manage))
+const canTransferLeadership = computed(() => viewerRole.value === 'leader')
 
-const currentAssets = computed(() => ({
+const filteredMembers = computed(() => {
+  const items = Array.isArray(nation.value?.members) ? nation.value.members : []
+  const q = memberSearch.value.trim().toLowerCase()
+  if (!q) return items
+  return items.filter((item) => {
+    const siteLogin = String(item.site_login || '').toLowerCase()
+    const nickname = String(item.minecraft_nickname || '').toLowerCase()
+    return siteLogin.includes(q) || nickname.includes(q)
+  })
+})
+
+const assetUrls = computed(() => ({
   icon: nation.value?.assets?.icon_url || nation.value?.assets?.icon_preview_url || '',
   banner: nation.value?.assets?.banner_url || nation.value?.assets?.banner_preview_url || '',
   background: nation.value?.assets?.background_url || nation.value?.assets?.background_preview_url || '',
 }))
 
-const members = computed(() => {
-  const items = Array.isArray(nation.value?.members) ? [...nation.value.members] : []
-  const order = { leader: 0, officer: 1, member: 2 }
-
-  items.sort((a, b) => {
-    const roleDiff = (order[a?.role] ?? 9) - (order[b?.role] ?? 9)
-    if (roleDiff !== 0) return roleDiff
-    return getMemberName(a).localeCompare(getMemberName(b), 'ru')
-  })
-
-  return items
+const publicUrl = computed(() => {
+  if (!nation.value?.slug || typeof window === 'undefined') return ''
+  return `${window.location.origin}/nation/${nation.value.slug}`
 })
 
-const leaderCount = computed(() => members.value.filter((item) => normalizeRole(item.role) === 'leader').length)
-const officerCount = computed(() => members.value.filter((item) => normalizeRole(item.role) === 'officer').length)
-const memberCount = computed(() => members.value.filter((item) => normalizeRole(item.role) === 'member').length)
+const colorPresets = ['#6d5df6', '#7c3aed', '#2563eb', '#0f766e', '#dc2626', '#ea580c', '#db2777']
 
-const publicNationUrl = computed(() => {
-  const slug = form.slug?.trim() || nation.value?.slug || ''
-  if (!slug || typeof window === 'undefined') return ''
-  return `${window.location.origin}/nation/${slug}`
-})
-
-function normalizeHexColor(value) {
-  const text = String(value || '').trim()
-  if (!text) return '#6d5df6'
-  return text.startsWith('#') ? text.slice(0, 7) : `#${text.slice(0, 6)}`
+function hydrateEditForm(payload) {
+  nation.value = payload
+  editForm.slug = payload?.slug || ''
+  editForm.title = payload?.title || ''
+  editForm.tag = payload?.tag || ''
+  editForm.short_description = payload?.short_description || ''
+  editForm.description = payload?.description || ''
+  editForm.accent_color = payload?.accent_color || '#6d5df6'
+  editForm.recruitment_policy = payload?.recruitment_policy || 'request'
+  editForm.is_public = Boolean(payload?.is_public)
 }
 
-function normalizeRole(role) {
-  return String(role || '').toLowerCase()
+function resetMessages() {
+  error.value = ''
+  success.value = ''
 }
 
-function getMemberId(member) {
-  return member?.user_id || member?.id || member?.site_login || member?.minecraft_nickname
-}
-
-function getMemberName(member) {
-  return member?.minecraft_nickname || member?.display_name || member?.site_login || 'Игрок'
-}
-
-function getMemberHandle(member) {
-  return member?.site_login || ''
-}
-
-function canManageTarget(member) {
-  const targetRole = normalizeRole(member?.role)
-  if (targetRole === 'leader') return false
-  if (isLeader.value) return true
-  return isOfficer.value && targetRole === 'member'
-}
-
-function canTransferLeadershipTo(member) {
-  return isLeader.value && normalizeRole(member?.role) !== 'leader'
-}
-
-function applyNation(data) {
-  nation.value = data
-
-  form.title = data?.title || ''
-  form.slug = data?.slug || ''
-  form.tag = data?.tag || ''
-  form.short_description = data?.short_description || ''
-  form.description = data?.description || ''
-  form.accent_color = normalizeHexColor(data?.accent_color || '#6d5df6')
-  form.recruitment_policy = data?.recruitment_policy || 'request'
-  form.is_public = Boolean(data?.is_public ?? true)
-
-  for (const member of Array.isArray(data?.members) ? data.members : []) {
-    roleDrafts[getMemberId(member)] = normalizeRole(member.role || 'member')
-  }
-}
-
-async function loadNation() {
-  if (!auth.accessToken) {
-    loading.value = false
-    return
-  }
-
+async function loadMyNation() {
   loading.value = true
-
+  resetMessages()
   try {
-    const data = await getMyNation(auth.accessToken)
-    applyNation(data)
-  } catch {
-    nation.value = null
+    const payload = await getMyNation(auth.accessToken)
+    if (payload) hydrateEditForm(payload)
+    else nation.value = null
+  } catch (err) {
+    error.value = err.message || 'Не удалось загрузить управление государством.'
   } finally {
     loading.value = false
   }
 }
 
-function onFileChange(slot, event) {
-  selectedFiles[slot] = event?.target?.files?.[0] || null
-}
-
-async function uploadAsset(slot) {
-  if (!auth.accessToken || !selectedFiles[slot]) return
-
-  uploading[slot] = true
-
-  try {
-    let data = null
-
-    if (slot === 'icon') data = await uploadNationIcon(auth.accessToken, selectedFiles[slot])
-    if (slot === 'banner') data = await uploadNationBanner(auth.accessToken, selectedFiles[slot])
-    if (slot === 'background') data = await uploadNationBackground(auth.accessToken, selectedFiles[slot])
-
-    if (data) {
-      applyNation(data)
-    } else {
-      await loadNation()
-    }
-
-    selectedFiles[slot] = null
-    toastSuccess('Изображение обновлено.')
-  } catch (error) {
-    toastError(error?.message || 'Не удалось загрузить изображение.')
-  } finally {
-    uploading[slot] = false
-  }
-}
-
-async function removeAsset(slot) {
-  if (!auth.accessToken) return
-
-  uploading[slot] = true
-
-  try {
-    let data = null
-
-    if (slot === 'icon') data = await deleteNationIcon(auth.accessToken)
-    if (slot === 'banner') data = await deleteNationBanner(auth.accessToken)
-    if (slot === 'background') data = await deleteNationBackground(auth.accessToken)
-
-    if (data) {
-      applyNation(data)
-    } else {
-      await loadNation()
-    }
-
-    toastSuccess('Изображение удалено.')
-  } catch (error) {
-    toastError(error?.message || 'Не удалось удалить изображение.')
-  } finally {
-    uploading[slot] = false
-  }
-}
-
-async function saveProfile() {
-  if (!auth.accessToken) return
-
+async function submitCreate() {
   saving.value = true
-
+  resetMessages()
   try {
-    const payload = {
-      title: form.title?.trim() || null,
-      slug: form.slug?.trim() || null,
-      tag: form.tag?.trim().toUpperCase() || null,
-      short_description: form.short_description?.trim() || null,
-      description: form.description?.trim() || null,
-      accent_color: normalizeHexColor(form.accent_color),
-      recruitment_policy: form.recruitment_policy || 'request',
-      is_public: Boolean(form.is_public),
-    }
-
-    const data = isEditMode.value
-      ? await updateMyNation(auth.accessToken, payload)
-      : await createNation(auth.accessToken, payload)
-
-    applyNation(data)
-    toastSuccess(isEditMode.value ? 'Государство сохранено.' : 'Государство создано.')
-  } catch (error) {
-    toastError(error?.message || 'Не удалось сохранить государство.')
+    const payload = await createNation(auth.accessToken, {
+      slug: createForm.slug?.trim() || null,
+      title: createForm.title?.trim() || null,
+      tag: createForm.tag?.trim() || null,
+      short_description: createForm.short_description?.trim() || null,
+      description: createForm.description?.trim() || null,
+      accent_color: createForm.accent_color?.trim() || null,
+      recruitment_policy: createForm.recruitment_policy,
+      is_public: createForm.is_public,
+    })
+    hydrateEditForm(payload)
+    success.value = 'Государство создано.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось создать государство.'
   } finally {
     saving.value = false
   }
 }
 
-async function leaveMyNationAction() {
-  if (!auth.accessToken || !isEditMode.value) return
+async function submitUpdate() {
+  if (!nation.value) return
+  saving.value = true
+  resetMessages()
+  try {
+    const payload = await updateMyNation(auth.accessToken, {
+      slug: editForm.slug?.trim() || null,
+      title: editForm.title?.trim() || null,
+      tag: editForm.tag?.trim() || null,
+      short_description: editForm.short_description?.trim() || null,
+      description: editForm.description?.trim() || null,
+      accent_color: editForm.accent_color?.trim() || null,
+      recruitment_policy: editForm.recruitment_policy,
+      is_public: editForm.is_public,
+    })
+    hydrateEditForm(payload)
+    success.value = 'Изменения сохранены.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось сохранить государство.'
+  } finally {
+    saving.value = false
+  }
+}
 
-  const confirmed = window.confirm('Точно выйти из государства?')
-  if (!confirmed) return
-
-  leaving.value = true
-
+async function handleLeave() {
+  if (!nation.value) return
+  if (!window.confirm('Точно выйти из государства?')) return
+  actionLoading.value = true
+  resetMessages()
   try {
     await leaveMyNation(auth.accessToken)
     nation.value = null
-    form.title = ''
-    form.slug = ''
-    form.tag = ''
-    form.short_description = ''
-    form.description = ''
-    form.accent_color = '#6d5df6'
-    form.recruitment_policy = 'request'
-    form.is_public = true
-    toastSuccess('Ты вышел из государства.')
-  } catch (error) {
-    toastError(error?.message || 'Не удалось выйти из государства.')
+    success.value = 'Ты вышел из государства.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось выйти из государства.'
   } finally {
-    leaving.value = false
+    actionLoading.value = false
   }
 }
 
-async function changeMemberRole(member) {
-  if (!auth.accessToken || !nation.value) return
+function selectFile(slot, event) {
+  selectedFiles[slot] = event?.target?.files?.[0] || null
+}
 
-  const memberId = getMemberId(member)
-  const targetRole = roleDrafts[memberId]
-  if (!targetRole || normalizeRole(member.role) === targetRole) return
-
-  memberBusy[memberId] = true
-
+async function uploadAsset(slot) {
+  const file = selectedFiles[slot]
+  if (!file) return
+  uploadState[slot] = true
+  resetMessages()
   try {
-    const data = await updateNationMemberRole(auth.accessToken, nation.value.slug, memberId, targetRole)
-    applyNation(data)
-    toastSuccess('Роль участника обновлена.')
-  } catch (error) {
-    toastError(error?.message || 'Не удалось изменить роль.')
+    let payload = null
+    if (slot === 'icon') payload = await uploadNationIcon(auth.accessToken, file)
+    if (slot === 'banner') payload = await uploadNationBanner(auth.accessToken, file)
+    if (slot === 'background') payload = await uploadNationBackground(auth.accessToken, file)
+    if (payload) hydrateEditForm(payload)
+    selectedFiles[slot] = null
+    success.value = 'Изображение обновлено.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось загрузить изображение.'
   } finally {
-    memberBusy[memberId] = false
+    uploadState[slot] = false
   }
 }
 
-async function makeLeader(member) {
-  if (!auth.accessToken || !nation.value) return
-
-  const memberId = getMemberId(member)
-  const confirmed = window.confirm(`Передать лидерство игроку ${getMemberName(member)}?`)
-  if (!confirmed) return
-
-  memberBusy[memberId] = true
-
+async function deleteAsset(slot) {
+  uploadState[slot] = true
+  resetMessages()
   try {
-    const data = await transferNationLeadership(auth.accessToken, nation.value.slug, memberId)
-    applyNation(data)
-    toastSuccess('Лидерство передано.')
-  } catch (error) {
-    toastError(error?.message || 'Не удалось передать лидерство.')
+    let payload = null
+    if (slot === 'icon') payload = await deleteNationIcon(auth.accessToken)
+    if (slot === 'banner') payload = await deleteNationBanner(auth.accessToken)
+    if (slot === 'background') payload = await deleteNationBackground(auth.accessToken)
+    if (payload) hydrateEditForm(payload)
+    selectedFiles[slot] = null
+    success.value = 'Изображение удалено.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось удалить изображение.'
   } finally {
-    memberBusy[memberId] = false
+    uploadState[slot] = false
+  }
+}
+
+async function approveRequest(requestId) {
+  if (!nation.value) return
+  actionLoading.value = true
+  resetMessages()
+  try {
+    const payload = await approveNationRequest(auth.accessToken, nation.value.slug, requestId)
+    hydrateEditForm(payload)
+    success.value = 'Заявка одобрена.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось одобрить заявку.'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+async function rejectRequest(requestId) {
+  if (!nation.value) return
+  actionLoading.value = true
+  resetMessages()
+  try {
+    const payload = await rejectNationRequest(auth.accessToken, nation.value.slug, requestId)
+    hydrateEditForm(payload)
+    success.value = 'Заявка отклонена.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось отклонить заявку.'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+async function setRole(member, role) {
+  if (!nation.value) return
+  actionLoading.value = true
+  resetMessages()
+  try {
+    const payload = await updateNationMemberRole(auth.accessToken, nation.value.slug, member.user_id, role)
+    hydrateEditForm(payload.nation || payload)
+    success.value = 'Роль обновлена.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось обновить роль.'
+  } finally {
+    actionLoading.value = false
   }
 }
 
 async function kickMember(member) {
-  if (!auth.accessToken || !nation.value) return
-
-  const memberId = getMemberId(member)
-  const confirmed = window.confirm(`Удалить игрока ${getMemberName(member)} из государства?`)
-  if (!confirmed) return
-
-  memberBusy[memberId] = true
-
+  if (!nation.value) return
+  if (!window.confirm(`Исключить ${member.minecraft_nickname || member.site_login} из государства?`)) return
+  actionLoading.value = true
+  resetMessages()
   try {
-    const data = await removeNationMember(auth.accessToken, nation.value.slug, memberId)
-    applyNation(data)
-    toastSuccess('Участник удалён.')
-  } catch (error) {
-    toastError(error?.message || 'Не удалось удалить участника.')
+    const payload = await removeNationMember(auth.accessToken, nation.value.slug, member.user_id)
+    hydrateEditForm(payload.nation || payload)
+    success.value = 'Участник исключён.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось исключить участника.'
   } finally {
-    memberBusy[memberId] = false
+    actionLoading.value = false
   }
 }
 
-onMounted(loadNation)
+async function makeLeader(member) {
+  if (!nation.value) return
+  if (!window.confirm(`Передать лидерство игроку ${member.minecraft_nickname || member.site_login}?`)) return
+  actionLoading.value = true
+  resetMessages()
+  try {
+    const payload = await transferNationLeadership(auth.accessToken, nation.value.slug, member.user_id)
+    hydrateEditForm(payload.nation || payload)
+    success.value = 'Лидерство передано.'
+  } catch (err) {
+    error.value = err.message || 'Не удалось передать лидерство.'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+async function copyPublicLink() {
+  if (!publicUrl.value) return
+  try {
+    await navigator.clipboard.writeText(publicUrl.value)
+    success.value = 'Ссылка скопирована.'
+    error.value = ''
+  } catch {
+    error.value = 'Не удалось скопировать ссылку.'
+  }
+}
+
+onMounted(loadMyNation)
 </script>
 
 <template>
   <section class="py-8 md:py-10">
     <div class="container-shell space-y-5">
-      <section class="surface-card overflow-hidden p-0">
-        <div class="relative h-44 overflow-hidden border-b border-white/10 bg-slate-950 md:h-52">
-          <img
-            v-if="currentAssets.banner"
-            :src="currentAssets.banner"
-            alt="banner"
-            class="h-full w-full object-cover"
-          />
-          <div
-            v-else
-            class="h-full w-full"
-            :style="{
-              background: `radial-gradient(circle at top left, ${form.accent_color}55, transparent 34%), linear-gradient(135deg, rgba(15,23,42,.92), rgba(9,14,27,1))`,
-            }"
-          ></div>
+      <section class="surface-card p-5 md:p-7">
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div class="max-w-3xl">
+            <div class="section-kicker !mb-2">Студия государства</div>
+            <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">
+              {{ isEditMode ? 'Управление государством' : 'Создать государство' }}
+            </h1>
+            <p class="mt-3 text-sm leading-7 text-slate-400 md:text-[15px]">
+              Здесь можно управлять оформлением, набором участников, ролями, заявками и публичной страницей государства.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <RouterLink v-if="isEditMode && nation?.slug" :to="`/nation/${nation.slug}`" class="btn btn-outline">Публичная страница</RouterLink>
+            <button v-if="isEditMode" type="button" class="btn btn-outline" @click="copyPublicLink">Копировать ссылку</button>
+            <button type="button" class="btn btn-primary" :disabled="saving" @click="isEditMode ? submitUpdate() : submitCreate()">
+              <span v-if="saving" class="spinner"></span>
+              <span>{{ saving ? 'Сохраняем...' : isEditMode ? 'Сохранить' : 'Создать государство' }}</span>
+            </button>
+          </div>
         </div>
 
-        <div class="p-5 md:p-6">
-          <header class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-            <div class="min-w-0">
-              <div class="flex min-w-0 items-center gap-4">
-                <div
-                  class="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[1.2rem] border border-white/10 bg-white/5"
-                >
-                  <img
-                    v-if="currentAssets.icon"
-                    :src="currentAssets.icon"
-                    alt="icon"
-                    class="h-full w-full object-cover"
-                  />
-                  <span v-else class="text-xl font-black text-white">
-                    {{ (form.tag || 'VR').slice(0, 2) }}
-                  </span>
-                </div>
-
-                <div class="min-w-0">
-                  <div class="section-kicker">Студия государства</div>
-                  <h1 class="truncate text-2xl font-black text-white md:text-4xl">
-                    {{ form.title || 'Новое государство' }}
-                  </h1>
-                  <p class="mt-2 break-all text-sm leading-6 text-slate-400">
-                    {{ publicNationUrl || 'Сначала укажи slug, чтобы получить публичную ссылку.' }}
-                  </p>
-                </div>
-              </div>
-
-              <div class="mt-4 flex flex-wrap gap-2.5">
-                <span class="inline-chip">{{ formatRecruitmentLabel(form.recruitment_policy) }}</span>
-                <span class="inline-chip inline-chip--subtle">
-                  {{ form.is_public ? 'Публичное' : 'Скрытое' }}
-                </span>
-              </div>
-            </div>
-
-            <div class="grid w-full max-w-[360px] grid-cols-3 gap-3">
-              <div class="stat-badge">
-                <span class="stat-badge__value">{{ leaderCount }}</span>
-                <span class="stat-badge__label">лидеры</span>
-              </div>
-              <div class="stat-badge">
-                <span class="stat-badge__value">{{ officerCount }}</span>
-                <span class="stat-badge__label">офицеры</span>
-              </div>
-              <div class="stat-badge">
-                <span class="stat-badge__value">{{ memberCount }}</span>
-                <span class="stat-badge__label">участники</span>
-              </div>
-            </div>
-          </header>
-        </div>
+        <p v-if="error" class="alert alert-error mt-5">{{ error }}</p>
+        <p v-if="success" class="alert alert-success mt-5">{{ success }}</p>
       </section>
 
-      <div v-if="loading" class="surface-card p-8 text-center">
-        <span class="spinner spinner-lg"></span>
+      <div v-if="loading" class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div class="space-y-5">
+          <div class="skeleton h-[300px] rounded-[28px]"></div>
+          <div class="skeleton h-[320px] rounded-[28px]"></div>
+        </div>
+        <div class="space-y-5">
+          <div class="skeleton h-[260px] rounded-[28px]"></div>
+          <div class="skeleton h-[340px] rounded-[28px]"></div>
+        </div>
       </div>
 
-      <div v-else class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div class="space-y-6">
-          <section class="surface-card p-5 md:p-6">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div class="min-w-0">
-                <div class="section-kicker">Основное</div>
-                <h2 class="section-title !text-[1.7rem]">Настройки государства</h2>
-                <p class="section-subtitle">
-                  Только важные поля и удобное управление без лишнего шума.
-                </p>
-              </div>
-
-              <button class="btn btn-primary" :disabled="saving" @click="saveProfile">
-                <span v-if="saving" class="spinner"></span>
-                <span>{{ saving ? 'Сохраняем...' : isEditMode ? 'Сохранить' : 'Создать' }}</span>
-              </button>
+      <div v-else-if="!isEditMode" class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <section class="surface-card p-5 md:p-6">
+          <div class="section-kicker !mb-2">Создание</div>
+          <h2 class="text-2xl font-black text-slate-50">Новое государство</h2>
+          <div class="mt-5 grid gap-4">
+            <label class="form-control">
+              <span class="mb-2 text-sm font-semibold text-slate-300">Slug</span>
+              <input v-model="createForm.slug" class="input rounded-2xl" maxlength="64" placeholder="kingdom-citadel" />
+            </label>
+            <div class="grid gap-4 md:grid-cols-[1fr_180px]">
+              <label class="form-control">
+                <span class="mb-2 text-sm font-semibold text-slate-300">Название</span>
+                <input v-model="createForm.title" class="input rounded-2xl" maxlength="64" placeholder="Kingdom Citadel" />
+              </label>
+              <label class="form-control">
+                <span class="mb-2 text-sm font-semibold text-slate-300">Тег</span>
+                <input v-model="createForm.tag" class="input rounded-2xl" maxlength="8" placeholder="KCT" />
+              </label>
             </div>
-
-            <div class="mt-5 grid gap-4 md:grid-cols-2">
+            <label class="form-control">
+              <span class="mb-2 text-sm font-semibold text-slate-300">Короткое описание</span>
+              <input v-model="createForm.short_description" class="input rounded-2xl" maxlength="140" placeholder="Короткая строка для списка и hero-блока" />
+            </label>
+            <label class="form-control">
+              <span class="mb-2 text-sm font-semibold text-slate-300">Полное описание</span>
+              <textarea v-model="createForm.description" rows="6" class="textarea rounded-2xl" placeholder="Расскажи, чем живёт государство." />
+            </label>
+            <div class="grid gap-4 md:grid-cols-[1fr_220px]">
               <label class="form-control">
-                <span class="field-label">Название</span>
-                <input v-model="form.title" class="input" maxlength="48" />
-              </label>
-
-              <label class="form-control">
-                <span class="field-label">Тег</span>
-                <input v-model="form.tag" class="input uppercase" maxlength="12" />
-              </label>
-
-              <label class="form-control">
-                <span class="field-label">Slug</span>
-                <input v-model="form.slug" class="input" maxlength="48" />
-              </label>
-
-              <label class="form-control">
-                <span class="field-label">Основной цвет</span>
-                <div class="compact-color-field">
-                  <input
-                    v-model="form.accent_color"
-                    type="color"
-                    class="compact-color-field__picker"
-                  />
-                  <input
-                    v-model="form.accent_color"
-                    class="compact-color-field__code"
-                    maxlength="7"
-                  />
+                <span class="mb-2 text-sm font-semibold text-slate-300">Акцентный цвет</span>
+                <div class="flex items-center gap-3">
+                  <input v-model="createForm.accent_color" type="color" class="h-12 w-14 cursor-pointer rounded-2xl border border-white/10 bg-transparent p-1" />
+                  <input v-model="createForm.accent_color" class="input rounded-2xl" placeholder="#6d5df6" />
                 </div>
               </label>
-
-              <label class="form-control md:col-span-2">
-                <span class="field-label">Короткое описание</span>
-                <input v-model="form.short_description" class="input" maxlength="140" />
-              </label>
-
-              <label class="form-control md:col-span-2">
-                <span class="field-label">Полное описание</span>
-                <textarea
-                  v-model="form.description"
-                  class="textarea min-h-[140px]"
-                  maxlength="2000"
-                ></textarea>
-              </label>
-            </div>
-
-            <div class="mt-4 flex flex-wrap gap-2.5">
-              <button
-                v-for="color in colorPresets"
-                :key="color"
-                type="button"
-                class="compact-color-swatch"
-                :style="{ backgroundColor: color }"
-                @click="form.accent_color = color"
-              ></button>
-            </div>
-
-            <div class="nation-form-lower mt-6">
               <label class="form-control">
-                <span class="field-label">Режим вступления</span>
-                <select v-model="form.recruitment_policy" class="select">
+                <span class="mb-2 text-sm font-semibold text-slate-300">Вступление</span>
+                <select v-model="createForm.recruitment_policy" class="select rounded-2xl">
                   <option value="open">Свободное вступление</option>
                   <option value="request">По заявке</option>
                   <option value="invite_only">Только по приглашению</option>
                 </select>
               </label>
-
-              <label class="visibility-option visibility-option--compact">
-                <div class="min-w-0">
-                  <p class="visibility-option__title">Публичная страница</p>
-                  <p class="visibility-option__text">
-                    Если выключить, государство не будет видно другим игрокам по ссылке.
-                  </p>
-                </div>
-                <input v-model="form.is_public" type="checkbox" class="compact-toggle" />
-              </label>
             </div>
+            <label class="panel-card flex items-center justify-between gap-4 p-4">
+              <div>
+                <p class="font-semibold text-slate-100">Публичная страница</p>
+                <p class="mt-1 text-sm leading-6 text-slate-400">Разрешить отображение государства в списке и на публичной странице.</p>
+              </div>
+              <input v-model="createForm.is_public" type="checkbox" class="toggle" />
+            </label>
+          </div>
+        </section>
+        <aside class="surface-card p-5 md:p-6">
+          <div class="section-kicker !mb-2">Подсказка</div>
+          <h2 class="text-xl font-black text-slate-50">Что будет доступно после создания</h2>
+          <div class="mt-5 grid gap-3">
+            <div class="action-card"><p class="font-semibold text-slate-100">Оформление</p><p class="mt-2 text-sm leading-6 text-slate-400">Сразу можно загрузить иконку, баннер и фон страницы государства.</p></div>
+            <div class="action-card"><p class="font-semibold text-slate-100">Участники</p><p class="mt-2 text-sm leading-6 text-slate-400">Появится управление ролями, заявками, киком и передачей лидерства.</p></div>
+            <div class="action-card"><p class="font-semibold text-slate-100">Статистика</p><p class="mt-2 text-sm leading-6 text-slate-400">После sync с игрового сервера начнут подтягиваться баланс, территория, онлайн и престиж.</p></div>
+          </div>
+        </aside>
+      </div>
 
-            <div class="mt-6 flex flex-wrap gap-3 border-t border-white/10 pt-6">
-              <button class="btn btn-primary" :disabled="saving" @click="saveProfile">
-                <span v-if="saving" class="spinner"></span>
-                <span>
-                  {{ saving ? 'Сохраняем...' : isEditMode ? 'Сохранить изменения' : 'Создать государство' }}
-                </span>
-              </button>
-
-              <button
-                v-if="isEditMode"
-                class="btn btn-ghost"
-                :disabled="leaving"
-                @click="leaveMyNationAction"
-              >
-                <span v-if="leaving" class="spinner"></span>
-                <span>{{ leaving ? 'Выходим...' : 'Выйти из государства' }}</span>
-              </button>
-
-              <RouterLink v-if="publicNationUrl" :to="`/nation/${form.slug}`" class="btn btn-outline">
-                Открыть страницу
-              </RouterLink>
+      <div v-else class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div class="space-y-5">
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Основное</div>
+            <h2 class="text-2xl font-black text-slate-50">Параметры государства</h2>
+            <div class="mt-5 grid gap-4">
+              <label class="form-control"><span class="mb-2 text-sm font-semibold text-slate-300">Slug</span><input v-model="editForm.slug" class="input rounded-2xl" maxlength="64" /></label>
+              <div class="grid gap-4 md:grid-cols-[1fr_180px]">
+                <label class="form-control"><span class="mb-2 text-sm font-semibold text-slate-300">Название</span><input v-model="editForm.title" class="input rounded-2xl" maxlength="64" /></label>
+                <label class="form-control"><span class="mb-2 text-sm font-semibold text-slate-300">Тег</span><input v-model="editForm.tag" class="input rounded-2xl" maxlength="8" /></label>
+              </div>
+              <label class="form-control"><span class="mb-2 text-sm font-semibold text-slate-300">Короткое описание</span><input v-model="editForm.short_description" class="input rounded-2xl" maxlength="140" /></label>
+              <label class="form-control"><span class="mb-2 text-sm font-semibold text-slate-300">Полное описание</span><textarea v-model="editForm.description" rows="6" class="textarea rounded-2xl" /></label>
+              <div class="grid gap-4 md:grid-cols-[1fr_220px]">
+                <label class="form-control">
+                  <span class="mb-2 text-sm font-semibold text-slate-300">Акцентный цвет</span>
+                  <div class="flex items-center gap-3">
+                    <input v-model="editForm.accent_color" type="color" class="h-12 w-14 cursor-pointer rounded-2xl border border-white/10 bg-transparent p-1" />
+                    <input v-model="editForm.accent_color" class="input rounded-2xl" />
+                  </div>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <button v-for="color in colorPresets" :key="color" type="button" class="h-9 w-9 rounded-full border border-white/10" :style="{ backgroundColor: color }" @click="editForm.accent_color = color"></button>
+                  </div>
+                </label>
+                <label class="form-control">
+                  <span class="mb-2 text-sm font-semibold text-slate-300">Вступление</span>
+                  <select v-model="editForm.recruitment_policy" class="select rounded-2xl">
+                    <option value="open">Свободное вступление</option>
+                    <option value="request">По заявке</option>
+                    <option value="invite_only">Только по приглашению</option>
+                  </select>
+                  <p class="mt-2 text-xs text-slate-500">{{ formatRecruitmentLabel(editForm.recruitment_policy) }}</p>
+                </label>
+              </div>
+              <label class="panel-card flex items-center justify-between gap-4 p-4">
+                <div><p class="font-semibold text-slate-100">Публичная страница</p><p class="mt-1 text-sm leading-6 text-slate-400">Показывать государство в каталоге и рейтинге.</p></div>
+                <input v-model="editForm.is_public" type="checkbox" class="toggle" />
+              </label>
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker">Участники</div>
-            <h2 class="section-title !text-[1.7rem]">Состав и роли</h2>
-            <p class="section-subtitle">
-              Компактные строки без лишней ширины и с понятными действиями.
-            </p>
-
-            <div class="mt-4 rounded-[1.25rem] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm leading-6 text-slate-300">
-              <span class="font-semibold text-white">Твоя роль:</span>
-              {{ formatRoleLabel(viewerRole) || '—' }}.
-              Лидер может менять роли, удалять участников и передавать лидерство.
-              Офицер управляет обычными участниками.
+            <div class="flex items-end justify-between gap-3">
+              <div><div class="section-kicker !mb-2">Состав</div><h2 class="text-2xl font-black text-slate-50">Участники</h2></div>
+              <div class="w-full max-w-[260px]"><input v-model="memberSearch" class="input rounded-2xl" placeholder="Найти по нику или логину" /></div>
             </div>
-
             <div class="mt-5 grid gap-3">
-              <article
-                v-for="member in members"
-                :key="getMemberId(member)"
-                class="member-row"
-              >
-                <div class="member-row__main">
+              <div v-for="member in filteredMembers" :key="member.user_id" class="action-card">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <h3 class="truncate text-base font-bold text-white">
-                        {{ getMemberName(member) }}
-                      </h3>
-                      <span class="inline-chip inline-chip--subtle">
-                        {{ formatRoleLabel(member.role) }}
-                      </span>
-                    </div>
-
-                    <p v-if="getMemberHandle(member)" class="member-row__meta">
-                      @{{ getMemberHandle(member) }}
-                    </p>
+                    <p class="truncate font-semibold text-slate-100">{{ member.minecraft_nickname || member.site_login }}</p>
+                    <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
+                    <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">{{ formatRoleLabel(member.role) }}</p>
+                  </div>
+                  <div v-if="canManage" class="flex flex-wrap gap-2">
+                    <button v-if="member.role === 'member'" type="button" class="btn btn-outline btn-sm" :disabled="actionLoading" @click="setRole(member, 'officer')">Сделать офицером</button>
+                    <button v-if="member.role === 'officer'" type="button" class="btn btn-outline btn-sm" :disabled="actionLoading" @click="setRole(member, 'member')">Понизить до участника</button>
+                    <button v-if="canTransferLeadership && member.role !== 'leader'" type="button" class="btn btn-outline btn-sm" :disabled="actionLoading" @click="makeLeader(member)">Передать лидерство</button>
+                    <button v-if="member.role !== 'leader'" type="button" class="btn btn-ghost btn-sm" :disabled="actionLoading" @click="kickMember(member)">Исключить</button>
                   </div>
                 </div>
-
-                <div
-                  v-if="canManageMembers && canManageTarget(member)"
-                  class="member-row__actions"
-                >
-                  <select
-                    v-model="roleDrafts[getMemberId(member)]"
-                    class="select member-row__select"
-                    :disabled="memberBusy[getMemberId(member)]"
-                  >
-                    <option value="member">Участник</option>
-                    <option value="officer">Офицер</option>
-                    <option value="leader" disabled>Лидер</option>
-                  </select>
-
-                  <button
-                    class="btn btn-light btn-sm"
-                    :disabled="memberBusy[getMemberId(member)]"
-                    @click="changeMemberRole(member)"
-                  >
-                    Применить
-                  </button>
-
-                  <button
-                    v-if="canTransferLeadershipTo(member)"
-                    class="btn btn-ghost btn-sm"
-                    :disabled="memberBusy[getMemberId(member)]"
-                    @click="makeLeader(member)"
-                  >
-                    Лидерство
-                  </button>
-
-                  <button
-                    class="btn btn-ghost btn-sm member-row__danger"
-                    :disabled="memberBusy[getMemberId(member)]"
-                    @click="kickMember(member)"
-                  >
-                    Удалить
-                  </button>
-                </div>
-              </article>
-
-              <div v-if="!members.length" class="action-card text-sm text-slate-400">
-                Участников пока нет.
               </div>
+              <div v-if="!filteredMembers.length" class="action-card text-sm text-slate-400">По текущему фильтру никого не найдено.</div>
+            </div>
+          </section>
+
+          <section v-if="canManage" class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Заявки</div>
+            <h2 class="text-2xl font-black text-slate-50">Вступление в государство</h2>
+            <div class="mt-5 space-y-3">
+              <div v-for="item in nation.join_requests" :key="item.id" class="action-card">
+                <p class="font-semibold text-slate-100">{{ item.minecraft_nickname || item.site_login }}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.message || 'Сообщение не указано.' }}</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-primary btn-sm" :disabled="actionLoading" @click="approveRequest(item.id)">Одобрить</button>
+                  <button type="button" class="btn btn-outline btn-sm" :disabled="actionLoading" @click="rejectRequest(item.id)">Отклонить</button>
+                </div>
+              </div>
+              <div v-if="!nation.join_requests?.length" class="action-card text-sm text-slate-400">Активных заявок сейчас нет.</div>
             </div>
           </section>
         </div>
 
-        <aside class="space-y-6">
+        <aside class="space-y-5">
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker">Медиа</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Оформление</h2>
-
-            <div class="mt-5 grid gap-4">
-              <div class="media-upload-card">
-                <div class="media-upload-card__head">
-                  <div class="min-w-0">
-                    <p class="media-upload-card__title">Иконка</p>
-                    <p class="media-upload-card__status">
-                      {{ currentAssets.icon ? 'Файл уже загружен' : 'Файл не выбран' }}
-                    </p>
-                  </div>
+            <div class="section-kicker !mb-2">Оформление</div>
+            <h2 class="text-2xl font-black text-slate-50">Медиа</h2>
+            <div class="mt-5 space-y-4">
+              <div class="action-card">
+                <div class="flex items-center justify-between gap-3">
+                  <div><p class="font-semibold text-slate-100">Иконка</p><p class="mt-1 text-sm text-slate-400">Квадратное изображение государства.</p></div>
+                  <div class="preview-avatar h-16 w-16 text-sm"><img v-if="assetUrls.icon" :src="assetUrls.icon" alt="icon" class="h-full w-full object-cover" /><span v-else>{{ editForm.tag?.slice(0, 2)?.toUpperCase() || 'N' }}</span></div>
                 </div>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="input media-upload-card__file"
-                  @change="onFileChange('icon', $event)"
-                />
-
-                <p v-if="selectedFileNames.icon" class="media-upload-card__filename">
-                  {{ selectedFileNames.icon }}
-                </p>
-
-                <div class="media-upload-card__actions">
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm"
-                    :disabled="uploading.icon || !selectedFiles.icon"
-                    @click="uploadAsset('icon')"
-                  >
-                    {{ uploading.icon ? 'Загрузка...' : 'Загрузить' }}
-                  </button>
-
-                  <button
-                    v-if="currentAssets.icon"
-                    type="button"
-                    class="btn btn-outline btn-sm"
-                    :disabled="uploading.icon"
-                    @click="removeAsset('icon')"
-                  >
-                    Удалить
-                  </button>
+                <input class="input mt-4 rounded-2xl file:mr-4 file:rounded-xl file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-slate-200" type="file" accept="image/png,image/jpeg,image/webp" @change="selectFile('icon', $event)" />
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-primary btn-sm" :disabled="uploadState.icon || !selectedFiles.icon" @click="uploadAsset('icon')"><span v-if="uploadState.icon" class="spinner"></span><span v-else>Загрузить</span></button>
+                  <button type="button" class="btn btn-outline btn-sm" :disabled="uploadState.icon || !assetUrls.icon" @click="deleteAsset('icon')">Удалить</button>
                 </div>
               </div>
 
-              <div class="media-upload-card">
-                <div class="media-upload-card__head">
-                  <div class="min-w-0">
-                    <p class="media-upload-card__title">Баннер</p>
-                    <p class="media-upload-card__status">
-                      {{ currentAssets.banner ? 'Файл уже загружен' : 'Файл не выбран' }}
-                    </p>
-                  </div>
-                </div>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="input media-upload-card__file"
-                  @change="onFileChange('banner', $event)"
-                />
-
-                <p v-if="selectedFileNames.banner" class="media-upload-card__filename">
-                  {{ selectedFileNames.banner }}
-                </p>
-
-                <div class="media-upload-card__actions">
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm"
-                    :disabled="uploading.banner || !selectedFiles.banner"
-                    @click="uploadAsset('banner')"
-                  >
-                    {{ uploading.banner ? 'Загрузка...' : 'Загрузить' }}
-                  </button>
-
-                  <button
-                    v-if="currentAssets.banner"
-                    type="button"
-                    class="btn btn-outline btn-sm"
-                    :disabled="uploading.banner"
-                    @click="removeAsset('banner')"
-                  >
-                    Удалить
-                  </button>
+              <div class="action-card">
+                <p class="font-semibold text-slate-100">Баннер</p>
+                <p class="mt-1 text-sm text-slate-400">Hero-обложка страницы государства.</p>
+                <img v-if="assetUrls.banner" :src="assetUrls.banner" alt="banner" class="mt-4 h-28 w-full rounded-2xl object-cover" />
+                <input class="input mt-4 rounded-2xl file:mr-4 file:rounded-xl file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-slate-200" type="file" accept="image/png,image/jpeg,image/webp" @change="selectFile('banner', $event)" />
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-primary btn-sm" :disabled="uploadState.banner || !selectedFiles.banner" @click="uploadAsset('banner')"><span v-if="uploadState.banner" class="spinner"></span><span v-else>Загрузить</span></button>
+                  <button type="button" class="btn btn-outline btn-sm" :disabled="uploadState.banner || !assetUrls.banner" @click="deleteAsset('banner')">Удалить</button>
                 </div>
               </div>
 
-              <div class="media-upload-card">
-                <div class="media-upload-card__head">
-                  <div class="min-w-0">
-                    <p class="media-upload-card__title">Фон страницы</p>
-                    <p class="media-upload-card__status">
-                      {{ currentAssets.background ? 'Файл уже загружен' : 'Файл не выбран' }}
-                    </p>
-                  </div>
-                </div>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="input media-upload-card__file"
-                  @change="onFileChange('background', $event)"
-                />
-
-                <p v-if="selectedFileNames.background" class="media-upload-card__filename">
-                  {{ selectedFileNames.background }}
-                </p>
-
-                <div class="media-upload-card__actions">
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm"
-                    :disabled="uploading.background || !selectedFiles.background"
-                    @click="uploadAsset('background')"
-                  >
-                    {{ uploading.background ? 'Загрузка...' : 'Загрузить' }}
-                  </button>
-
-                  <button
-                    v-if="currentAssets.background"
-                    type="button"
-                    class="btn btn-outline btn-sm"
-                    :disabled="uploading.background"
-                    @click="removeAsset('background')"
-                  >
-                    Удалить
-                  </button>
+              <div class="action-card">
+                <p class="font-semibold text-slate-100">Фон страницы</p>
+                <p class="mt-1 text-sm text-slate-400">Отдельный фон всей публичной страницы государства.</p>
+                <img v-if="assetUrls.background" :src="assetUrls.background" alt="background" class="mt-4 h-28 w-full rounded-2xl object-cover" />
+                <input class="input mt-4 rounded-2xl file:mr-4 file:rounded-xl file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-slate-200" type="file" accept="image/png,image/jpeg,image/webp" @change="selectFile('background', $event)" />
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-primary btn-sm" :disabled="uploadState.background || !selectedFiles.background" @click="uploadAsset('background')"><span v-if="uploadState.background" class="spinner"></span><span v-else>Загрузить</span></button>
+                  <button type="button" class="btn btn-outline btn-sm" :disabled="uploadState.background || !assetUrls.background" @click="deleteAsset('background')">Удалить</button>
                 </div>
               </div>
             </div>
+          </section>
+
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Статус</div>
+            <h2 class="text-2xl font-black text-slate-50">Текущее состояние</h2>
+            <div class="mt-5 grid gap-3">
+              <div class="metric-card"><p class="metric-label">Твоя роль</p><p class="mt-2 text-sm font-semibold text-slate-100">{{ formatRoleLabel(viewerRole) }}</p></div>
+              <div class="metric-card"><p class="metric-label">Политика вступления</p><p class="mt-2 text-sm font-semibold text-slate-100">{{ formatRecruitmentLabel(editForm.recruitment_policy) }}</p></div>
+              <div class="metric-card"><p class="metric-label">Ссылка</p><p class="mt-2 break-all text-sm font-semibold text-slate-100">{{ publicUrl || '—' }}</p></div>
+            </div>
+            <div class="mt-5"><button type="button" class="btn btn-ghost w-full" :disabled="actionLoading" @click="handleLeave">Выйти из государства</button></div>
           </section>
         </aside>
       </div>
