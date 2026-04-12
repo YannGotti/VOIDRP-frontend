@@ -206,7 +206,7 @@ onMounted(loadPage)
           </div>
 
           <div class="p-5 md:p-6">
-            <div class="-mt-10 flex items-end gap-3">
+            <div class="-mt-0 flex items-end gap-3">
               <div class="preview-avatar h-16 w-16 border-4 border-[#09101d] bg-[#0f172a] shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
                 <img
                   v-if="nation.assets?.icon_url || nation.assets?.icon_preview_url"
