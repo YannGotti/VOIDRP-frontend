@@ -4,56 +4,80 @@ import { siteConfig } from '../config.site'
 const links = [
   {
     title: 'Скачать лаунчер',
-    description: 'Главная страница скачивания официального лаунчера и быстрый путь к запуску игры.',
+    description: 'Официальная страница загрузки лаунчера и быстрый переход к запуску игры.',
     internal: '/download-launcher',
-    button: 'Перейти к скачиванию',
+    button: 'Скачать лаунчер',
   },
   {
     title: 'Карта мира',
-    description: 'Онлайн-карта сервера, где можно смотреть мир, маршруты и интересные места прямо из браузера.',
+    description: 'Онлайн-карта сервера: маршруты, постройки и обзор мира прямо в браузере.',
     url: siteConfig.dynmapUrl,
     button: 'Открыть карту',
   },
   {
     title: 'Telegram',
-    description: 'Новости проекта, анонсы и важные сообщения для игроков в одном канале.',
+    description: 'Новости проекта, анонсы и важные сообщения для игроков.',
     url: siteConfig.telegramUrl,
     button: 'Перейти в Telegram',
   },
   {
     title: 'Главная страница',
-    description: 'Возврат на основной сайт со стартовой страницей, кабинетом и навигацией по проекту.',
+    description: 'Быстрый возврат на основной сайт со стартовой страницей и кабинетом.',
     url: siteConfig.siteUrl,
-    button: 'Открыть главную',
+    button: 'Открыть сайт',
   },
 ]
 </script>
 
 <template>
-  <section class="py-12 md:py-18">
-    <div class="container-shell">
-      <div class="max-w-3xl">
-        <div class="section-kicker">Полезные ссылки</div>
-        <h1 class="section-title">Всё важное в одном месте</h1>
-        <p class="section-subtitle">
-          Карта мира, Telegram, главная страница и скачивание лаунчера вынесены в отдельный понятный раздел без визуальной каши.
-        </p>
-      </div>
+  <section class="py-8 md:py-10">
+    <div class="container-shell space-y-5">
+      <section class="surface-card p-5 md:p-7">
+        <div class="max-w-3xl">
+          <div class="section-kicker !mb-2">Полезные ссылки</div>
+          <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">
+            Всё важное под рукой
+          </h1>
+          <p class="mt-4 text-sm leading-7 text-slate-400 md:text-[15px]">
+            Карта мира, Telegram, сайт и страница скачивания лаунчера собраны в одном
+            аккуратном разделе без лишней визуальной перегрузки.
+          </p>
+        </div>
+      </section>
 
-      <div class="mt-10 grid gap-5 md:grid-cols-2">
-        <article v-for="item in links" :key="item.title" class="surface-card p-6 md:p-7">
-          <div class="section-kicker">Ссылка</div>
-          <h2 class="text-2xl font-black tracking-tight text-slate-950">{{ item.title }}</h2>
-          <p class="mt-4 text-sm leading-7 text-slate-600">{{ item.description }}</p>
+      <section class="grid gap-4 md:grid-cols-2">
+        <article
+          v-for="item in links"
+          :key="item.title"
+          class="surface-card p-5 md:p-6"
+        >
+          <div class="section-kicker !mb-2">Ссылка</div>
+          <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
+            {{ item.title }}
+          </h2>
+          <p class="mt-3 text-sm leading-7 text-slate-400">
+            {{ item.description }}
+          </p>
 
-          <RouterLink v-if="item.internal" :to="item.internal" class="btn btn-primary mt-6">
+          <RouterLink
+            v-if="item.internal"
+            :to="item.internal"
+            class="btn btn-primary mt-5 w-full sm:w-auto"
+          >
             {{ item.button }}
           </RouterLink>
-          <a v-else :href="item.url" target="_blank" rel="noreferrer" class="btn btn-primary mt-6">
+
+          <a
+            v-else
+            :href="item.url"
+            target="_blank"
+            rel="noreferrer"
+            class="btn btn-primary mt-5 w-full sm:w-auto"
+          >
             {{ item.button }}
           </a>
         </article>
-      </div>
+      </section>
     </div>
   </section>
 </template>

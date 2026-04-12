@@ -1,9 +1,9 @@
 <script setup>
 const tabs = [
-  { to: '/profile', label: 'Обзор' },
-  { to: '/profile/public', label: 'Профиль' },
+  { to: '/profile', label: 'Кабинет' },
+  { to: '/profile/public', label: 'Публичный профиль' },
   { to: '/profile/referrals', label: 'Рефералы' },
-  { to: '/profile/social', label: 'Социальный блок' },
+  { to: '/profile/social', label: 'Друзья' },
 ]
 </script>
 

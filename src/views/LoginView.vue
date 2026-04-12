@@ -11,8 +11,10 @@ const form = reactive({
   password: '',
   device_name: 'VoidRP Site',
 })
+
 const isSubmitting = ref(false)
 const errorMessage = ref('')
+
 const redirectTarget = computed(() =>
   typeof route.query.redirect === 'string' && route.query.redirect.length > 0
     ? route.query.redirect
@@ -27,7 +29,7 @@ async function submit() {
     await loginWithPassword(form)
     await router.push(redirectTarget.value)
   } catch (error) {
-    errorMessage.value = error.message || 'Не удалось войти в аккаунт.'
+    errorMessage.value = error?.message || 'Не удалось войти в аккаунт.'
   } finally {
     isSubmitting.value = false
   }
@@ -35,14 +37,17 @@ async function submit() {
 </script>
 
 <template>
-  <section class="py-12 md:py-20">
+  <section class="py-10 md:py-16">
     <div class="container-shell max-w-6xl">
       <div class="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
         <aside class="gradient-panel p-6 md:p-8">
           <div class="section-kicker section-kicker--light">Вход в аккаунт</div>
-          <h1 class="text-3xl font-black tracking-tight text-white md:text-5xl">Возвращайся в игру без путаницы</h1>
+          <h1 class="text-3xl font-black tracking-tight text-white md:text-5xl">
+            Возвращайся в игру без путаницы
+          </h1>
           <p class="mt-4 text-base leading-8 text-white/78">
-            Один аккаунт работает для сайта, кабинета и официального лаунчера. После входа ты сразу попадёшь туда, куда собирался перейти.
+            Один аккаунт работает для сайта, кабинета и официального лаунчера.
+            После входа ты сразу попадёшь туда, куда собирался перейти.
           </p>
 
           <div class="mt-8 grid gap-3">
@@ -62,7 +67,8 @@ async function submit() {
           <div class="section-kicker">Вход</div>
           <h2 class="section-title">Войти в аккаунт</h2>
           <p class="section-subtitle">
-            Используй логин или email и пароль от аккаунта VoidRP. Эти же данные подойдут для официального лаунчера.
+            Используй логин или email и пароль от аккаунта VoidRP. Эти же данные
+            подойдут для официального лаунчера.
           </p>
 
           <div v-if="route.query.redirect" class="alert alert-info mt-6">
@@ -72,12 +78,18 @@ async function submit() {
           <form class="mt-8 grid gap-4" @submit.prevent="submit">
             <label>
               <span class="field-label">Логин или email</span>
-              <input v-model="form.login" class="input" required />
+              <input v-model="form.login" class="input" autocomplete="username" required />
             </label>
 
             <label>
               <span class="field-label">Пароль</span>
-              <input v-model="form.password" type="password" class="input" required />
+              <input
+                v-model="form.password"
+                type="password"
+                class="input"
+                autocomplete="current-password"
+                required
+              />
             </label>
 
             <p v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
@@ -88,9 +100,13 @@ async function submit() {
             </button>
           </form>
 
-          <div class="mt-6 flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-            <RouterLink to="/forgot-password" class="font-semibold text-indigo-700">Забыли пароль?</RouterLink>
-            <RouterLink to="/register" class="font-semibold text-indigo-700">Нет аккаунта? Создать</RouterLink>
+          <div class="mt-6 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <RouterLink to="/forgot-password" class="text-slate-300 transition hover:text-white">
+              Забыли пароль?
+            </RouterLink>
+            <RouterLink to="/register" class="text-slate-300 transition hover:text-white">
+              Нет аккаунта? Создать
+            </RouterLink>
           </div>
         </div>
       </div>
