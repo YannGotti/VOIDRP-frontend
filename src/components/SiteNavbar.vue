@@ -51,6 +51,8 @@ async function handleLogout() {
           <div class="site-navbar__brand-text">
             <div class="site-navbar__title">{{ siteConfig.serverName }}</div>
             <div class="site-navbar__meta">Better MC 5 · Minecraft {{ siteConfig.serverVersion }}</div>
+            
+            <a href="https://minecraftrating.ru/" class="mr-vote-server site-navbar__meta" data-server-id="396033"><span id="mr-vote-title"><img src="" alt="" /></span><span id="mr-vote-counter"></span></a>
           </div>
         </RouterLink>
 

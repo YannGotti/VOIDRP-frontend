@@ -30,6 +30,13 @@ export async function joinAlliance(accessToken, allianceSlug) {
   })
 }
 
+export async function leaveAlliance(accessToken) {
+  return await apiRequest('/alliances/leave', {
+    method: 'POST',
+    headers: buildAuthHeaders(accessToken),
+  })
+}
+
 export async function updateAlliancePolicies(accessToken, slug, payload) {
   return await apiRequest(`/alliances/${encodeURIComponent(slug)}/policies`, {
     method: 'POST',
@@ -66,5 +73,12 @@ export async function transferAllianceFunds(accessToken, slug, payload) {
     method: 'POST',
     headers: buildAuthHeaders(accessToken, { 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload),
+  })
+}
+
+export async function getAllianceTransactions(slug, accessToken = null) {
+  return await apiRequest(`/alliances/${encodeURIComponent(slug)}/transactions`, {
+    method: 'GET',
+    headers: buildAuthHeaders(accessToken),
   })
 }

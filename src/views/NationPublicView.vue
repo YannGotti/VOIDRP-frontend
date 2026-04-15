@@ -4,7 +4,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import { approveNationRequest, getNationBySlug, joinNation, rejectNationRequest } from '../services/nationsApi'
 import { getNationActivity } from '../services/nationActivityApi'
-import { getNationStatsBySlug } from '../services/nationStatsApi'
+import { getNationStatsBySlug, getNationTopDonors, getNationTreasuryTransactions } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
 import { formatCompactHoursFromMinutes, formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
 
@@ -21,6 +21,10 @@ const requestMessage = ref('')
 const nation = ref(null)
 const stats = ref(null)
 const activity = ref([])
+const treasuryLoading = ref(true)
+const donorsLoading = ref(true)
+const transactions = ref([])
+const donors = ref([])
 
 function hexToRgba(hex, alpha) {
   if (!hex || typeof hex !== 'string') return `rgba(109, 93, 246, ${alpha})`
@@ -106,6 +110,18 @@ const cardStyle = computed(() => ({
   background: `linear-gradient(180deg, rgba(10,15,27,0.84), ${hexToRgba(accent.value, 0.08)})`,
 }))
 
+
+function txLabel(item) {
+  const type = String(item?.transaction_type || '').toLowerCase()
+  if (type === 'player_donation') return `Донат игрока ${item?.metadata_json?.minecraft_nickname || ''}`.trim()
+  if (type === 'deposit') return 'Пополнение'
+  if (type === 'withdraw') return 'Списание'
+  if (type === 'alliance_transfer_out') return 'Перевод союзнику'
+  if (type === 'alliance_transfer_in') return 'Перевод от союзника'
+  if (type === 'alliance_fee_income') return 'Комиссия альянса'
+  return item?.transaction_type || 'Операция'
+}
+
 const canJoin = computed(() => {
   if (!nation.value || !auth.isAuthenticated.value) return false
   if (nation.value.viewer_is_member) return false
@@ -158,6 +174,31 @@ async function loadActivity() {
   }
 }
 
+
+async function loadTreasury() {
+  treasuryLoading.value = true
+  try {
+    const payload = await getNationTreasuryTransactions(route.params.slug, auth.accessToken || null)
+    transactions.value = payload?.items || []
+  } catch {
+    transactions.value = []
+  } finally {
+    treasuryLoading.value = false
+  }
+}
+
+async function loadDonors() {
+  donorsLoading.value = true
+  try {
+    const payload = await getNationTopDonors(route.params.slug, auth.accessToken || null)
+    donors.value = payload?.items || []
+  } catch {
+    donors.value = []
+  } finally {
+    donorsLoading.value = false
+  }
+}
+
 async function handleJoin() {
   if (!nation.value || !auth.accessToken) return
   joinLoading.value = true
@@ -197,12 +238,12 @@ async function handleReject(requestId) {
 }
 
 watch(() => route.params.slug, async () => {
-  await Promise.all([loadNation(), loadStats(), loadActivity()])
+  await Promise.all([loadNation(), loadStats(), loadActivity(), loadTreasury(), loadDonors()])
 })
 watch(routeBackground, (value) => applyRouteBackground(value), { immediate: true })
 
 onMounted(async () => {
-  await Promise.all([loadNation(), loadStats(), loadActivity()])
+  await Promise.all([loadNation(), loadStats(), loadActivity(), loadTreasury(), loadDonors()])
 })
 
 onBeforeUnmount(() => {
@@ -459,6 +500,57 @@ onBeforeUnmount(() => {
                   </div>
                 </section>
               </aside>
+            </div>
+
+
+            <div class="grid gap-4 lg:grid-cols-2">
+              <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                <div class="section-kicker !mb-2">Казна</div>
+                <h2 class="text-lg font-black text-slate-50 md:text-xl">Последние операции</h2>
+
+                <div v-if="treasuryLoading" class="mt-4 space-y-3">
+                  <div class="skeleton h-20 rounded-2xl"></div>
+                  <div class="skeleton h-20 rounded-2xl"></div>
+                </div>
+
+                <div v-else-if="!transactions.length" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
+                  Операций пока нет.
+                </div>
+
+                <div v-else class="mt-4 space-y-3">
+                  <div v-for="item in transactions" :key="item.id" class="action-card" :style="cardStyle">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                      <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
+                      <span class="footer-chip">{{ formatNumber(item.net_amount) }}</span>
+                    </div>
+                    <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария.' }}</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                <div class="section-kicker !mb-2">Меценаты</div>
+                <h2 class="text-lg font-black text-slate-50 md:text-xl">Кто пополняет казну</h2>
+
+                <div v-if="donorsLoading" class="mt-4 space-y-3">
+                  <div class="skeleton h-16 rounded-2xl"></div>
+                  <div class="skeleton h-16 rounded-2xl"></div>
+                </div>
+
+                <div v-else-if="!donors.length" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
+                  Донатов игроков пока не было.
+                </div>
+
+                <div v-else class="mt-4 space-y-3">
+                  <div v-for="item in donors" :key="item.minecraft_nickname" class="action-card" :style="cardStyle">
+                    <div class="flex items-center justify-between gap-3">
+                      <p class="font-semibold text-slate-100">{{ item.minecraft_nickname }}</p>
+                      <span class="footer-chip">{{ formatNumber(item.total_amount) }}</span>
+                    </div>
+                    <p class="mt-2 text-sm leading-6 text-slate-400">Донатов: {{ formatNumber(item.donations_count) }}</p>
+                  </div>
+                </div>
+              </section>
             </div>
 
             <NationActivityFeed

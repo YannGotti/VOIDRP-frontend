@@ -22,8 +22,9 @@ import {
   uploadNationIcon,
 } from '../services/nationsApi'
 import { getMyNationActivity } from '../services/nationActivityApi'
+import { depositNationTreasury, getNationTopDonors, getNationTreasuryTransactions, withdrawNationTreasury } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
-import { formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
+import { formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
 
 const auth = useAuthStore()
 
@@ -35,7 +36,18 @@ const error = ref('')
 const success = ref('')
 const nation = ref(null)
 const activity = ref([])
+const treasuryLoading = ref(true)
+const donorsLoading = ref(true)
+const transactions = ref([])
+const donors = ref([])
 const memberSearch = ref('')
+
+const treasuryForm = reactive({
+  deposit_amount: 1000,
+  deposit_comment: '',
+  withdraw_amount: 1000,
+  withdraw_comment: '',
+})
 
 const createForm = reactive({
   slug: '',
@@ -109,6 +121,18 @@ function formatAllianceType(value) {
   }
 }
 
+
+function txLabel(item) {
+  const type = String(item?.transaction_type || '').toLowerCase()
+  if (type === 'player_donation') return `Донат игрока ${item?.metadata_json?.minecraft_nickname || ''}`.trim()
+  if (type === 'deposit') return 'Пополнение'
+  if (type === 'withdraw') return 'Списание'
+  if (type === 'alliance_transfer_out') return 'Перевод союзнику'
+  if (type === 'alliance_transfer_in') return 'Перевод от союзника'
+  if (type === 'alliance_fee_income') return 'Комиссия альянса'
+  return item?.transaction_type || 'Операция'
+}
+
 function hydrateForms(payload) {
   nation.value = payload
 
@@ -151,8 +175,87 @@ async function loadActivity() {
     activity.value = Array.isArray(payload?.items) ? payload.items : []
   } catch {
     activity.value = []
+    transactions.value = []
+    donors.value = []
   } finally {
     activityLoading.value = false
+  }
+}
+
+
+async function loadTreasury() {
+  if (!nation.value?.slug) {
+    transactions.value = []
+    treasuryLoading.value = false
+    return
+  }
+  treasuryLoading.value = true
+  try {
+    const payload = await getNationTreasuryTransactions(nation.value.slug, auth.accessToken)
+    transactions.value = payload?.items || []
+  } catch {
+    transactions.value = []
+  } finally {
+    treasuryLoading.value = false
+  }
+}
+
+async function loadDonors() {
+  if (!nation.value?.slug) {
+    donors.value = []
+    donorsLoading.value = false
+    return
+  }
+  donorsLoading.value = true
+  try {
+    const payload = await getNationTopDonors(nation.value.slug, auth.accessToken)
+    donors.value = payload?.items || []
+  } catch {
+    donors.value = []
+  } finally {
+    donorsLoading.value = false
+  }
+}
+
+async function refreshTreasuryBlocks() {
+  await Promise.all([loadTreasury(), loadDonors(), loadActivity(), loadNation()])
+}
+
+async function submitDeposit() {
+  if (!nation.value?.slug) return
+  saving.value = true
+  error.value = ''
+  success.value = ''
+  try {
+    await depositNationTreasury(auth.accessToken, nation.value.slug, {
+      amount: treasuryForm.deposit_amount,
+      comment: treasuryForm.deposit_comment || null,
+    })
+    success.value = 'Казна государства пополнена.'
+    await refreshTreasuryBlocks()
+  } catch (err) {
+    error.value = err.message || 'Не удалось пополнить казну.'
+  } finally {
+    saving.value = false
+  }
+}
+
+async function submitWithdraw() {
+  if (!nation.value?.slug) return
+  saving.value = true
+  error.value = ''
+  success.value = ''
+  try {
+    await withdrawNationTreasury(auth.accessToken, nation.value.slug, {
+      amount: treasuryForm.withdraw_amount,
+      comment: treasuryForm.withdraw_comment || null,
+    })
+    success.value = 'Списание из казны выполнено.'
+    await refreshTreasuryBlocks()
+  } catch (err) {
+    error.value = err.message || 'Не удалось списать из казны.'
+  } finally {
+    saving.value = false
   }
 }
 
@@ -175,7 +278,7 @@ async function submitCreate() {
 
     hydrateForms(payload)
     success.value = 'Государство создано.'
-    await loadActivity()
+    await Promise.all([loadActivity(), loadTreasury(), loadDonors()])
   } catch (err) {
     error.value = err.message || 'Не удалось создать государство.'
   } finally {
@@ -202,7 +305,7 @@ async function submitUpdate() {
 
     hydrateForms(payload)
     success.value = 'Изменения сохранены.'
-    await loadActivity()
+    await Promise.all([loadActivity(), loadTreasury(), loadDonors()])
   } catch (err) {
     error.value = err.message || 'Не удалось сохранить изменения.'
   } finally {
@@ -384,6 +487,8 @@ async function handleLeaveNation() {
     nation.value = null
     success.value = 'Ты покинул государство.'
     activity.value = []
+    transactions.value = []
+    donors.value = []
   } catch (err) {
     error.value = err.message || 'Не удалось покинуть государство.'
   } finally {
@@ -392,7 +497,8 @@ async function handleLeaveNation() {
 }
 
 onMounted(async () => {
-  await Promise.all([loadNation(), loadActivity()])
+  await loadNation()
+  await Promise.all([loadActivity(), loadTreasury(), loadDonors()])
 })
 </script>
 
@@ -619,6 +725,80 @@ onMounted(async () => {
                 >
                   Покинуть государство
                 </button>
+              </div>
+            </div>
+          </section>
+
+
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Казна</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Управление treasury</h2>
+
+            <div class="mt-5 grid gap-4 md:grid-cols-2">
+              <div class="action-card">
+                <p class="font-semibold text-slate-100">Пополнение</p>
+                <input v-model="treasuryForm.deposit_amount" type="number" class="input rounded-2xl mt-3" placeholder="Сумма" />
+                <textarea v-model="treasuryForm.deposit_comment" class="textarea rounded-2xl mt-3" rows="3" placeholder="Комментарий"></textarea>
+                <button type="button" class="btn btn-primary mt-3" :disabled="saving" @click="submitDeposit">
+                  Пополнить казну
+                </button>
+              </div>
+
+              <div class="action-card">
+                <p class="font-semibold text-slate-100">Списание</p>
+                <input v-model="treasuryForm.withdraw_amount" type="number" class="input rounded-2xl mt-3" placeholder="Сумма" />
+                <textarea v-model="treasuryForm.withdraw_comment" class="textarea rounded-2xl mt-3" rows="3" placeholder="Комментарий"></textarea>
+                <button type="button" class="btn btn-outline mt-3" :disabled="saving" @click="submitWithdraw">
+                  Списать из казны
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Меценаты</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Кто пополняет казну</h2>
+
+            <div v-if="donorsLoading" class="mt-5 space-y-3">
+              <div class="skeleton h-16 rounded-[22px]"></div>
+              <div class="skeleton h-16 rounded-[22px]"></div>
+            </div>
+
+            <div v-else-if="!donors.length" class="action-card mt-5 text-sm text-slate-400">
+              Донатов игроков пока не было.
+            </div>
+
+            <div v-else class="mt-5 grid gap-3 md:grid-cols-2">
+              <div v-for="item in donors" :key="item.minecraft_nickname" class="action-card">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="font-semibold text-slate-100">{{ item.minecraft_nickname }}</p>
+                  <span class="footer-chip">{{ formatNumber(item.total_amount) }}</span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-slate-400">Донатов: {{ formatNumber(item.donations_count) }}</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Журнал казны</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Последние операции</h2>
+
+            <div v-if="treasuryLoading" class="mt-5 space-y-3">
+              <div class="skeleton h-20 rounded-[22px]"></div>
+              <div class="skeleton h-20 rounded-[22px]"></div>
+            </div>
+
+            <div v-else-if="!transactions.length" class="action-card mt-5 text-sm text-slate-400">
+              Операций пока нет.
+            </div>
+
+            <div v-else class="mt-5 space-y-3">
+              <div v-for="item in transactions" :key="item.id" class="action-card">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
+                  <span class="footer-chip">{{ formatNumber(item.net_amount) }}</span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария.' }}</p>
               </div>
             </div>
           </section>
