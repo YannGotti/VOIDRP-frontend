@@ -4,27 +4,31 @@ import { siteConfig } from '../config.site'
 const links = [
   {
     title: 'Скачать лаунчер',
-    description: 'Официальная страница загрузки лаунчера и быстрый переход к запуску игры.',
+    description: 'Официальная страница загрузки лаунчера и быстрый путь к запуску игры.',
     internal: '/download-launcher',
     button: 'Скачать лаунчер',
+    tag: 'Старт',
   },
   {
     title: 'Карта мира',
-    description: 'Онлайн-карта сервера: маршруты, постройки и обзор мира прямо в браузере.',
+    description: 'Онлайн-карта сервера: маршруты, города, регионы и обзор мира прямо в браузере.',
     url: siteConfig.dynmapUrl,
     button: 'Открыть карту',
+    tag: 'Мир',
   },
   {
     title: 'Telegram',
-    description: 'Новости проекта, анонсы и важные сообщения для игроков.',
+    description: 'Новости проекта, анонсы и важные сообщения для игроков в одном месте.',
     url: siteConfig.telegramUrl,
     button: 'Перейти в Telegram',
+    tag: 'Связь',
   },
   {
     title: 'Главная страница',
-    description: 'Быстрый возврат на основной сайт со стартовой страницей и кабинетом.',
+    description: 'Возврат на стартовый экран с путём к игре, кабинетам и навигацией по сайту.',
     url: siteConfig.siteUrl,
     button: 'Открыть сайт',
+    tag: 'Навигация',
   },
 ]
 </script>
@@ -39,8 +43,8 @@ const links = [
             Всё важное под рукой
           </h1>
           <p class="mt-4 text-sm leading-7 text-slate-400 md:text-[15px]">
-            Карта мира, Telegram, сайт и страница скачивания лаунчера собраны в одном
-            аккуратном разделе без лишней визуальной перегрузки.
+            Карта мира, Telegram, сайт и загрузка лаунчера собраны в одном спокойном разделе.
+            Игроку не нужно искать их по разным углам интерфейса.
           </p>
         </div>
       </section>
@@ -51,8 +55,12 @@ const links = [
           :key="item.title"
           class="surface-card p-5 md:p-6"
         >
-          <div class="section-kicker !mb-2">Ссылка</div>
-          <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
+          <div class="flex items-center justify-between gap-3">
+            <div class="section-kicker !mb-0">{{ item.tag }}</div>
+            <div class="footer-chip">Быстрый переход</div>
+          </div>
+
+          <h2 class="mt-4 text-xl font-black tracking-tight text-slate-50 md:text-2xl">
             {{ item.title }}
           </h2>
           <p class="mt-3 text-sm leading-7 text-slate-400">

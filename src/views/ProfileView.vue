@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AccountTabs from '../components/AccountTabs.vue'
+import { resendVerification } from '../services/authApi'
 import { getMyNation } from '../services/nationsApi'
 import { getMyPublicProfile } from '../services/profileApi'
 import { reloadMe, useAuthStore } from '../stores/authStore'
@@ -10,7 +11,9 @@ const auth = useAuthStore()
 
 const loading = ref(true)
 const refreshing = ref(false)
+const sendingVerification = ref(false)
 const errorMessage = ref('')
+const actionMessage = ref('')
 const publicProfile = ref(null)
 const myNation = ref(null)
 
@@ -31,6 +34,10 @@ const avatarUrl = computed(
 )
 
 const publicProfileUrl = computed(() => (publicProfile.value?.slug ? `/u/${publicProfile.value.slug}` : ''))
+const publicProfileAbsoluteUrl = computed(() => {
+  if (!publicProfile.value?.slug || typeof window === 'undefined') return ''
+  return `${window.location.origin}/u/${publicProfile.value.slug}`
+})
 
 const createdAtText = computed(() => {
   const raw = auth.state.user?.created_at
@@ -46,9 +53,20 @@ const bioText = computed(() => {
   return publicProfile.value?.bio?.trim() || 'Добавь короткое описание о себе, чтобы профиль выглядел живым и законченным.'
 })
 
-const profileStateText = computed(() => {
-  return publicProfile.value?.slug ? 'Публичный профиль уже доступен игрокам' : 'Публичный профиль ещё не заполнен'
+const nationRoleText = computed(() => {
+  switch (String(myNation.value?.viewer_role || '').toLowerCase()) {
+    case 'leader':
+      return 'Лидер государства'
+    case 'officer':
+      return 'Офицер государства'
+    case 'member':
+      return 'Участник государства'
+    default:
+      return 'Без государства'
+  }
 })
+
+const canManageNation = computed(() => Boolean(myNation.value?.viewer_can_manage))
 
 const checkpoints = computed(() => [
   {
@@ -66,35 +84,94 @@ const checkpoints = computed(() => [
     value: publicProfile.value?.slug ? `@${publicProfile.value.slug}` : 'Пока не заполнен',
     done: Boolean(publicProfile.value?.slug),
   },
+  {
+    label: 'Государство',
+    value: myNation.value?.title || 'Пока не выбрано',
+    done: Boolean(myNation.value?.slug),
+  },
 ])
+
+const readinessPercent = computed(() => {
+  const done = checkpoints.value.filter((item) => item.done).length
+  return Math.round((done / checkpoints.value.length) * 100)
+})
+
+const primaryActions = computed(() => {
+  const items = []
+
+  if (!auth.emailVerified.value) {
+    items.push({
+      title: 'Подтвердить почту',
+      description: 'Это откроет полный и понятный путь для входа и восстановления доступа.',
+      to: '/verify-email',
+      tone: 'primary',
+    })
+  }
+
+  if (!publicProfile.value?.slug) {
+    items.push({
+      title: 'Заполнить публичный профиль',
+      description: 'Добавь описание и оформление, чтобы тебя было проще узнать другим игрокам.',
+      to: '/profile/public',
+      tone: items.length ? 'outline' : 'primary',
+    })
+  }
+
+  if (!myNation.value?.slug) {
+    items.push({
+      title: 'Выбрать государство',
+      description: 'Открой каталог и вступи в подходящее сообщество или создай своё.',
+      to: '/nations',
+      tone: items.length ? 'outline' : 'primary',
+    })
+  }
+
+  if (!items.length) {
+    items.push({
+      title: 'Открыть публичный профиль',
+      description: 'Профиль уже готов — можно показать его другим игрокам.',
+      to: publicProfileUrl.value || '/profile/public',
+      tone: 'primary',
+    })
+  }
+
+  return items.slice(0, 3)
+})
 
 const quickLinks = computed(() => [
   {
-    title: 'Редактировать публичный профиль',
-    description: 'Сменить описание, внешний вид и ссылки профиля.',
+    title: 'Оформление профиля',
+    description: 'Измени описание, фон, аватар и внешний вид страницы игрока.',
     to: '/profile/public',
   },
   {
     title: 'Реферальный центр',
-    description: 'Смотреть код приглашения и активность приглашённых игроков.',
+    description: 'Смотреть код приглашения, прогресс и недавние регистрации.',
     to: '/profile/referrals',
   },
   {
-    title: 'Друзья и подписки',
-    description: 'Открыть социальный блок без лишней перегрузки кабинета.',
+    title: 'Социальный хаб',
+    description: 'Подписчики, подписки и друзья в одном компактном месте.',
     to: '/profile/social',
   },
   {
-    title: myNation.value ? 'Управлять государством' : 'Перейти к государствам',
-    description: myNation.value
-      ? `Сейчас ты состоишь в «${myNation.value.title}».`
-      : 'Можно создать своё государство или вступить в существующее.',
-    to: myNation.value ? '/nation/studio' : '/nations',
+    title: !myNation.value
+      ? 'Каталог государств'
+      : canManageNation.value
+        ? 'Управление государством'
+        : 'Страница твоего государства',
+    description: !myNation.value
+      ? 'Посмотри открытые сообщества, заявки и условия вступления.'
+      : canManageNation.value
+        ? `У тебя есть доступ к управлению «${myNation.value.title}».`
+        : `Ты состоишь в «${myNation.value.title}». Открой страницу сообщества.`,
+    to: !myNation.value ? '/nations' : canManageNation.value ? '/nation/studio' : `/nation/${myNation.value.slug}`,
   },
 ])
 
 async function loadData() {
   errorMessage.value = ''
+  actionMessage.value = ''
   loading.value = true
 
   try {
@@ -120,18 +197,50 @@ async function refreshAccount() {
   refreshing.value = false
 }
 
+async function sendVerificationAgain() {
+  if (!auth.state.user?.email) return
+
+  sendingVerification.value = true
+  errorMessage.value = ''
+  actionMessage.value = ''
+
+  try {
+    const response = await resendVerification({ email: auth.state.user.email })
+    actionMessage.value = response?.message || 'Письмо для подтверждения отправлено повторно.'
+  } catch (error) {
+    errorMessage.value = error?.message || 'Не удалось отправить письмо повторно.'
+  } finally {
+    sendingVerification.value = false
+  }
+}
+
+async function copyPublicProfileUrl() {
+  if (!publicProfileAbsoluteUrl.value) return
+
+  try {
+    await navigator.clipboard.writeText(publicProfileAbsoluteUrl.value)
+    actionMessage.value = 'Ссылка на публичный профиль скопирована.'
+    errorMessage.value = ''
+  } catch {
+    errorMessage.value = 'Не удалось скопировать ссылку.'
+  }
+}
+
 onMounted(loadData)
 </script>
 
 <template>
   <section class="py-8 md:py-10">
-    <div class="container-shell space-y-6">
+    <div class="container-shell space-y-5">
       <div v-if="errorMessage" class="alert alert-error">
         {{ errorMessage }}
       </div>
+      <div v-if="actionMessage" class="alert alert-success">
+        {{ actionMessage }}
+      </div>
 
       <section class="surface-card p-5 md:p-7 lg:p-8">
-        <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
           <div class="flex min-w-0 gap-4 md:gap-5">
             <div class="preview-avatar h-20 w-20 shrink-0 text-2xl md:h-24 md:w-24 md:text-3xl">
               <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
@@ -144,30 +253,44 @@ onMounted(loadData)
                 {{ displayName }}
               </h1>
               <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-400 md:text-[15px]">
-                Чистый обзор аккаунта без лишних технических деталей. Всё важное для игрока
-                собрано в одном месте: профиль, состояние аккаунта и быстрые переходы.
+                Понятный личный кабинет без перегруза: только статус аккаунта, готовность к старту и быстрые переходы.
               </p>
 
               <div class="mt-4 flex flex-wrap gap-2.5">
                 <span class="footer-chip">{{ auth.accountModeText.value }}</span>
-                <span class="footer-chip">{{ profileStateText }}</span>
+                <span class="footer-chip">{{ nationRoleText }}</span>
                 <span class="footer-chip">Аккаунт создан: {{ createdAtText }}</span>
               </div>
             </div>
           </div>
 
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <button type="button" class="btn btn-outline" :disabled="refreshing" @click="refreshAccount">
-              <span v-if="refreshing" class="spinner"></span>
-              <span>{{ refreshing ? 'Обновляем...' : 'Обновить данные' }}</span>
-            </button>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <div class="metric-card text-center">
+              <p class="metric-label">Готовность профиля</p>
+              <p class="metric-value mt-2">{{ readinessPercent }}%</p>
+              <p class="mt-2 text-sm leading-6 text-slate-400">
+                {{ checkpoints.filter((item) => item.done).length }} из {{ checkpoints.length }} ключевых шагов завершено.
+              </p>
+            </div>
 
-            <RouterLink v-if="publicProfileUrl" :to="publicProfileUrl" class="btn btn-primary">
-              Открыть публичный профиль
-            </RouterLink>
-            <RouterLink v-else to="/profile/public" class="btn btn-primary">
-              Заполнить профиль
-            </RouterLink>
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <button type="button" class="btn btn-outline" :disabled="refreshing" @click="refreshAccount">
+                <span v-if="refreshing" class="spinner"></span>
+                <span>{{ refreshing ? 'Обновляем...' : 'Обновить данные' }}</span>
+              </button>
+
+              <button
+                v-if="publicProfileAbsoluteUrl"
+                type="button"
+                class="btn btn-primary"
+                @click="copyPublicProfileUrl"
+              >
+                Скопировать ссылку профиля
+              </button>
+              <RouterLink v-else to="/profile/public" class="btn btn-primary">
+                Заполнить профиль
+              </RouterLink>
+            </div>
           </div>
         </div>
       </section>
@@ -188,15 +311,49 @@ onMounted(loadData)
       <div v-else class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <div class="space-y-4">
           <section class="surface-card p-5 md:p-6">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="section-kicker !mb-2">Старт</div>
+                <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
+                  Что сделать дальше
+                </h2>
+              </div>
+              <span class="footer-chip">{{ readinessPercent }}%</span>
+            </div>
+
+            <div class="mt-5 grid gap-3">
+              <RouterLink
+                v-for="item in primaryActions"
+                :key="item.to"
+                :to="item.to"
+                :class="item.tone === 'primary' ? 'btn btn-primary justify-start' : 'btn btn-outline justify-start'"
+              >
+                {{ item.title }}
+              </RouterLink>
+            </div>
+
+            <button
+              v-if="!auth.emailVerified.value"
+              type="button"
+              class="btn btn-ghost mt-3 w-full"
+              :disabled="sendingVerification"
+              @click="sendVerificationAgain"
+            >
+              <span v-if="sendingVerification" class="spinner"></span>
+              <span>{{ sendingVerification ? 'Отправляем...' : 'Отправить письмо ещё раз' }}</span>
+            </button>
+          </section>
+
+          <section class="surface-card p-5 md:p-6">
             <div class="section-kicker !mb-2">Профиль</div>
             <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              О себе
+              О тебе
             </h2>
             <p class="mt-4 whitespace-pre-line text-sm leading-7 text-slate-300">
               {{ bioText }}
             </p>
 
-            <div class="mt-5 grid gap-3 sm:grid-cols-3">
+            <div class="mt-5 grid gap-3 sm:grid-cols-2">
               <div
                 v-for="item in checkpoints"
                 :key="item.label"
@@ -216,7 +373,7 @@ onMounted(loadData)
           <section class="surface-card p-5 md:p-6">
             <div class="section-kicker !mb-2">Переходы</div>
             <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              Быстрые действия
+              Быстрые разделы
             </h2>
 
             <div class="mt-5 grid gap-3">
@@ -249,6 +406,9 @@ onMounted(loadData)
               <div class="action-card">
                 <p class="metric-label">Email</p>
                 <p class="mt-2 break-all text-sm font-semibold text-slate-100">{{ auth.state.user?.email || '—' }}</p>
+                <p class="mt-2 text-sm text-slate-400">
+                  {{ auth.emailVerified.value ? 'Почта подтверждена.' : 'Почта пока не подтверждена.' }}
+                </p>
               </div>
 
               <div class="action-card">
@@ -263,7 +423,7 @@ onMounted(loadData)
           <section class="surface-card p-5 md:p-6">
             <div class="section-kicker !mb-2">Государство</div>
             <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              Твой статус в мире
+              Твоё место в мире
             </h2>
 
             <div v-if="myNation" class="mt-5 space-y-3">
@@ -276,7 +436,12 @@ onMounted(loadData)
               </div>
 
               <div class="grid gap-3 sm:grid-cols-2">
-                <RouterLink to="/nation/studio" class="btn btn-primary">Открыть управление</RouterLink>
+                <RouterLink
+                  :to="canManageNation ? '/nation/studio' : `/nation/${myNation.slug}`"
+                  class="btn btn-primary"
+                >
+                  {{ canManageNation ? 'Открыть управление' : 'Открыть страницу' }}
+                </RouterLink>
                 <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-outline">Публичная страница</RouterLink>
               </div>
             </div>
@@ -284,8 +449,7 @@ onMounted(loadData)
             <div v-else class="mt-5">
               <div class="action-card">
                 <p class="text-sm leading-7 text-slate-300">
-                  Ты пока не состоишь в государстве. Можно вступить в существующее или
-                  создать своё сообщество со страницей, рейтингом и оформлением.
+                  Ты пока не состоишь в государстве. Можно вступить в существующее или создать своё сообщество со страницей, рейтингом и оформлением.
                 </p>
               </div>
 

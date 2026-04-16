@@ -73,21 +73,31 @@ const nationTreasuryForm = reactive({
 })
 
 const hasNation = computed(() => Boolean(myNation.value?.slug))
+const nationRole = computed(() => String(myNation.value?.viewer_role || '').toLowerCase())
+const canManageNation = computed(() => Boolean(myNation.value?.viewer_can_manage))
 const currentAllianceSummary = computed(() => myNation.value?.alliance_summary || null)
 const isInAlliance = computed(() => Boolean(currentAllianceSummary.value?.slug))
 const currentAllianceSlug = computed(() => currentAllianceSummary.value?.slug || '')
 const myNationBalance = computed(() => Number(myNation.value?.stats?.treasury_balance || 0))
+const myNationPower = computed(() => {
+  const prestige = Number(myNation.value?.stats?.prestige_score || 0)
+  const territory = Number(myNation.value?.stats?.territory_points || 0)
+  return prestige + territory
+})
 const allianceMembers = computed(() => selectedAlliance.value?.members || [])
 const selectedAllianceIsMine = computed(() => Boolean(selectedAlliance.value?.slug) && selectedAlliance.value?.slug === currentAllianceSlug.value)
-const canCreateAlliance = computed(() => hasNation.value && !isInAlliance.value)
-const canJoinSelectedAlliance = computed(() => hasNation.value && !isInAlliance.value && Boolean(selectedAlliance.value?.slug))
+const canCreateAlliance = computed(() => hasNation.value && canManageNation.value && !isInAlliance.value)
+const canJoinSelectedAlliance = computed(() => hasNation.value && canManageNation.value && !isInAlliance.value && Boolean(selectedAlliance.value?.slug))
+const canLeaveAlliance = computed(() => hasNation.value && canManageNation.value && isInAlliance.value)
 const canManagePolicies = computed(() => {
-  if (!selectedAlliance.value || !myNation.value) return false
+  if (!selectedAlliance.value || !myNation.value || !canManageNation.value) return false
   return selectedAlliance.value.founder_nation_id === myNation.value.id
 })
-const canCreateProposal = computed(() => hasNation.value && selectedAllianceIsMine.value)
-const canVote = computed(() => hasNation.value && selectedAllianceIsMine.value)
-const canManageNationTreasury = computed(() => hasNation.value)
+const canCreateProposal = computed(() => hasNation.value && canManageNation.value && selectedAllianceIsMine.value)
+const canVote = computed(() => hasNation.value && canManageNation.value && selectedAllianceIsMine.value)
+const canManageNationTreasury = computed(() => hasNation.value && canManageNation.value)
+const canTransferWithinAlliance = computed(() => selectedAllianceIsMine.value && canManageNation.value)
+const isReadOnlyMember = computed(() => hasNation.value && !canManageNation.value)
 
 function setMessage(type, message) {
   if (type === 'error') {
@@ -119,8 +129,8 @@ async function loadMyNation() {
 }
 
 async function loadAlliances() {
-  alliances.value = (await getAlliances(auth.accessToken || null)) || []
-  alliances.value = alliances.value?.items || alliances.value || []
+  const payload = await getAlliances(auth.accessToken || null)
+  alliances.value = payload?.items || payload || []
 }
 
 function applyAllianceToForms(alliance) {
@@ -209,7 +219,7 @@ async function loadPage() {
 
 async function submitCreateAlliance() {
   if (!canCreateAlliance.value) {
-    setMessage('error', 'Создание альянса недоступно: государство уже состоит в альянсе.')
+    setMessage('error', 'Создание альянса недоступно.')
     return
   }
   actionLoading.value = true
@@ -226,7 +236,7 @@ async function submitCreateAlliance() {
 
 async function submitJoinAlliance(slug) {
   if (!canJoinSelectedAlliance.value || !slug) {
-    setMessage('error', 'Вступление недоступно: государство уже состоит в альянсе.')
+    setMessage('error', 'Вступление в альянс недоступно.')
     return
   }
   actionLoading.value = true
@@ -242,8 +252,8 @@ async function submitJoinAlliance(slug) {
 }
 
 async function submitLeaveAlliance() {
-  if (!isInAlliance.value) {
-    setMessage('error', 'Государство не состоит в альянсе.')
+  if (!canLeaveAlliance.value) {
+    setMessage('error', 'Выход из альянса недоступен.')
     return
   }
   actionLoading.value = true
@@ -260,7 +270,7 @@ async function submitLeaveAlliance() {
 
 async function submitPolicies() {
   if (!canManagePolicies.value || !selectedAlliance.value?.slug) {
-    setMessage('error', 'Изменение политик доступно только основателю альянса.')
+    setMessage('error', 'Изменение политик доступно только государству-основателю.')
     return
   }
   actionLoading.value = true
@@ -277,7 +287,7 @@ async function submitPolicies() {
 
 async function submitProposal() {
   if (!canCreateProposal.value || !selectedAlliance.value?.slug) {
-    setMessage('error', 'Создание предложений доступно только члену выбранного альянса.')
+    setMessage('error', 'Создание предложений недоступно.')
     return
   }
   actionLoading.value = true
@@ -307,7 +317,7 @@ async function submitProposal() {
 
 async function handleVote({ id, vote }) {
   if (!canVote.value) {
-    setMessage('error', 'Голосование доступно только государству-участнику выбранного альянса.')
+    setMessage('error', 'Голосование недоступно.')
     return
   }
   actionLoading.value = true
@@ -323,8 +333,8 @@ async function handleVote({ id, vote }) {
 }
 
 async function submitTransfer() {
-  if (!selectedAllianceIsMine.value || !selectedAlliance.value?.slug) {
-    setMessage('error', 'Переводы доступны только для альянса, в котором состоит твоё государство.')
+  if (!canTransferWithinAlliance.value || !selectedAlliance.value?.slug) {
+    setMessage('error', 'Перевод внутри альянса недоступен.')
     return
   }
   actionLoading.value = true
@@ -392,18 +402,22 @@ onMounted(loadPage)
               Центр альянсов
             </h1>
             <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-400 md:text-[15px]">
-              Управление надгосударственными блоками, голосованиями и межгосударственными переводами.
+              Все надгосударственные блоки в одном месте: обзор, состав, политики и операции, которые уже поддерживает backend.
             </p>
           </div>
 
-          <div v-if="myNation" class="grid gap-3 sm:grid-cols-2">
+          <div v-if="myNation" class="grid gap-3 sm:grid-cols-3">
             <div class="metric-card text-center">
-              <p class="metric-value !text-[1.15rem]">{{ myNation.title }}</p>
+              <p class="metric-value !text-[1.05rem]">{{ myNation.title }}</p>
               <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Твоё государство</p>
             </div>
             <div class="metric-card text-center">
-              <p class="metric-value !text-[1.15rem]">{{ formatNumber(myNationBalance) }}</p>
+              <p class="metric-value !text-[1.05rem]">{{ formatNumber(myNationBalance) }}</p>
               <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Казна</p>
+            </div>
+            <div class="metric-card text-center">
+              <p class="metric-value !text-[1.05rem]">{{ nationRole || '—' }}</p>
+              <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Роль</p>
             </div>
           </div>
         </div>
@@ -430,7 +444,7 @@ onMounted(loadPage)
             <h2 class="text-xl font-black text-slate-50 md:text-2xl">Текущее состояние</h2>
 
             <div v-if="!myNation" class="action-card mt-5 text-sm text-slate-400">
-              Чтобы управлять альянсами, сначала нужно состоять в государстве.
+              Чтобы работать с альянсами, сначала нужно состоять в государстве.
             </div>
 
             <div v-else class="mt-5 space-y-3">
@@ -449,8 +463,17 @@ onMounted(loadPage)
                 </p>
               </div>
 
+              <div class="action-card text-sm text-slate-300">
+                <template v-if="canManageNation">
+                  У тебя есть права управления альянсами от имени государства.
+                </template>
+                <template v-else>
+                  Ты обычный участник государства. Здесь доступен обзор, но управляющие действия скрыты.
+                </template>
+              </div>
+
               <button
-                v-if="isInAlliance"
+                v-if="canLeaveAlliance"
                 type="button"
                 class="btn btn-outline"
                 :disabled="actionLoading"
@@ -469,8 +492,24 @@ onMounted(loadPage)
               Сначала нужно создать или вступить в государство.
             </div>
 
-            <div v-else-if="!canCreateAlliance" class="action-card mt-5 text-sm text-slate-400">
-              Создание нового альянса скрыто, потому что твоё государство уже состоит в альянсе.
+            <div v-else-if="isReadOnlyMember" class="action-card mt-5 text-sm text-slate-400">
+              Создание альянса доступно только лидеру или офицеру государства.
+            </div>
+
+            <div v-else-if="!canCreateAlliance" class="mt-5 space-y-3">
+              <div class="action-card text-sm text-slate-400">
+                Создание нового альянса скрыто, потому что твоё государство уже состоит в альянсе или пока не хватает силы.
+              </div>
+              <div class="metric-grid metric-grid-2">
+                <div class="metric-card text-center">
+                  <p class="metric-value !text-[1.1rem]">{{ formatNumber(myNationPower) }}</p>
+                  <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Текущая сила</p>
+                </div>
+                <div class="metric-card text-center">
+                  <p class="metric-value !text-[1.1rem]">50 000</p>
+                  <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Порог создания</p>
+                </div>
+              </div>
             </div>
 
             <div v-else class="mt-5 grid gap-3">
@@ -530,7 +569,7 @@ onMounted(loadPage)
                     </span>
 
                     <button
-                      v-else-if="canJoinSelectedAlliance"
+                      v-else-if="canJoinSelectedAlliance && selectedAlliance?.slug === item.slug"
                       type="button"
                       class="btn btn-primary btn-sm"
                       :disabled="actionLoading || isInAlliance"
@@ -553,7 +592,7 @@ onMounted(loadPage)
             <h2 class="text-xl font-black text-slate-50 md:text-2xl">Настройка альянса</h2>
 
             <div v-if="!canManagePolicies" class="action-card mt-5 text-sm text-slate-400">
-              Редактирование политик доступно только государству-основателю выбранного альянса.
+              Редактирование политик доступно только государству-основателю, у которого есть права управления.
             </div>
 
             <div v-else class="mt-5 grid gap-3">
@@ -589,12 +628,16 @@ onMounted(loadPage)
           </section>
 
           <section v-if="selectedAlliance" class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Казна</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Переводы и treasury</h2>
+            <div class="section-kicker !mb-2">Операции</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Переводы и казна</h2>
+
+            <div v-if="!canManageNation" class="action-card mt-5 text-sm text-slate-400">
+              Управляющие действия скрыты. Ты можешь просматривать операции, но не выполнять их.
+            </div>
 
             <div class="mt-5 grid gap-4 xl:grid-cols-2">
               <div class="space-y-3">
-                <div class="action-card">
+                <div v-if="canManageNation" class="action-card">
                   <p class="metric-label">Перевод внутри альянса</p>
                   <div class="mt-3 grid gap-3">
                     <label>
@@ -618,13 +661,13 @@ onMounted(loadPage)
                       <span class="field-label">Комментарий</span>
                       <input v-model="transferForm.comment" class="input" />
                     </label>
-                    <button type="button" class="btn btn-primary" :disabled="actionLoading || !selectedAllianceIsMine" @click="submitTransfer">
+                    <button type="button" class="btn btn-primary" :disabled="actionLoading || !canTransferWithinAlliance" @click="submitTransfer">
                       Выполнить перевод
                     </button>
                   </div>
                 </div>
 
-                <div class="action-card">
+                <div v-if="canManageNation" class="action-card">
                   <p class="metric-label">Казна государства</p>
                   <div class="mt-3 grid gap-3">
                     <label>
@@ -693,11 +736,11 @@ onMounted(loadPage)
           </section>
 
           <section v-if="selectedAlliance" class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Новое предложение</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Создать proposal</h2>
+            <div class="section-kicker !mb-2">Предложения</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Новое proposal</h2>
 
             <div v-if="!canCreateProposal" class="action-card mt-5 text-sm text-slate-400">
-              Создание proposal доступно только участнику выбранного альянса.
+              Создание предложений доступно только лидеру или офицеру государства, которое уже состоит в выбранном альянсе.
             </div>
 
             <div v-else class="mt-5 grid gap-3">

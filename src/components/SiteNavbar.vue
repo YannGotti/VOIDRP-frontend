@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { siteConfig } from '../config.site'
+import { externalNavigation, primaryNavigation } from '../config/navigation'
 import { logoutCurrentSession, useAuthStore } from '../stores/authStore'
 
 const auth = useAuthStore()
@@ -10,13 +11,8 @@ const mobileOpen = ref(false)
 
 const isAuthenticated = computed(() => auth.isAuthenticated.value)
 const displayName = computed(() => auth.displayName.value || 'Профиль')
-
-const navItems = [
-  { label: 'Главная', to: '/' },
-  { label: 'Государства', to: '/nations' },
-  { label: 'Рейтинг', to: '/nations/rankings' },
-  { label: 'Ссылки', to: '/links' },
-]
+const navItems = primaryNavigation
+const externalItems = externalNavigation
 
 function isActive(item) {
   if (item.to === '/') {
@@ -50,9 +46,7 @@ async function handleLogout() {
 
           <div class="site-navbar__brand-text">
             <div class="site-navbar__title">{{ siteConfig.serverName }}</div>
-            <div class="site-navbar__meta">Better MC 5 · Minecraft {{ siteConfig.serverVersion }}</div>
-            
-            <a href="https://minecraftrating.ru/" class="mr-vote-server site-navbar__meta" data-server-id="396033"><span id="mr-vote-title"><img src="" alt="" /></span><span id="mr-vote-counter"></span></a>
+            <div class="site-navbar__meta">Better MC 5 · Minecraft {{ siteConfig.serverVersion }} · {{ siteConfig.serverIp }}</div>
           </div>
         </RouterLink>
 
@@ -68,12 +62,14 @@ async function handleLogout() {
           </RouterLink>
 
           <a
-            :href="siteConfig.dynmapUrl"
+            v-for="item in externalItems"
+            :key="item.href"
+            :href="item.href"
             target="_blank"
             rel="noreferrer"
             class="site-navbar__link"
           >
-            Карта
+            {{ item.label }}
           </a>
         </nav>
 
@@ -116,12 +112,14 @@ async function handleLogout() {
             </RouterLink>
 
             <a
-              :href="siteConfig.dynmapUrl"
+              v-for="item in externalItems"
+              :key="item.href"
+              :href="item.href"
               target="_blank"
               rel="noreferrer"
               class="site-navbar__mobile-link"
             >
-              Карта
+              {{ item.label }}
             </a>
           </div>
 

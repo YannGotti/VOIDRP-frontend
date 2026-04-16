@@ -23,6 +23,9 @@ const recentItems = computed(() => {
   return []
 })
 
+const inviteLink = computed(() => dashboard.value?.my_code?.invite_url || '')
+const currentCode = computed(() => dashboard.value?.my_code?.code || '—')
+
 function formatDate(value) {
   if (!value) return '—'
   const date = new Date(value)
@@ -66,11 +69,21 @@ async function regenerateCode() {
 
 async function copyInviteUrl() {
   try {
-    await navigator.clipboard.writeText(dashboard.value?.my_code?.invite_url || '')
+    await navigator.clipboard.writeText(inviteLink.value || '')
     success.value = 'Ссылка приглашения скопирована.'
     error.value = ''
   } catch {
     error.value = 'Не удалось скопировать ссылку.'
+  }
+}
+
+async function copyCode() {
+  try {
+    await navigator.clipboard.writeText(currentCode.value || '')
+    success.value = 'Код приглашения скопирован.'
+    error.value = ''
+  } catch {
+    error.value = 'Не удалось скопировать код.'
   }
 }
 
@@ -88,8 +101,7 @@ onMounted(loadDashboard)
               Приглашай игроков без лишней путаницы
             </h1>
             <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-400 md:text-[15px]">
-              Здесь твой код приглашения, прогресс и недавние регистрации. Всё собрано
-              компактно и по делу.
+              Здесь твой код приглашения, прогресс и недавние регистрации. Всё собрано компактно и по делу.
             </p>
           </div>
 
@@ -120,18 +132,19 @@ onMounted(loadDashboard)
             <div class="action-card mt-5">
               <p class="metric-label">Referral code</p>
               <p class="mt-2 break-all text-3xl font-black tracking-[0.12em] text-slate-50">
-                {{ dashboard?.my_code?.code || '—' }}
+                {{ currentCode }}
               </p>
               <p class="mt-4 break-all text-sm leading-6 text-slate-400">
-                {{ dashboard?.my_code?.invite_url || '—' }}
+                {{ inviteLink || '—' }}
               </p>
             </div>
 
-            <div class="mt-4 flex flex-wrap gap-3">
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
               <button class="btn btn-primary" @click="copyInviteUrl">Скопировать ссылку</button>
-              <button class="btn btn-outline" :disabled="regenerating" @click="regenerateCode">
+              <button class="btn btn-outline" @click="copyCode">Скопировать код</button>
+              <button class="btn btn-ghost sm:col-span-2" :disabled="regenerating" @click="regenerateCode">
                 <span v-if="regenerating" class="spinner"></span>
-                <span>{{ regenerating ? 'Создаём...' : 'Новый код' }}</span>
+                <span>{{ regenerating ? 'Создаём...' : 'Сгенерировать новый код' }}</span>
               </button>
             </div>
           </section>
@@ -144,11 +157,11 @@ onMounted(loadDashboard)
 
             <div class="metric-grid metric-grid-3 mt-5">
               <div class="metric-card text-center">
-                <p class="metric-label">Pending</p>
+                <p class="metric-label">Ожидают</p>
                 <p class="metric-value">{{ dashboard?.totals?.pending || 0 }}</p>
               </div>
               <div class="metric-card text-center">
-                <p class="metric-label">Qualified</p>
+                <p class="metric-label">Засчитано</p>
                 <p class="metric-value">{{ dashboard?.totals?.qualified || 0 }}</p>
               </div>
               <div class="metric-card text-center">
@@ -158,58 +171,57 @@ onMounted(loadDashboard)
             </div>
 
             <div class="action-card mt-5 text-sm text-slate-300">
-              Чем больше приглашённых игроков дойдут до нужного статуса, тем выше твой
-              ранг и тем больше ценность реферального центра.
+              Чем больше приглашённых игроков дойдут до нужного статуса, тем выше твой ранг и ценность реферального центра.
             </div>
           </section>
         </div>
 
         <section class="surface-card p-5 md:p-6">
-          <div class="section-kicker !mb-2">История</div>
-          <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-            Недавние регистрации
-          </h2>
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div class="section-kicker !mb-2">История</div>
+              <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
+                Недавние регистрации
+              </h2>
+            </div>
+            <span class="footer-chip">Всего событий: {{ recentItems.length }}</span>
+          </div>
 
           <div v-if="!recentItems.length" class="action-card mt-5 text-sm text-slate-400">
             Пока приглашённых регистраций нет.
           </div>
 
-          <div v-else class="table-shell mt-5 overflow-x-auto">
-            <table class="data-table min-w-[720px]">
-              <thead>
-                <tr>
-                  <th>Игрок</th>
-                  <th>Дата</th>
-                  <th>Статус</th>
-                  <th>Награда</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in recentItems" :key="item.id || item.player_id || item.created_at">
-                  <td>
-                    <div class="font-semibold text-slate-100">
-                      {{
-                        item.display_name ||
-                        item.minecraft_nickname ||
-                        item.site_login ||
-                        item.player_name ||
-                        'Игрок'
-                      }}
-                    </div>
-                    <div class="mt-1 text-sm text-slate-500">
-                      {{ item.email || item.player_account_id || '—' }}
-                    </div>
-                  </td>
-                  <td>{{ formatDate(item.created_at || item.registered_at) }}</td>
-                  <td>
-                    <span :class="badgeClass(item.status)">
-                      {{ item.status || 'unknown' }}
-                    </span>
-                  </td>
-                  <td>{{ item.reward_name || item.reward || '—' }}</td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-else class="mt-5 grid gap-3 lg:grid-cols-2">
+            <article
+              v-for="item in recentItems"
+              :key="item.id || item.player_id || item.created_at"
+              class="action-card"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="font-semibold text-slate-100">
+                    {{
+                      item.display_name ||
+                      item.minecraft_nickname ||
+                      item.site_login ||
+                      item.player_name ||
+                      'Игрок'
+                    }}
+                  </div>
+                  <div class="mt-1 text-sm text-slate-400">
+                    {{ item.email || item.player_account_id || '—' }}
+                  </div>
+                </div>
+                <span :class="badgeClass(item.status)">
+                  {{ item.status || 'unknown' }}
+                </span>
+              </div>
+
+              <div class="mt-4 grid gap-2 text-sm text-slate-400">
+                <div>Дата: {{ formatDate(item.created_at || item.registered_at) }}</div>
+                <div>Награда: {{ item.reward_name || item.reward || '—' }}</div>
+              </div>
+            </article>
           </div>
         </section>
       </template>

@@ -9,6 +9,7 @@ const auth = useAuthStore()
 
 const loading = ref(true)
 const error = ref('')
+const search = ref('')
 const followers = ref({ items: [] })
 const following = ref({ items: [] })
 const friends = ref({ items: [] })
@@ -23,6 +24,22 @@ function initialFor(item) {
   const value = item?.display_name || item?.minecraft_nickname || item?.slug || 'U'
   return value.slice(0, 1).toUpperCase()
 }
+
+function filterItems(items = []) {
+  const q = search.value.trim().toLowerCase()
+  if (!q) return items
+
+  return items.filter((item) => {
+    const haystack = [item?.display_name, item?.minecraft_nickname, item?.slug]
+      .map((value) => String(value || '').toLowerCase())
+      .join(' ')
+    return haystack.includes(q)
+  })
+}
+
+const filteredFollowers = computed(() => filterItems(followers.value?.items || []))
+const filteredFollowing = computed(() => filterItems(following.value?.items || []))
+const filteredFriends = computed(() => filterItems(friends.value?.items || []))
 
 async function loadSocial() {
   loading.value = true
@@ -52,13 +69,22 @@ onMounted(loadSocial)
   <section class="py-8 md:py-10">
     <div class="container-shell space-y-5">
       <section class="surface-card p-5 md:p-7">
-        <div class="section-kicker !mb-2">Социальный хаб</div>
-        <h1 class="text-2xl font-black tracking-tight text-slate-950 md:text-4xl">
-          Подписчики, подписки и друзья
-        </h1>
-        <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-[15px]">
-          Вынесено в отдельный раздел, чтобы основной кабинет не захламлялся и оставался удобным для игрока.
-        </p>
+        <div class="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-end">
+          <div>
+            <div class="section-kicker !mb-2">Социальный хаб</div>
+            <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-4xl">
+              Подписчики, подписки и друзья
+            </h1>
+            <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-400 md:text-[15px]">
+              Вынесено в отдельный раздел, чтобы основной кабинет не захламлялся и оставался удобным для игрока.
+            </p>
+          </div>
+
+          <label>
+            <span class="field-label">Поиск игрока</span>
+            <input v-model="search" class="input" placeholder="Ник, имя или slug" />
+          </label>
+        </div>
       </section>
 
       <AccountTabs />
@@ -77,7 +103,7 @@ onMounted(loadSocial)
           <div class="flex items-end justify-between gap-3">
             <div>
               <div class="section-kicker !mb-2">Подписчики</div>
-              <h2 class="text-xl font-black text-slate-950">Кто подписан на тебя</h2>
+              <h2 class="text-xl font-black text-slate-50">Кто подписан на тебя</h2>
             </div>
           </div>
 
@@ -88,29 +114,29 @@ onMounted(loadSocial)
 
           <div v-else class="mt-5 space-y-3">
             <RouterLink
-              v-for="item in followers.items"
+              v-for="item in filteredFollowers"
               :key="`followers-${item.slug}`"
               :to="`/u/${item.slug}`"
-              class="action-card flex items-center justify-between gap-3 transition hover:border-slate-300 hover:bg-slate-50"
+              class="action-card flex items-center justify-between gap-3 transition hover:-translate-y-[1px]"
             >
               <div class="flex min-w-0 items-center gap-3">
-                <div class="preview-avatar h-12 w-12 shrink-0 border border-slate-200 text-lg">{{ initialFor(item) }}</div>
+                <div class="preview-avatar h-12 w-12 shrink-0 border border-white/10 text-lg">{{ initialFor(item) }}</div>
                 <div class="min-w-0">
-                  <div class="truncate font-semibold text-slate-900">{{ item.display_name || item.minecraft_nickname || item.slug }}</div>
-                  <div class="truncate text-sm text-slate-500">@{{ item.slug }}</div>
+                  <div class="truncate font-semibold text-slate-100">{{ item.display_name || item.minecraft_nickname || item.slug }}</div>
+                  <div class="truncate text-sm text-slate-400">@{{ item.slug }}</div>
                 </div>
               </div>
               <span v-if="item.is_friend" class="badge badge-success">Друг</span>
             </RouterLink>
 
-            <div v-if="!followers.items.length" class="action-card text-sm text-slate-600">Пока пусто.</div>
+            <div v-if="!filteredFollowers.length" class="action-card text-sm text-slate-400">Пока пусто.</div>
           </div>
         </section>
 
         <section class="surface-card p-5 md:p-6">
           <div>
             <div class="section-kicker !mb-2">Подписки</div>
-            <h2 class="text-xl font-black text-slate-950">На кого подписан ты</h2>
+            <h2 class="text-xl font-black text-slate-50">На кого подписан ты</h2>
           </div>
 
           <div v-if="loading" class="mt-5 space-y-3">
@@ -120,29 +146,29 @@ onMounted(loadSocial)
 
           <div v-else class="mt-5 space-y-3">
             <RouterLink
-              v-for="item in following.items"
+              v-for="item in filteredFollowing"
               :key="`following-${item.slug}`"
               :to="`/u/${item.slug}`"
-              class="action-card flex items-center justify-between gap-3 transition hover:border-slate-300 hover:bg-slate-50"
+              class="action-card flex items-center justify-between gap-3 transition hover:-translate-y-[1px]"
             >
               <div class="flex min-w-0 items-center gap-3">
-                <div class="preview-avatar h-12 w-12 shrink-0 border border-slate-200 text-lg">{{ initialFor(item) }}</div>
+                <div class="preview-avatar h-12 w-12 shrink-0 border border-white/10 text-lg">{{ initialFor(item) }}</div>
                 <div class="min-w-0">
-                  <div class="truncate font-semibold text-slate-900">{{ item.display_name || item.minecraft_nickname || item.slug }}</div>
-                  <div class="truncate text-sm text-slate-500">@{{ item.slug }}</div>
+                  <div class="truncate font-semibold text-slate-100">{{ item.display_name || item.minecraft_nickname || item.slug }}</div>
+                  <div class="truncate text-sm text-slate-400">@{{ item.slug }}</div>
                 </div>
               </div>
               <span v-if="item.is_friend" class="badge badge-success">Друг</span>
             </RouterLink>
 
-            <div v-if="!following.items.length" class="action-card text-sm text-slate-600">Пока пусто.</div>
+            <div v-if="!filteredFollowing.length" class="action-card text-sm text-slate-400">Пока пусто.</div>
           </div>
         </section>
 
         <section class="surface-card p-5 md:p-6">
           <div>
             <div class="section-kicker !mb-2">Друзья</div>
-            <h2 class="text-xl font-black text-slate-950">Взаимные связи</h2>
+            <h2 class="text-xl font-black text-slate-50">Взаимные связи</h2>
           </div>
 
           <div v-if="loading" class="mt-5 space-y-3">
@@ -152,22 +178,22 @@ onMounted(loadSocial)
 
           <div v-else class="mt-5 space-y-3">
             <RouterLink
-              v-for="item in friends.items"
+              v-for="item in filteredFriends"
               :key="`friends-${item.slug}`"
               :to="`/u/${item.slug}`"
-              class="action-card flex items-center justify-between gap-3 transition hover:border-slate-300 hover:bg-slate-50"
+              class="action-card flex items-center justify-between gap-3 transition hover:-translate-y-[1px]"
             >
               <div class="flex min-w-0 items-center gap-3">
-                <div class="preview-avatar h-12 w-12 shrink-0 border border-slate-200 text-lg">{{ initialFor(item) }}</div>
+                <div class="preview-avatar h-12 w-12 shrink-0 border border-white/10 text-lg">{{ initialFor(item) }}</div>
                 <div class="min-w-0">
-                  <div class="truncate font-semibold text-slate-900">{{ item.display_name || item.minecraft_nickname || item.slug }}</div>
-                  <div class="truncate text-sm text-slate-500">@{{ item.slug }}</div>
+                  <div class="truncate font-semibold text-slate-100">{{ item.display_name || item.minecraft_nickname || item.slug }}</div>
+                  <div class="truncate text-sm text-slate-400">@{{ item.slug }}</div>
                 </div>
               </div>
               <span class="badge badge-success">Друг</span>
             </RouterLink>
 
-            <div v-if="!friends.items.length" class="action-card text-sm text-slate-600">Пока пусто.</div>
+            <div v-if="!filteredFriends.length" class="action-card text-sm text-slate-400">Пока пусто.</div>
           </div>
         </section>
       </div>

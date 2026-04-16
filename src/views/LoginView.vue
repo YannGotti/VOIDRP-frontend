@@ -43,22 +43,31 @@ async function submit() {
         <aside class="gradient-panel p-6 md:p-8">
           <div class="section-kicker section-kicker--light">Вход в аккаунт</div>
           <h1 class="text-3xl font-black tracking-tight text-white md:text-5xl">
-            Возвращайся в игру без путаницы
+            Возвращайся в игру без лишних экранов
           </h1>
           <p class="mt-4 text-base leading-8 text-white/78">
-            Один аккаунт работает для сайта, кабинета и официального лаунчера.
-            После входа ты сразу попадёшь туда, куда собирался перейти.
+            Тот же аккаунт работает для сайта, кабинета и официального лаунчера.
+            После входа игрок сразу попадает туда, куда шёл.
           </p>
 
           <div class="mt-8 grid gap-3">
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
-              Логин или email подойдут одинаково.
+            <div class="dark-list-card">
+              <p class="text-sm font-black text-white">Логин или email</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                Можно использовать любой из вариантов — система примет оба.
+              </p>
             </div>
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
-              Почта и ник уже будут связаны с твоим аккаунтом.
+            <div class="dark-list-card">
+              <p class="text-sm font-black text-white">Один вход на всё</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                Кабинет, профиль, лаунчер и дальнейший запуск игры идут через одну точку.
+              </p>
             </div>
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/10 p-4 text-sm leading-7 text-white/80">
-              После входа можно сразу скачать лаунчер и перейти к игре.
+            <div class="dark-list-card">
+              <p class="text-sm font-black text-white">Никакой путаницы</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                После входа ты сразу сможешь скачать лаунчер или открыть свой кабинет.
+              </p>
             </div>
           </div>
         </aside>
@@ -67,8 +76,7 @@ async function submit() {
           <div class="section-kicker">Вход</div>
           <h2 class="section-title">Войти в аккаунт</h2>
           <p class="section-subtitle">
-            Используй логин или email и пароль от аккаунта VoidRP. Эти же данные
-            подойдут для официального лаунчера.
+            Используй логин или email и пароль от аккаунта VoidRP.
           </p>
 
           <div v-if="route.query.redirect" class="alert alert-info mt-6">

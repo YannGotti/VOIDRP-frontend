@@ -2,7 +2,13 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
-import { approveNationRequest, getNationBySlug, joinNation, rejectNationRequest } from '../services/nationsApi'
+import {
+  approveNationRequest,
+  getMyNation,
+  getNationBySlug,
+  joinNation,
+  rejectNationRequest,
+} from '../services/nationsApi'
 import { getNationActivity } from '../services/nationActivityApi'
 import { getNationStatsBySlug, getNationTopDonors, getNationTreasuryTransactions } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
@@ -14,15 +20,19 @@ const auth = useAuthStore()
 const loading = ref(true)
 const statsLoading = ref(true)
 const activityLoading = ref(true)
+const treasuryLoading = ref(true)
+const donorsLoading = ref(true)
+const currentNationLoading = ref(false)
+
 const error = ref('')
 const actionMessage = ref('')
 const joinLoading = ref(false)
 const requestMessage = ref('')
+
 const nation = ref(null)
+const currentNation = ref(null)
 const stats = ref(null)
 const activity = ref([])
-const treasuryLoading = ref(true)
-const donorsLoading = ref(true)
 const transactions = ref([])
 const donors = ref([])
 
@@ -49,6 +59,17 @@ function formatAllianceType(value) {
     default:
       return 'Альянс'
   }
+}
+
+function txLabel(item) {
+  const type = String(item?.transaction_type || '').toLowerCase()
+  if (type === 'player_donation') return `Донат игрока ${item?.metadata_json?.minecraft_nickname || ''}`.trim()
+  if (type === 'deposit') return 'Пополнение'
+  if (type === 'withdraw') return 'Списание'
+  if (type === 'alliance_transfer_out') return 'Перевод союзнику'
+  if (type === 'alliance_transfer_in') return 'Перевод от союзника'
+  if (type === 'alliance_fee_income') return 'Комиссия альянса'
+  return item?.transaction_type || 'Операция'
 }
 
 const accent = computed(() => nation.value?.accent_color || '#6d5df6')
@@ -110,28 +131,54 @@ const cardStyle = computed(() => ({
   background: `linear-gradient(180deg, rgba(10,15,27,0.84), ${hexToRgba(accent.value, 0.08)})`,
 }))
 
-
-function txLabel(item) {
-  const type = String(item?.transaction_type || '').toLowerCase()
-  if (type === 'player_donation') return `Донат игрока ${item?.metadata_json?.minecraft_nickname || ''}`.trim()
-  if (type === 'deposit') return 'Пополнение'
-  if (type === 'withdraw') return 'Списание'
-  if (type === 'alliance_transfer_out') return 'Перевод союзнику'
-  if (type === 'alliance_transfer_in') return 'Перевод от союзника'
-  if (type === 'alliance_fee_income') return 'Комиссия альянса'
-  return item?.transaction_type || 'Операция'
-}
-
-const canJoin = computed(() => {
-  if (!nation.value || !auth.isAuthenticated.value) return false
-  if (nation.value.viewer_is_member) return false
-  return !nation.value.viewer_request_status
+const isAuthenticated = computed(() => auth.isAuthenticated.value)
+const viewerHasPendingRequest = computed(() => nation.value?.viewer_request_status === 'pending')
+const viewerIsMember = computed(() => Boolean(nation.value?.viewer_is_member))
+const viewerCanManage = computed(() => Boolean(nation.value?.viewer_can_manage))
+const viewerOwnsOtherNation = computed(() => {
+  if (!currentNation.value?.slug || !nation.value?.slug) return false
+  return currentNation.value.slug !== nation.value.slug
 })
 
-const joinLabel = computed(() => {
-  if (!nation.value) return 'Вступить'
-  if (nation.value.recruitment_policy === 'open') return 'Вступить'
-  return 'Подать заявку'
+const canJoinDirectly = computed(() => {
+  if (!nation.value || !isAuthenticated.value) return false
+  if (viewerCanManage.value || viewerIsMember.value || viewerHasPendingRequest.value || viewerOwnsOtherNation.value) return false
+  return nation.value.recruitment_policy === 'open'
+})
+
+const canRequestJoin = computed(() => {
+  if (!nation.value || !isAuthenticated.value) return false
+  if (viewerCanManage.value || viewerIsMember.value || viewerHasPendingRequest.value || viewerOwnsOtherNation.value) return false
+  return nation.value.recruitment_policy === 'request'
+})
+
+const canShowJoinAction = computed(() => canJoinDirectly.value || canRequestJoin.value)
+
+const actionCardTitle = computed(() => {
+  if (!isAuthenticated.value) return 'Войти для вступления'
+  if (viewerCanManage.value) return 'Это твоё государство'
+  if (viewerIsMember.value) return 'Ты уже состоишь здесь'
+  if (viewerOwnsOtherNation.value) return 'Сначала покинь текущее государство'
+  if (viewerHasPendingRequest.value) return 'Заявка уже отправлена'
+  if (nation.value?.recruitment_policy === 'invite_only') return 'Вступление только по приглашению'
+  if (canJoinDirectly.value) return 'Можно вступить сразу'
+  if (canRequestJoin.value) return 'Можно подать заявку'
+  return 'Действия'
+})
+
+const actionCardText = computed(() => {
+  if (!nation.value) return ''
+  if (!isAuthenticated.value) return 'После входа ты сможешь сразу вступить или отправить заявку без лишних шагов.'
+  if (viewerCanManage.value) return 'Ты можешь редактировать страницу, принимать заявки и управлять участниками.'
+  if (viewerIsMember.value) return 'Ты уже находишься в составе этого государства.'
+  if (viewerOwnsOtherNation.value) {
+    return `Сейчас ты состоишь в «${currentNation.value?.title || 'другом государстве'}». Одновременно можно быть только в одном.`
+  }
+  if (viewerHasPendingRequest.value) return 'Лидеры ещё не приняли решение. Повторно отправлять заявку не нужно.'
+  if (nation.value.recruitment_policy === 'invite_only') return 'Это государство принимает игроков только по прямому приглашению от лидера или офицеров.'
+  if (canJoinDirectly.value) return 'У этого государства открытый набор. Вступление произойдёт сразу после нажатия кнопки.'
+  if (canRequestJoin.value) return 'Оставь короткое сообщение, чтобы лидер понял, зачем ты хочешь присоединиться.'
+  return 'Доступных действий сейчас нет.'
 })
 
 function applyRouteBackground(value) {
@@ -148,6 +195,22 @@ async function loadNation() {
     error.value = err.message || 'Не удалось загрузить страницу государства.'
   } finally {
     loading.value = false
+  }
+}
+
+async function loadCurrentNation() {
+  if (!auth.accessToken) {
+    currentNation.value = null
+    return
+  }
+
+  currentNationLoading.value = true
+  try {
+    currentNation.value = await getMyNation(auth.accessToken)
+  } catch {
+    currentNation.value = null
+  } finally {
+    currentNationLoading.value = false
   }
 }
 
@@ -174,7 +237,6 @@ async function loadActivity() {
   }
 }
 
-
 async function loadTreasury() {
   treasuryLoading.value = true
   try {
@@ -200,18 +262,27 @@ async function loadDonors() {
 }
 
 async function handleJoin() {
-  if (!nation.value || !auth.accessToken) return
+  if (!nation.value || !auth.accessToken || !canShowJoinAction.value) return
+
   joinLoading.value = true
   error.value = ''
   actionMessage.value = ''
+
   try {
-    const response = await joinNation(auth.accessToken, nation.value.slug, { message: requestMessage.value || null })
+    const response = await joinNation(auth.accessToken, nation.value.slug, {
+      message: canRequestJoin.value ? requestMessage.value || null : null,
+    })
+
     nation.value = response?.nation || nation.value
-    actionMessage.value = response?.message || 'Действие выполнено.'
+    actionMessage.value =
+      canJoinDirectly.value
+        ? 'Ты успешно вступил в государство.'
+        : 'Заявка отправлена. Теперь нужно дождаться решения лидера.'
     requestMessage.value = ''
-    await loadActivity()
+
+    await Promise.all([loadActivity(), loadCurrentNation()])
   } catch (err) {
-    error.value = err.message || 'Не удалось отправить действие.'
+    error.value = err.message || 'Не удалось выполнить действие.'
   } finally {
     joinLoading.value = false
   }
@@ -237,14 +308,21 @@ async function handleReject(requestId) {
   }
 }
 
-watch(() => route.params.slug, async () => {
-  await Promise.all([loadNation(), loadStats(), loadActivity(), loadTreasury(), loadDonors()])
-})
+async function loadPage() {
+  await Promise.all([
+    loadNation(),
+    loadCurrentNation(),
+    loadStats(),
+    loadActivity(),
+    loadTreasury(),
+    loadDonors(),
+  ])
+}
+
+watch(() => route.params.slug, loadPage)
 watch(routeBackground, (value) => applyRouteBackground(value), { immediate: true })
 
-onMounted(async () => {
-  await Promise.all([loadNation(), loadStats(), loadActivity(), loadTreasury(), loadDonors()])
-})
+onMounted(loadPage)
 
 onBeforeUnmount(() => {
   document.documentElement.style.removeProperty('--route-bg')
@@ -252,13 +330,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="py-6 md:py-8">
+  <section class="py-5 md:py-7">
     <div class="container-shell">
-      <div v-if="loading" class="space-y-5">
-        <div class="skeleton h-[320px] rounded-[30px]"></div>
-        <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div class="skeleton h-[260px] rounded-[28px]"></div>
-          <div class="skeleton h-[260px] rounded-[28px]"></div>
+      <div v-if="loading" class="space-y-4">
+        <div class="skeleton h-[280px] rounded-[30px]"></div>
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_340px]">
+          <div class="skeleton h-[280px] rounded-[28px]"></div>
+          <div class="skeleton h-[280px] rounded-[28px]"></div>
         </div>
       </div>
 
@@ -278,6 +356,12 @@ onBeforeUnmount(() => {
                     {{ formatRecruitmentLabel(nation.recruitment_policy) }}
                   </span>
                   <span
+                    v-if="viewerHasPendingRequest"
+                    class="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-amber-200 backdrop-blur-md"
+                  >
+                    Заявка отправлена
+                  </span>
+                  <span
                     v-if="allianceSummary"
                     class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md"
                   >
@@ -285,9 +369,9 @@ onBeforeUnmount(() => {
                   </span>
                 </div>
 
-                <div class="mt-12 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div class="mt-10 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                   <div class="flex min-w-0 items-end gap-4">
-                    <div class="flex h-22 w-22 items-center justify-center overflow-hidden rounded-[24px] border-4 border-white/90 bg-slate-900 text-3xl font-black uppercase text-slate-100 shadow-[0_18px_50px_rgba(0,0,0,0.4)] md:h-24 md:w-24">
+                    <div class="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[24px] border-4 border-white/90 bg-slate-900 text-3xl font-black uppercase text-slate-100 shadow-[0_18px_50px_rgba(0,0,0,0.4)] md:h-24 md:w-24">
                       <img v-if="iconUrl" :src="iconUrl" alt="icon" class="h-full w-full object-cover" />
                       <span v-else>{{ tagText.slice(0, 2).toUpperCase() }}</span>
                     </div>
@@ -303,19 +387,12 @@ onBeforeUnmount(() => {
                   </div>
 
                   <div class="flex flex-wrap gap-3">
-                    <RouterLink v-if="nation.viewer_can_manage" to="/nation/studio" class="btn btn-light rounded-2xl">
+                    <RouterLink v-if="viewerCanManage" to="/nation/studio" class="btn btn-light rounded-2xl">
                       Управлять
                     </RouterLink>
-                    <button
-                      v-if="canJoin"
-                      type="button"
-                      class="btn btn-light rounded-2xl"
-                      :disabled="joinLoading"
-                      @click="handleJoin"
-                    >
-                      <span v-if="joinLoading" class="spinner"></span>
-                      <span v-else>{{ joinLabel }}</span>
-                    </button>
+                    <RouterLink to="/nations" class="btn btn-outline rounded-2xl border-white/18 bg-black/10 text-white hover:border-white/30 hover:bg-black/20">
+                      Все государства
+                    </RouterLink>
                   </div>
                 </div>
               </div>
@@ -323,27 +400,26 @@ onBeforeUnmount(() => {
 
             <div v-if="actionMessage" class="alert alert-success">{{ actionMessage }}</div>
 
-            <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-              <section class="surface-card p-4 md:p-5" :style="cardStyle">
-                <div class="section-kicker !mb-2">О государстве</div>
-                <h2 class="text-lg font-black text-slate-50 md:text-xl">Описание</h2>
-                <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300 md:text-[15px]">
-                  {{ nation.description || 'Подробное описание пока не заполнено.' }}
-                </p>
+            <div class="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_340px]">
+              <div class="space-y-4">
+                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                  <div class="section-kicker !mb-2">О государстве</div>
+                  <h2 class="text-lg font-black text-slate-50 md:text-xl">Описание</h2>
+                  <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300 md:text-[15px]">
+                    {{ nation.description || 'Подробное описание пока не заполнено.' }}
+                  </p>
+                </section>
 
-                <div v-if="canJoin && nation.recruitment_policy === 'request'" class="action-card mt-5" :style="cardStyle">
-                  <p class="metric-label">Сообщение лидеру</p>
-                  <textarea
-                    v-model="requestMessage"
-                    rows="4"
-                    class="textarea textarea-bordered mt-3 w-full rounded-2xl"
-                    placeholder="Напиши, почему хочешь вступить"
-                  ></textarea>
-                </div>
-
-                <div class="mt-5">
+                <section class="surface-card p-4 md:p-5" :style="cardStyle">
                   <div class="section-kicker !mb-2">Участники</div>
-                  <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <h2 class="text-lg font-black text-slate-50 md:text-xl">Состав государства</h2>
+                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {{ nation.members.length }} участников
+                    </span>
+                  </div>
+
+                  <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     <div v-for="member in nation.members" :key="member.user_id" class="action-card" :style="cardStyle">
                       <p class="font-semibold text-slate-100">{{ member.minecraft_nickname || member.site_login }}</p>
                       <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
@@ -352,48 +428,122 @@ onBeforeUnmount(() => {
                       </p>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
+
+                <NationActivityFeed
+                  :items="activity"
+                  :loading="activityLoading"
+                  title="Последняя активность"
+                  subtitle="Вступления, переводы ролей и другие важные события государства."
+                  compact
+                />
+              </div>
 
               <aside class="space-y-4">
+                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                  <div class="section-kicker !mb-2">Вступление</div>
+                  <h2 class="text-lg font-black text-slate-50">{{ actionCardTitle }}</h2>
+                  <p class="mt-3 text-sm leading-6 text-slate-300">
+                    {{ actionCardText }}
+                  </p>
+
+                  <div v-if="!isAuthenticated" class="mt-4 grid gap-3">
+                    <RouterLink :to="`/login?redirect=${encodeURIComponent(`/nation/${nation.slug}`)}`" class="btn btn-primary w-full">
+                      Войти и продолжить
+                    </RouterLink>
+                    <RouterLink to="/register" class="btn btn-outline w-full">
+                      Создать аккаунт
+                    </RouterLink>
+                  </div>
+
+                  <div v-else-if="viewerOwnsOtherNation" class="action-card mt-4" :style="cardStyle">
+                    <p class="metric-label">Текущее государство</p>
+                    <p class="mt-2 text-sm font-semibold text-slate-100">
+                      {{ currentNation?.title || 'Уже выбрано другое государство' }}
+                    </p>
+                    <div class="mt-3 grid gap-3">
+                      <RouterLink to="/nation/studio" class="btn btn-outline w-full">
+                        Открыть своё государство
+                      </RouterLink>
+                      <RouterLink to="/nations" class="btn btn-ghost w-full">
+                        Вернуться к каталогу
+                      </RouterLink>
+                    </div>
+                  </div>
+
+                  <div v-else-if="viewerHasPendingRequest" class="action-card mt-4" :style="cardStyle">
+                    <p class="metric-label">Статус</p>
+                    <p class="mt-2 text-sm font-semibold text-amber-200">Ожидает решения лидера</p>
+                  </div>
+
+                  <div v-else-if="viewerIsMember" class="action-card mt-4" :style="cardStyle">
+                    <p class="metric-label">Статус</p>
+                    <p class="mt-2 text-sm font-semibold text-emerald-200">Ты уже в составе государства</p>
+                  </div>
+
+                  <div v-else-if="canRequestJoin" class="mt-4 space-y-3">
+                    <div class="action-card" :style="cardStyle">
+                      <p class="metric-label">Сообщение лидеру</p>
+                      <textarea
+                        v-model="requestMessage"
+                        rows="4"
+                        class="textarea textarea-bordered mt-3 w-full rounded-2xl"
+                        placeholder="Коротко напиши, почему хочешь вступить"
+                      ></textarea>
+                    </div>
+                    <button type="button" class="btn btn-primary w-full" :disabled="joinLoading || currentNationLoading" @click="handleJoin">
+                      <span v-if="joinLoading" class="spinner"></span>
+                      <span>{{ joinLoading ? 'Отправляем...' : 'Подать заявку' }}</span>
+                    </button>
+                  </div>
+
+                  <button
+                    v-else-if="canJoinDirectly"
+                    type="button"
+                    class="btn btn-primary mt-4 w-full"
+                    :disabled="joinLoading || currentNationLoading"
+                    @click="handleJoin"
+                  >
+                    <span v-if="joinLoading" class="spinner"></span>
+                    <span>{{ joinLoading ? 'Вступаем...' : 'Вступить в государство' }}</span>
+                  </button>
+
+                  <div v-else-if="nation.recruitment_policy === 'invite_only'" class="action-card mt-4" :style="cardStyle">
+                    <p class="metric-label">Набор</p>
+                    <p class="mt-2 text-sm font-semibold text-slate-100">Только по приглашению</p>
+                  </div>
+                </section>
+
                 <section class="surface-card p-4 md:p-5" :style="cardStyle">
                   <div class="section-kicker !mb-2">Статистика</div>
                   <h2 class="text-lg font-black text-slate-50">Сила государства</h2>
 
-                  <div v-if="statsLoading" class="space-y-3 mt-4">
+                  <div v-if="statsLoading" class="mt-4 space-y-3">
                     <div class="skeleton h-16 rounded-2xl"></div>
                     <div class="skeleton h-16 rounded-2xl"></div>
                   </div>
 
                   <div v-else class="metric-grid metric-grid-2 mt-4">
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.treasury_balance ?? 0) }}</p>
+                      <p class="metric-value !text-[1.18rem]">{{ formatNumber(stats?.treasury_balance ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Баланс</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.territory_points ?? 0) }}</p>
+                      <p class="metric-value !text-[1.18rem]">{{ formatNumber(stats?.territory_points ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Территория</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ formatCompactHoursFromMinutes(stats?.total_playtime_minutes ?? 0) }}</p>
+                      <p class="metric-value !text-[1.18rem]">{{ formatCompactHoursFromMinutes(stats?.total_playtime_minutes ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Онлайн</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.pvp_kills ?? 0) }}</p>
-                      <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">PvP</p>
-                    </div>
-                    <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.mob_kills ?? 0) }}</p>
-                      <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Mobs</p>
-                    </div>
-                    <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.2rem]">{{ formatNumber(stats?.prestige_score ?? 0) }}</p>
+                      <p class="metric-value !text-[1.18rem]">{{ formatNumber(stats?.prestige_score ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Престиж</p>
                     </div>
                   </div>
 
-                  <RouterLink to="/nations/rankings" class="btn btn-outline mt-4 rounded-2xl">
-                    Открыть общий рейтинг
+                  <RouterLink to="/nations/rankings" class="btn btn-outline mt-4 w-full rounded-2xl">
+                    Открыть рейтинг
                   </RouterLink>
                 </section>
 
@@ -426,23 +576,8 @@ onBeforeUnmount(() => {
                       </div>
                     </div>
 
-                    <div class="grid gap-3 sm:grid-cols-2">
-                      <div class="action-card" :style="cardStyle">
-                        <p class="metric-label">Внутренние переводы</p>
-                        <p class="mt-2 text-sm font-semibold text-slate-100">
-                          {{ allianceSummary.allow_internal_transfers ? 'Разрешены' : 'Отключены' }}
-                        </p>
-                      </div>
-                      <div class="action-card" :style="cardStyle">
-                        <p class="metric-label">Совместная защита</p>
-                        <p class="mt-2 text-sm font-semibold text-slate-100">
-                          {{ allianceSummary.allow_joint_defense ? 'Активна' : 'Отключена' }}
-                        </p>
-                      </div>
-                    </div>
-
                     <div v-if="allianceMembersPreview.length">
-                      <div class="section-kicker !mb-2">Союзные государства</div>
+                      <div class="section-kicker !mb-2">Союзники</div>
                       <div class="grid gap-3">
                         <RouterLink
                           v-for="member in allianceMembersPreview"
@@ -452,7 +587,7 @@ onBeforeUnmount(() => {
                           :style="cardStyle"
                         >
                           <div class="flex items-center gap-3">
-                            <div class="preview-avatar h-12 w-12 border border-white/10 text-sm">
+                            <div class="preview-avatar h-11 w-11 border border-white/10 text-sm">
                               <img
                                 v-if="member.icon_url || member.icon_preview_url"
                                 :src="member.icon_url || member.icon_preview_url"
@@ -470,7 +605,7 @@ onBeforeUnmount(() => {
                       </div>
                     </div>
 
-                    <RouterLink to="/alliances" class="btn btn-outline rounded-2xl">
+                    <RouterLink to="/alliances" class="btn btn-outline w-full rounded-2xl">
                       Открыть центр альянсов
                     </RouterLink>
                   </div>
@@ -486,15 +621,16 @@ onBeforeUnmount(() => {
 
                   <div v-else class="mt-4 space-y-3">
                     <div v-for="item in nation.join_requests" :key="item.id" class="action-card" :style="cardStyle">
-                      <p class="font-semibold text-slate-100">{{ item.minecraft_nickname || item.site_login }}</p>
-                      <p class="mt-1 text-sm leading-6 text-slate-400">{{ item.message || 'Сообщение не указано.' }}</p>
-                      <div class="mt-3 flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-primary btn-sm rounded-2xl" @click="handleApprove(item.id)">
-                          Одобрить
-                        </button>
-                        <button type="button" class="btn btn-outline btn-sm rounded-2xl" @click="handleReject(item.id)">
-                          Отклонить
-                        </button>
+                      <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <p class="font-semibold text-slate-100">{{ item.minecraft_nickname || item.site_login }}</p>
+                          <p class="mt-1 text-sm text-slate-400">@{{ item.site_login }}</p>
+                          <p v-if="item.message" class="mt-3 text-sm leading-6 text-slate-300">{{ item.message }}</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                          <button type="button" class="btn btn-outline btn-sm" @click="handleReject(item.id)">Отклонить</button>
+                          <button type="button" class="btn btn-primary btn-sm" @click="handleApprove(item.id)">Принять</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -502,15 +638,14 @@ onBeforeUnmount(() => {
               </aside>
             </div>
 
-
-            <div class="grid gap-4 lg:grid-cols-2">
+            <div class="grid gap-4 xl:grid-cols-2">
               <section class="surface-card p-4 md:p-5" :style="cardStyle">
                 <div class="section-kicker !mb-2">Казна</div>
-                <h2 class="text-lg font-black text-slate-50 md:text-xl">Последние операции</h2>
+                <h2 class="text-lg font-black text-slate-50">Последние операции</h2>
 
                 <div v-if="treasuryLoading" class="mt-4 space-y-3">
-                  <div class="skeleton h-20 rounded-2xl"></div>
-                  <div class="skeleton h-20 rounded-2xl"></div>
+                  <div class="skeleton h-16 rounded-2xl"></div>
+                  <div class="skeleton h-16 rounded-2xl"></div>
                 </div>
 
                 <div v-else-if="!transactions.length" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
@@ -518,19 +653,21 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div v-else class="mt-4 space-y-3">
-                  <div v-for="item in transactions" :key="item.id" class="action-card" :style="cardStyle">
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                      <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
-                      <span class="footer-chip">{{ formatNumber(item.net_amount) }}</span>
+                  <div v-for="item in transactions.slice(0, 5)" :key="item.id" class="action-card" :style="cardStyle">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
+                        <p class="mt-1 text-sm text-slate-400">{{ item.comment || 'Без комментария' }}</p>
+                      </div>
+                      <p class="text-sm font-bold text-slate-100">{{ formatNumber(item.amount) }}</p>
                     </div>
-                    <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария.' }}</p>
                   </div>
                 </div>
               </section>
 
               <section class="surface-card p-4 md:p-5" :style="cardStyle">
-                <div class="section-kicker !mb-2">Меценаты</div>
-                <h2 class="text-lg font-black text-slate-50 md:text-xl">Кто пополняет казну</h2>
+                <div class="section-kicker !mb-2">Поддержка</div>
+                <h2 class="text-lg font-black text-slate-50">Топ донатеров</h2>
 
                 <div v-if="donorsLoading" class="mt-4 space-y-3">
                   <div class="skeleton h-16 rounded-2xl"></div>
@@ -538,27 +675,22 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div v-else-if="!donors.length" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
-                  Донатов игроков пока не было.
+                  Пока никто не пополнял казну через сайт.
                 </div>
 
                 <div v-else class="mt-4 space-y-3">
-                  <div v-for="item in donors" :key="item.minecraft_nickname" class="action-card" :style="cardStyle">
+                  <div v-for="item in donors.slice(0, 5)" :key="item.user_id || item.site_login" class="action-card" :style="cardStyle">
                     <div class="flex items-center justify-between gap-3">
-                      <p class="font-semibold text-slate-100">{{ item.minecraft_nickname }}</p>
-                      <span class="footer-chip">{{ formatNumber(item.total_amount) }}</span>
+                      <div class="min-w-0">
+                        <p class="font-semibold text-slate-100">{{ item.minecraft_nickname || item.site_login }}</p>
+                        <p class="mt-1 text-sm text-slate-400">@{{ item.site_login }}</p>
+                      </div>
+                      <p class="text-sm font-bold text-slate-100">{{ formatNumber(item.total_amount ?? 0) }}</p>
                     </div>
-                    <p class="mt-2 text-sm leading-6 text-slate-400">Донатов: {{ formatNumber(item.donations_count) }}</p>
                   </div>
                 </div>
               </section>
             </div>
-
-            <NationActivityFeed
-              :items="activity"
-              :loading="activityLoading"
-              title="Последние события"
-              subtitle="Вступления, заявки, смена ролей и оформление сохраняются в журнале."
-            />
           </div>
         </div>
       </div>

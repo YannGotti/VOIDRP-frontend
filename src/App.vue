@@ -23,9 +23,10 @@ const hidePublicShell = computed(() => Boolean(route.meta?.hidePublicShell))
             <div class="section-kicker">VoidRP</div>
             <h1 class="section-title">Подготавливаем сайт</h1>
             <p class="section-subtitle mx-auto max-w-2xl">
-              Проверяем сохранённый вход и подгружаем интерфейс.
+              Проверяем сохранённый вход и подгружаем интерфейс, чтобы игрок сразу попал
+              в понятный и аккуратный кабинет.
             </p>
-            <div class="mt-6 flex justify-center text-violet-400">
+            <div class="mt-6 flex justify-center text-violet-300">
               <span class="spinner spinner-lg"></span>
             </div>
           </div>

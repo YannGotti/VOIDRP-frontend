@@ -8,11 +8,11 @@ import { siteConfig } from '../config.site'
       <article class="surface-card p-5 md:p-6">
         <div class="section-kicker !mb-2">О сервере</div>
         <h2 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
-          Что игрок увидит с первых минут
+          Что игрок видит с первых минут
         </h2>
         <p class="mt-3 text-sm leading-7 text-slate-400 md:text-[15px]">
-          Сайт для входа, официальный лаунчер, карта мира и публичный профиль остаются
-          в центре, но поданы компактнее и чище.
+          Тут нет служебного шума. Игроку сразу понятны версия, путь к лаунчеру, карта мира
+          и общая логика входа.
         </p>
 
         <div class="mt-5 grid gap-3 sm:grid-cols-2">
@@ -38,28 +38,28 @@ import { siteConfig } from '../config.site'
       <article class="gradient-panel p-5 md:p-6">
         <div class="section-kicker section-kicker--light !mb-2">Почему это проще</div>
         <h3 class="text-2xl font-black tracking-tight text-white md:text-[2rem]">
-          Интерфейс выглядит цельно и не перегружает игрока
+          Интерфейс не спорит с игроком и не прячет важные действия
         </h3>
 
         <div class="mt-5 grid gap-2.5">
           <div class="dark-list-card">
-            <p class="text-sm font-black text-white">01 — Один аккаунт</p>
+            <p class="text-sm font-black text-white">01 — Один понятный вход</p>
             <p class="mt-1.5 text-sm leading-6 text-white/74">
-              Сайт, профиль и лаунчер работают через одну точку входа.
+              Один аккаунт работает и на сайте, и в лаунчере без дублирующих форм.
             </p>
           </div>
 
           <div class="dark-list-card">
-            <p class="text-sm font-black text-white">02 — Понятный кабинет</p>
+            <p class="text-sm font-black text-white">02 — Красивые публичные страницы</p>
             <p class="mt-1.5 text-sm leading-6 text-white/74">
-              Только полезные данные и кнопки без служебного шума.
+              Профиль игрока и государства выглядят как полноценные живые страницы, а не как админка.
             </p>
           </div>
 
           <div class="dark-list-card">
-            <p class="text-sm font-black text-white">03 — Живой публичный профиль</p>
+            <p class="text-sm font-black text-white">03 — Быстрые переходы к игре</p>
             <p class="mt-1.5 text-sm leading-6 text-white/74">
-              Баннер, фон, аватар и статус действительно меняют вид страницы.
+              Лаунчер, карта и кабинет находятся на расстоянии одного клика почти на всех экранах.
             </p>
           </div>
         </div>

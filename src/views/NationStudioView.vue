@@ -87,6 +87,7 @@ const isEditMode = computed(() => Boolean(nation.value))
 const viewerRole = computed(() => nation.value?.viewer_role || null)
 const canManage = computed(() => Boolean(nation.value?.viewer_can_manage))
 const canTransferLeadership = computed(() => viewerRole.value === 'leader')
+const isReadOnlyMember = computed(() => isEditMode.value && !canManage.value)
 
 const filteredMembers = computed(() => {
   const items = Array.isArray(nation.value?.members) ? nation.value.members : []
@@ -571,6 +572,107 @@ onMounted(async () => {
             </button>
           </div>
         </section>
+      </div>
+
+      <div v-else-if="isReadOnlyMember" class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
+        <aside class="space-y-5">
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Твоя роль</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Режим участника</h2>
+            <p class="mt-3 text-sm leading-7 text-slate-400">
+              Ты состоишь в государстве, но управляющие действия скрыты. Здесь остаётся только полезный обзор и быстрый переход на публичную страницу.
+            </p>
+
+            <div class="mt-5 grid gap-3">
+              <div class="action-card">
+                <p class="metric-label">Государство</p>
+                <p class="mt-2 text-sm font-semibold text-slate-100">{{ nation.title }}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">[{{ nation.tag }}] · {{ nation.short_description || 'Описание пока не добавлено.' }}</p>
+              </div>
+              <div class="action-card">
+                <p class="metric-label">Роль</p>
+                <p class="mt-2 text-sm font-semibold text-slate-100">{{ formatRoleLabel(viewerRole) }}</p>
+              </div>
+            </div>
+
+            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+              <RouterLink :to="publicNationUrl" class="btn btn-primary">Открыть страницу</RouterLink>
+              <button type="button" class="btn btn-outline" :disabled="actionLoading" @click="handleLeaveNation">
+                Покинуть государство
+              </button>
+            </div>
+          </section>
+
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Альянс</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">
+              {{ allianceSummary ? allianceSummary.title : 'Надгосударственный блок' }}
+            </h2>
+
+            <div v-if="!allianceSummary" class="action-card mt-5 text-sm text-slate-400">
+              Государство пока не состоит в альянсе.
+            </div>
+
+            <div v-else class="mt-5 space-y-3">
+              <div class="action-card">
+                <p class="font-semibold text-slate-100">[{{ allianceSummary.tag }}] · {{ formatAllianceType(allianceSummary.alliance_type) }}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">
+                  {{ allianceSummary.description || 'Описание альянса пока не добавлено.' }}
+                </p>
+              </div>
+              <RouterLink to="/alliances" class="btn btn-outline">Открыть центр альянсов</RouterLink>
+            </div>
+          </section>
+        </aside>
+
+        <div class="space-y-5">
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Состав</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Участники государства</h2>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <div v-for="member in nation.members" :key="member.user_id" class="action-card">
+                <p class="font-semibold text-slate-100">{{ member.minecraft_nickname || member.site_login }}</p>
+                <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
+                <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                  {{ formatRoleLabel(member.role) }}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">История</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Последние события</h2>
+            <div class="mt-5">
+              <NationActivityFeed :items="activity" :loading="activityLoading" />
+            </div>
+          </section>
+
+          <section class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Казна</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Последние операции</h2>
+
+            <div v-if="treasuryLoading" class="mt-5 space-y-3">
+              <div class="skeleton h-16 rounded-[22px]"></div>
+              <div class="skeleton h-16 rounded-[22px]"></div>
+            </div>
+
+            <div v-else-if="!transactions.length" class="action-card mt-5 text-sm text-slate-400">
+              Операций пока нет.
+            </div>
+
+            <div v-else class="mt-5 space-y-3">
+              <div v-for="item in transactions.slice(0, 6)" :key="item.id" class="action-card">
+                <div class="flex items-center justify-between gap-3">
+                  <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
+                  <span class="footer-chip">{{ formatNumber(item.net_amount || item.amount) }}</span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария.' }}</p>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
 
       <div v-else class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">

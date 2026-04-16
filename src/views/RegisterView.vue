@@ -120,7 +120,8 @@ onMounted(async () => {
           <div class="section-kicker">Регистрация</div>
           <h1 class="section-title">Создать аккаунт VoidRP</h1>
           <p class="section-subtitle max-w-3xl">
-            Один аккаунт нужен для сайта, кабинета и официального лаунчера. После регистрации письмо для подтверждения почты отправится автоматически.
+            Один аккаунт нужен для сайта, кабинета и официального лаунчера. После регистрации
+            письмо для подтверждения почты отправится автоматически.
           </p>
 
           <form class="mt-8 grid gap-4 md:grid-cols-2" @submit.prevent="submit">
@@ -172,7 +173,7 @@ onMounted(async () => {
               </div>
 
               <p class="helper-text mt-3">
-                Если тебя пригласил другой игрок, укажи его код. Это засчитается в его реферальный прогресс.
+                Если тебя пригласил другой игрок, укажи его код. Это зачтётся в его реферальный прогресс.
               </p>
 
               <p v-if="referralMessage" class="alert alert-success mt-4">{{ referralMessage }}</p>
@@ -201,14 +202,23 @@ onMounted(async () => {
           </p>
 
           <div class="mt-8 grid gap-3">
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/8 p-4 text-sm leading-7 text-white/80">
-              Один аккаунт для сайта и официального лаунчера.
+            <div class="dark-list-card">
+              <p class="text-sm font-black text-white">Один аккаунт</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                Для сайта, кабинета, публичного профиля и лаунчера не нужны разные входы.
+              </p>
             </div>
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/8 p-4 text-sm leading-7 text-white/80">
-              Письмо подтверждения отправится автоматически.
+            <div class="dark-list-card">
+              <p class="text-sm font-black text-white">Письмо придёт автоматически</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                Сразу после регистрации можно подтвердить почту и продолжить путь к игре.
+              </p>
             </div>
-            <div class="rounded-[1.3rem] border border-white/10 bg-white/8 p-4 text-sm leading-7 text-white/80">
-              Аватар, баннер, фон и описание можно будет настроить позже в профиле.
+            <div class="dark-list-card">
+              <p class="text-sm font-black text-white">Оформление потом</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                Аватар, баннер, фон и описание можно спокойно настроить уже после входа.
+              </p>
             </div>
           </div>
         </aside>

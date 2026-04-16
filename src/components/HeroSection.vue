@@ -8,13 +8,13 @@ import { siteConfig } from '../config.site'
       <div class="relative z-10 pb-1">
         <div class="section-kicker">{{ siteConfig.hero.badge }}</div>
 
-        <h1 class="max-w-4xl text-[2.35rem] font-black leading-[1.02] tracking-[-0.05em] text-slate-50 md:text-[3.2rem] xl:text-[3.9rem]">
-          Регистрация и вход
-          <span class="text-gradient mt-2 block pb-[0.12em]">на сайте и в лаунчере</span>
+        <h1 class="max-w-5xl text-[2.45rem] font-black leading-[0.98] tracking-[-0.06em] text-slate-50 md:text-[3.3rem] xl:text-[4.35rem]">
+          {{ siteConfig.hero.title }}
+          <span class="text-gradient mt-2 block pb-[0.12em]">через официальный сайт и лаунчер</span>
         </h1>
 
-        <p class="section-subtitle mt-4 max-w-2xl text-[0.96rem] leading-7 md:text-[1rem]">
-          {{ siteConfig.hero.description }} Всё сделано компактнее, чище и понятнее для игрока.
+        <p class="section-subtitle mt-4 max-w-2xl text-[0.98rem] leading-7 md:text-[1rem]">
+          {{ siteConfig.hero.description }}
         </p>
 
         <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -24,12 +24,16 @@ import { siteConfig } from '../config.site'
           <RouterLink to="/download-launcher" class="btn btn-outline">
             Скачать лаунчер
           </RouterLink>
+          <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="btn btn-ghost">
+            Открыть карту
+          </a>
         </div>
 
         <div class="mt-6 flex flex-wrap gap-2.5 pb-1">
           <div class="hero-chip">Адрес: {{ siteConfig.serverIp }}</div>
           <div class="hero-chip">Версия: {{ siteConfig.serverVersion }}</div>
           <div class="hero-chip">Better MC 5</div>
+          <div class="hero-chip">Официальный лаунчер</div>
         </div>
       </div>
 
@@ -38,12 +42,12 @@ import { siteConfig } from '../config.site'
           <div>
             <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/55">Путь игрока</p>
             <h2 class="mt-2 text-[1.8rem] font-black tracking-tight text-white md:text-[2rem]">
-              Три понятных шага
+              Три шага до входа
             </h2>
           </div>
 
           <div class="inline-chip border-white/10 bg-white/8 text-white/82">
-            Dark UI
+            Player-first UX
           </div>
         </div>
 
@@ -51,39 +55,39 @@ import { siteConfig } from '../config.site'
           <div class="hero-step-card">
             <p class="hero-step-label">Шаг 1</p>
             <p class="hero-step-title">Аккаунт</p>
-            <p class="hero-step-text">Создай аккаунт и укажи игровой ник один раз.</p>
+            <p class="hero-step-text">Регистрируешься на сайте и подтверждаешь почту один раз.</p>
           </div>
 
           <div class="hero-step-card">
             <p class="hero-step-label">Шаг 2</p>
             <p class="hero-step-title">Лаунчер</p>
-            <p class="hero-step-text">Скачай лаунчер и войди тем же аккаунтом.</p>
+            <p class="hero-step-text">Скачиваешь официальный клиент и входишь тем же аккаунтом.</p>
           </div>
 
           <div class="hero-step-card">
             <p class="hero-step-label">Шаг 3</p>
             <p class="hero-step-title">Игра</p>
-            <p class="hero-step-text">Нажми «Играть», остальное лаунчер сделает сам.</p>
+            <p class="hero-step-text">Нажимаешь «Играть», а сайт и лаунчер берут всё остальное на себя.</p>
           </div>
         </div>
 
         <div class="mt-5 rounded-[1.35rem] border border-white/10 bg-white/6 p-3.5 md:p-4">
-          <p class="text-[12px] font-semibold text-white/58">Почему это удобно</p>
+          <p class="text-[12px] font-semibold text-white/58">Что получает обычный игрок</p>
 
           <div class="mt-3 grid gap-2">
             <div class="hero-reason-card">
               <span class="hero-reason-dot bg-sky-300"></span>
-              Не нужно вручную искать сборку и настраивать клиент.
+              Не нужно искать модпак, версию клиента и отдельные инструкции.
             </div>
 
             <div class="hero-reason-card">
               <span class="hero-reason-dot bg-emerald-300"></span>
-              Все важные действия находятся в одном кабинете.
+              Кабинет, профиль и переход к игре собраны в одном понятном месте.
             </div>
 
             <div class="hero-reason-card">
               <span class="hero-reason-dot bg-violet-300"></span>
-              Публичный профиль теперь выглядит как часть сайта, а не отдельная коробка.
+              Государства, рейтинг и карта мира доступны без перегруза интерфейса.
             </div>
           </div>
         </div>
