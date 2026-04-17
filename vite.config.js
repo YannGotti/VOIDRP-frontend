@@ -14,7 +14,7 @@ export default defineConfig({
     host: true,
     port: 5175,
     strictPort: true,
-    allowedHosts: [ "minecraftrating.ru" ],
+    allowedHosts: [ "minecraftrating.ru", "127.0.0.1", "0.0.0.0"],
     proxy: {
       '/api': {
         target: API_PROXY_TARGET,
