@@ -27,6 +27,7 @@ import { useAuthStore } from '../stores/authStore'
 import { formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
 
 const auth = useAuthStore()
+const MIN_CREATE_NATION_BALANCE = 2_500_000
 
 const loading = ref(true)
 const saving = ref(false)
@@ -544,6 +545,11 @@ onMounted(async () => {
           <div class="section-kicker !mb-2">Создание</div>
           <h2 class="text-xl font-black text-slate-50 md:text-2xl">Основные данные</h2>
 
+          <div class="mt-5 rounded-[20px] border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-sm leading-6 text-amber-100">
+            Для создания государства нужен баланс игрока минимум {{ formatNumber(MIN_CREATE_NATION_BALANCE) }}.
+            Если баланс ещё не синхронизирован с игрового сервера, backend отклонит создание.
+          </div>
+
           <div class="mt-5 grid gap-4">
             <input v-model="createForm.title" class="input rounded-2xl" placeholder="Название" />
             <input v-model="createForm.slug" class="input rounded-2xl" placeholder="slug" />
@@ -1021,3 +1027,4 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
