@@ -44,7 +44,7 @@ const routes = [
   { path: '/nation/studio', name: 'nation-studio', component: NationStudioView, meta: { title: 'Студия государства', requiresAuth: true } },
   { path: '/nations/rankings', name: 'nation-rankings', component: NationRankingsView, meta: { title: 'Рейтинг государств' } },
 
-  { path: '/alliances', name: 'alliances', component: AllianceHubView, meta: { title: 'Альянсы', requiresAuth: true } },
+  { path: '/alliances', name: 'alliances', component: AllianceHubView, meta: { title: 'Альянсы' } },
 
   { path: '/internal-admin', name: 'admin-legacy', component: AdminLegacyView, meta: { title: 'Legacy Admin', hidePublicShell: true } },
 ]

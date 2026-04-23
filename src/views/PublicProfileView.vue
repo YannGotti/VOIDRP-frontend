@@ -1,8 +1,6 @@
 <script setup>
-import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { getNationsList } from '../services/nationsApi'
-import { toastError, toastSuccess } from '../services/toast'
 import { getPublicProfileBySlug } from '../services/profileApi'
 import { followProfile, unfollowProfile } from '../services/socialApi'
 import { useAuthStore } from '../stores/authStore'
@@ -15,7 +13,7 @@ const error = ref('')
 const actionMessage = ref('')
 const followLoading = ref(false)
 const profile = ref(null)
-const publicNation = ref(null)
+const publicNation = computed(() => profile.value?.nation || null)
 
 function hexToRgba(hex, alpha) {
   if (!hex || typeof hex !== 'string') return `rgba(139, 92, 246, ${alpha})`
@@ -145,18 +143,6 @@ function applyRouteBackground(value) {
   document.documentElement.style.setProperty('--route-bg', value)
 }
 
-async function resolvePublicNation(userId) {
-  publicNation.value = null
-  if (!userId) return
-
-  try {
-    const payload = await getNationsList(authStore.accessToken || null)
-    const items = Array.isArray(payload?.items) ? payload.items : []
-    publicNation.value = items.find((item) => Array.isArray(item.members) && item.members.some((member) => member.user_id === userId)) || null
-  } catch {
-    publicNation.value = null
-  }
-}
 
 async function loadProfile() {
   loading.value = true
@@ -166,7 +152,6 @@ async function loadProfile() {
   try {
     const payload = await getPublicProfileBySlug(route.params.slug, authStore.accessToken || null)
     profile.value = payload
-    await resolvePublicNation(payload?.user?.id)
   } catch (err) {
     error.value = err.message || 'Не удалось загрузить профиль.'
   } finally {
@@ -215,8 +200,6 @@ onMounted(loadProfile)
 onBeforeUnmount(() => {
   document.documentElement.style.removeProperty('--route-bg')
 })
-watch(error, (value) => { if (value) toastError(value) })
-watch(actionMessage, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
@@ -230,7 +213,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
         </div>
       </div>
 
-      <div v-else-if="error" class="mx-auto max-w-3xl text-center text-sm text-slate-300">Открываем профиль…</div>
+      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">{{ error }}</div>
 
       <div v-else-if="profile" class="page-backdrop route-shell overflow-hidden rounded-[32px] border" :style="pageShellStyle">
         <div class="p-3 md:p-4">
@@ -301,6 +284,9 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
               </div>
             </section>
 
+            <div v-if="actionMessage" class="alert alert-success">
+              {{ actionMessage }}
+            </div>
 
             <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
               <section class="surface-card p-4 md:p-5" :style="cardStyle">
@@ -353,5 +339,3 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
     </div>
   </section>
 </template>
-
-
