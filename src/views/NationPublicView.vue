@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import {
@@ -9,7 +9,6 @@ import {
   joinNation,
   rejectNationRequest,
 } from '../services/nationsApi'
-import { toastError, toastSuccess, toastInfo } from '../services/toast'
 import { getNationActivity } from '../services/nationActivityApi'
 import { getNationStatsBySlug, getNationTopDonors, getNationTreasuryTransactions } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
@@ -328,29 +327,27 @@ onMounted(loadPage)
 onBeforeUnmount(() => {
   document.documentElement.style.removeProperty('--route-bg')
 })
-watch(error, (value) => { if (value) toastError(value) })
-watch(actionMessage, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
-  <section class="py-5 md:py-7">
-    <div class="container-shell">
-      <div v-if="loading" class="space-y-4">
-        <div class="skeleton h-[280px] rounded-[30px]"></div>
-        <div class="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_340px]">
-          <div class="skeleton h-[280px] rounded-[28px]"></div>
-          <div class="skeleton h-[280px] rounded-[28px]"></div>
+  <section class="py-4 md:py-5">
+    <div class="container-shell max-w-[1380px]">
+      <div v-if="loading" class="space-y-2.5">
+        <div class="skeleton h-[220px] rounded-[24px]"></div>
+        <div class="grid gap-3 xl:grid-cols-[minmax(0,1.12fr)_320px]">
+          <div class="skeleton h-[220px] rounded-[24px]"></div>
+          <div class="skeleton h-[220px] rounded-[24px]"></div>
         </div>
       </div>
 
-      <div v-else-if="error" class="mx-auto max-w-3xl text-center text-sm text-slate-300">Страница пока недоступна.</div>
+      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">{{ error }}</div>
 
-      <div v-else-if="nation" class="page-backdrop route-shell overflow-hidden rounded-[32px] border" :style="pageShellStyle">
-        <div class="p-3 md:p-4">
-          <div class="space-y-4">
-            <section class="relative overflow-hidden rounded-[28px] shadow-[0_26px_100px_rgba(0,0,0,0.36)]" :style="heroStyle">
+      <div v-else-if="nation" class="page-backdrop route-shell overflow-hidden rounded-[26px] border" :style="pageShellStyle">
+        <div class="p-2.5 md:p-3">
+          <div class="space-y-2.5">
+            <section class="relative overflow-hidden rounded-[24px] shadow-[0_20px_72px_rgba(0,0,0,0.32)]" :style="heroStyle">
               <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/72"></div>
-              <div class="relative px-5 pb-5 pt-5 md:px-7 md:pb-7 md:pt-7">
+              <div class="relative px-4 pb-4 pt-4 md:px-5 md:pb-5 md:pt-5">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
                     Государство
@@ -372,18 +369,18 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                   </span>
                 </div>
 
-                <div class="mt-10 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div class="mt-7 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
                   <div class="flex min-w-0 items-end gap-4">
-                    <div class="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[24px] border-4 border-white/90 bg-slate-900 text-3xl font-black uppercase text-slate-100 shadow-[0_18px_50px_rgba(0,0,0,0.4)] md:h-24 md:w-24">
+                    <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[18px] border-2 border-white/90 bg-slate-900 text-2xl font-black uppercase text-slate-100 shadow-[0_12px_30px_rgba(0,0,0,0.34)] md:h-20 md:w-20">
                       <img v-if="iconUrl" :src="iconUrl" alt="icon" class="h-full w-full object-cover" />
                       <span v-else>{{ tagText.slice(0, 2).toUpperCase() }}</span>
                     </div>
 
                     <div class="min-w-0 pb-1 text-white">
-                      <h1 class="break-words text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] md:text-4xl">
+                      <h1 class="break-words text-2xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] md:text-3xl">
                         {{ nation.title }}
                       </h1>
-                      <p class="mt-2 text-sm text-white/76 md:text-base">
+                      <p class="mt-1.5 text-sm text-white/76 md:text-[15px]">
                         [{{ nation.tag }}] · {{ nation.short_description || 'Описание пока не добавлено' }}
                       </p>
                     </div>
@@ -401,28 +398,29 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
               </div>
             </section>
 
+            <div v-if="actionMessage" class="alert alert-success">{{ actionMessage }}</div>
 
-            <div class="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_340px]">
+            <div class="grid gap-3 xl:grid-cols-[minmax(0,1.12fr)_320px]">
               <div class="space-y-4">
-                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
                   <div class="section-kicker !mb-2">О государстве</div>
-                  <h2 class="text-lg font-black text-slate-50 md:text-xl">Описание</h2>
-                  <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300 md:text-[15px]">
+                  <h2 class="text-base font-black text-slate-50 md:text-lg">Описание</h2>
+                  <p class="mt-2.5 whitespace-pre-line text-sm leading-6 text-slate-300 md:text-[14px]">
                     {{ nation.description || 'Подробное описание пока не заполнено.' }}
                   </p>
                 </section>
 
-                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
                   <div class="section-kicker !mb-2">Участники</div>
                   <div class="flex items-center justify-between gap-3">
-                    <h2 class="text-lg font-black text-slate-50 md:text-xl">Состав государства</h2>
+                    <h2 class="text-base font-black text-slate-50 md:text-lg">Состав государства</h2>
                     <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                       {{ nation.members.length }} участников
                     </span>
                   </div>
 
-                  <div class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <div v-for="member in nation.members" :key="member.user_id" class="action-card" :style="cardStyle">
+                  <div class="mt-3 grid gap-2.5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                    <div v-for="member in nation.members" :key="member.user_id" class="action-card !p-3" :style="cardStyle">
                       <p class="font-semibold text-slate-100">{{ member.minecraft_nickname || member.site_login }}</p>
                       <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
                       <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
@@ -436,20 +434,20 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                   :items="activity"
                   :loading="activityLoading"
                   title="Последняя активность"
-                  subtitle="Вступления, переводы ролей и другие важные события государства."
+                  subtitle="Короткая лента последних событий государства."
                   compact
                 />
               </div>
 
               <aside class="space-y-4">
-                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
                   <div class="section-kicker !mb-2">Вступление</div>
                   <h2 class="text-lg font-black text-slate-50">{{ actionCardTitle }}</h2>
                   <p class="mt-3 text-sm leading-6 text-slate-300">
                     {{ actionCardText }}
                   </p>
 
-                  <div v-if="!isAuthenticated" class="mt-4 grid gap-3">
+                  <div v-if="!isAuthenticated" class="mt-3 grid gap-2.5">
                     <RouterLink :to="`/login?redirect=${encodeURIComponent(`/nation/${nation.slug}`)}`" class="btn btn-primary w-full">
                       Войти и продолжить
                     </RouterLink>
@@ -483,7 +481,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                     <p class="mt-2 text-sm font-semibold text-emerald-200">Ты уже в составе государства</p>
                   </div>
 
-                  <div v-else-if="canRequestJoin" class="mt-4 space-y-3">
+                  <div v-else-if="canRequestJoin" class="mt-3 space-y-2.5">
                     <div class="action-card" :style="cardStyle">
                       <p class="metric-label">Сообщение лидеру</p>
                       <textarea
@@ -502,7 +500,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                   <button
                     v-else-if="canJoinDirectly"
                     type="button"
-                    class="btn btn-primary mt-4 w-full"
+                    class="btn btn-primary mt-3 w-full"
                     :disabled="joinLoading || currentNationLoading"
                     @click="handleJoin"
                   >
@@ -516,30 +514,30 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                   </div>
                 </section>
 
-                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
                   <div class="section-kicker !mb-2">Статистика</div>
                   <h2 class="text-lg font-black text-slate-50">Сила государства</h2>
 
-                  <div v-if="statsLoading" class="mt-4 space-y-3">
+                  <div v-if="statsLoading" class="mt-3 space-y-2.5">
                     <div class="skeleton h-16 rounded-2xl"></div>
                     <div class="skeleton h-16 rounded-2xl"></div>
                   </div>
 
-                  <div v-else class="metric-grid metric-grid-2 mt-4">
+                  <div v-else class="metric-grid metric-grid-2 mt-3">
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.18rem]">{{ formatNumber(stats?.treasury_balance ?? 0) }}</p>
+                      <p class="metric-value !text-[1.05rem]">{{ formatNumber(stats?.treasury_balance ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Баланс</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.18rem]">{{ formatNumber(stats?.territory_points ?? 0) }}</p>
+                      <p class="metric-value !text-[1.05rem]">{{ formatNumber(stats?.territory_points ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Территория</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.18rem]">{{ formatCompactHoursFromMinutes(stats?.total_playtime_minutes ?? 0) }}</p>
+                      <p class="metric-value !text-[1.05rem]">{{ formatCompactHoursFromMinutes(stats?.total_playtime_minutes ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Онлайн</p>
                     </div>
                     <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.18rem]">{{ formatNumber(stats?.prestige_score ?? 0) }}</p>
+                      <p class="metric-value !text-[1.05rem]">{{ formatNumber(stats?.prestige_score ?? 0) }}</p>
                       <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Престиж</p>
                     </div>
                   </div>
@@ -549,7 +547,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                   </RouterLink>
                 </section>
 
-                <section class="surface-card p-4 md:p-5" :style="cardStyle">
+                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
                   <div class="section-kicker !mb-2">Альянс</div>
                   <h2 class="text-lg font-black text-slate-50">
                     {{ allianceSummary ? allianceSummary.title : 'Надгосударственный блок' }}
@@ -559,7 +557,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                     Это государство пока не состоит ни в одном альянсе.
                   </div>
 
-                  <div v-else class="mt-4 space-y-4">
+                  <div v-else class="mt-3 space-y-3">
                     <div class="action-card" :style="cardStyle">
                       <p class="font-semibold text-slate-100">[{{ allianceSummary.tag }}] · {{ formatAllianceType(allianceSummary.alliance_type) }}</p>
                       <p class="mt-2 text-sm leading-6 text-slate-400">
@@ -567,13 +565,13 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                       </p>
                     </div>
 
-                    <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="grid gap-2.5 sm:grid-cols-2">
                       <div class="metric-card text-center">
-                        <p class="metric-value !text-[1.12rem]">{{ allianceSummary.members_count }}</p>
+                        <p class="metric-value !text-[1.02rem]">{{ allianceSummary.members_count }}</p>
                         <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Государств</p>
                       </div>
                       <div class="metric-card text-center">
-                        <p class="metric-value !text-[1.12rem]">{{ formatNumber(allianceSummary.treasury_balance ?? 0) }}</p>
+                        <p class="metric-value !text-[1.02rem]">{{ formatNumber(allianceSummary.treasury_balance ?? 0) }}</p>
                         <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Казна</p>
                       </div>
                     </div>
@@ -613,7 +611,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                   </div>
                 </section>
 
-                <section v-if="nation.viewer_can_manage" class="surface-card p-4 md:p-5" :style="cardStyle">
+                <section v-if="nation.viewer_can_manage" class="surface-card p-3.5 md:p-4" :style="cardStyle">
                   <div class="section-kicker !mb-2">Заявки</div>
                   <h2 class="text-lg font-black text-slate-50">Управление вступлением</h2>
 
@@ -621,7 +619,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                     Сейчас нет активных заявок.
                   </div>
 
-                  <div v-else class="mt-4 space-y-3">
+                  <div v-else class="mt-3 space-y-2.5">
                     <div v-for="item in nation.join_requests" :key="item.id" class="action-card" :style="cardStyle">
                       <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0">
@@ -640,12 +638,12 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
               </aside>
             </div>
 
-            <div class="grid gap-4 xl:grid-cols-2">
-              <section class="surface-card p-4 md:p-5" :style="cardStyle">
+            <div class="grid gap-3 xl:grid-cols-2">
+              <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
                 <div class="section-kicker !mb-2">Казна</div>
                 <h2 class="text-lg font-black text-slate-50">Последние операции</h2>
 
-                <div v-if="treasuryLoading" class="mt-4 space-y-3">
+                <div v-if="treasuryLoading" class="mt-3 space-y-2.5">
                   <div class="skeleton h-16 rounded-2xl"></div>
                   <div class="skeleton h-16 rounded-2xl"></div>
                 </div>
@@ -654,7 +652,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                   Операций пока нет.
                 </div>
 
-                <div v-else class="mt-4 space-y-3">
+                <div v-else class="mt-3 space-y-2.5">
                   <div v-for="item in transactions.slice(0, 5)" :key="item.id" class="action-card" :style="cardStyle">
                     <div class="flex items-start justify-between gap-3">
                       <div class="min-w-0">
@@ -667,11 +665,11 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                 </div>
               </section>
 
-              <section class="surface-card p-4 md:p-5" :style="cardStyle">
+              <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
                 <div class="section-kicker !mb-2">Поддержка</div>
                 <h2 class="text-lg font-black text-slate-50">Топ донатеров</h2>
 
-                <div v-if="donorsLoading" class="mt-4 space-y-3">
+                <div v-if="donorsLoading" class="mt-3 space-y-2.5">
                   <div class="skeleton h-16 rounded-2xl"></div>
                   <div class="skeleton h-16 rounded-2xl"></div>
                 </div>
@@ -680,7 +678,7 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
                   Пока никто не пополнял казну через сайт.
                 </div>
 
-                <div v-else class="mt-4 space-y-3">
+                <div v-else class="mt-3 space-y-2.5">
                   <div v-for="item in donors.slice(0, 5)" :key="item.user_id || item.site_login" class="action-card" :style="cardStyle">
                     <div class="flex items-center justify-between gap-3">
                       <div class="min-w-0">
@@ -699,5 +697,16 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
     </div>
   </section>
 </template>
+
+<style scoped>
+:deep(.route-shell .metric-card),
+:deep(.route-shell .action-card) {
+  padding: 0.8rem;
+}
+
+:deep(.route-shell .btn) {
+  min-height: 2.55rem;
+}
+</style>
 
 

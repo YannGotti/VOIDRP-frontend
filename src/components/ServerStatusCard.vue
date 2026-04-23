@@ -67,10 +67,6 @@ const externalStatsUrl = computed(() => siteConfig.monitoringChartUrl)
 
                 <div class="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-slate-950/14 to-transparent"></div>
               </div>
-
-              <p class="mt-2.5 text-[11px] leading-5 text-slate-500">
-                Внутренние цвета и шрифты графика нельзя полностью перекрасить стилями сайта, потому что это iframe с другого домена.
-              </p>
             </div>
           </div>
         </div>
