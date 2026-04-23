@@ -7,6 +7,7 @@ import {
   registerAccount,
   revokeOtherSessions,
 } from '../services/authApi'
+import { toastInfo, toastSuccess } from '../services/toast'
 
 const STORAGE_KEY = 'voidrp_auth_v1'
 
@@ -139,6 +140,7 @@ export async function revokeOtherSessionsForCurrentAccount() {
   })
 
   await reloadMe()
+  toastSuccess(response?.message || 'Другие активные входы завершены.', 'Безопасность')
   return response
 }
 
@@ -146,6 +148,7 @@ export async function logoutCurrentSession() {
   const refreshToken = authState.refreshToken
   clearAuthState()
   authState.ready = true
+  toastInfo('Ты вышел из аккаунта.', 'Выход выполнен')
 
   if (!refreshToken) return
 
@@ -184,9 +187,10 @@ export function useAuthStore() {
     legacyHashPresent: computed(() => Boolean(authState.security?.legacy_hash_present)),
 
     accountModeText: computed(() => {
+      if (authState.security?.mustUseLauncher) return 'Только официальный лаунчер'
       if (authState.security?.must_use_launcher) return 'Только официальный лаунчер'
-      if (authState.playerAccount?.legacy_auth_enabled) return 'Смешанный режим: лаунчер + legacy'
-      return 'Режим не определён'
+      if (authState.playerAccount?.legacy_auth_enabled) return 'Официальный лаунчер и старый вход'
+      return 'Основной вход через сайт'
     }),
   }
 }

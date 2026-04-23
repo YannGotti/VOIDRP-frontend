@@ -42,12 +42,12 @@ import { siteConfig } from '../config.site'
           <div>
             <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-white/55">Путь игрока</p>
             <h2 class="mt-2 text-[1.8rem] font-black tracking-tight text-white md:text-[2rem]">
-              Три шага до входа
+              Три простых шага до входа
             </h2>
           </div>
 
           <div class="inline-chip border-white/10 bg-white/8 text-white/82">
-            Player-first UX
+            Понятно и просто
           </div>
         </div>
 
@@ -55,39 +55,39 @@ import { siteConfig } from '../config.site'
           <div class="hero-step-card">
             <p class="hero-step-label">Шаг 1</p>
             <p class="hero-step-title">Аккаунт</p>
-            <p class="hero-step-text">Регистрируешься на сайте и подтверждаешь почту один раз.</p>
+            <p class="hero-step-text">Регистрируешься на сайте и один раз подтверждаешь почту.</p>
           </div>
 
           <div class="hero-step-card">
             <p class="hero-step-label">Шаг 2</p>
             <p class="hero-step-title">Лаунчер</p>
-            <p class="hero-step-text">Скачиваешь официальный клиент и входишь тем же аккаунтом.</p>
+            <p class="hero-step-text">Скачиваешь официальный лаунчер и входишь под тем же аккаунтом.</p>
           </div>
 
           <div class="hero-step-card">
             <p class="hero-step-label">Шаг 3</p>
             <p class="hero-step-title">Игра</p>
-            <p class="hero-step-text">Нажимаешь «Играть», а сайт и лаунчер берут всё остальное на себя.</p>
+            <p class="hero-step-text">Нажимаешь «Играть», а остальное сайт и лаунчер делают сами.</p>
           </div>
         </div>
 
         <div class="mt-5 rounded-[1.35rem] border border-white/10 bg-white/6 p-3.5 md:p-4">
-          <p class="text-[12px] font-semibold text-white/58">Что получает обычный игрок</p>
+          <p class="text-[12px] font-semibold text-white/58">Что это даёт обычному игроку</p>
 
           <div class="mt-3 grid gap-2">
             <div class="hero-reason-card">
               <span class="hero-reason-dot bg-sky-300"></span>
-              Не нужно искать модпак, версию клиента и отдельные инструкции.
+              Не нужно искать модпак, правильную версию клиента и отдельные инструкции.
             </div>
 
             <div class="hero-reason-card">
               <span class="hero-reason-dot bg-emerald-300"></span>
-              Кабинет, профиль и переход к игре собраны в одном понятном месте.
+              Кабинет, переход к игре и настройка профиля собраны в одном понятном месте.
             </div>
 
             <div class="hero-reason-card">
               <span class="hero-reason-dot bg-violet-300"></span>
-              Государства, рейтинг и карта мира доступны без перегруза интерфейса.
+              Государства, рейтинг и карта мира доступны без перегруженного интерфейса.
             </div>
           </div>
         </div>
