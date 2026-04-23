@@ -74,7 +74,7 @@ const summaryCounters = computed(() => {
     { label: 'Всего', value: items.length },
     { label: 'Свободный вход', value: items.filter((item) => item.recruitment_policy === 'open').length },
     { label: 'По заявке', value: items.filter((item) => item.recruitment_policy === 'request').length },
-    { label: 'Invite only', value: items.filter((item) => item.recruitment_policy === 'invite_only').length },
+    { label: 'По приглашению', value: items.filter((item) => item.recruitment_policy === 'invite_only').length },
   ]
 })
 
@@ -100,9 +100,9 @@ async function loadPage() {
 }
 
 function recruitmentLabel(value) {
-  if (value === 'open') return 'Свободное вступление'
+  if (value === 'open') return 'Свободный вход'
   if (value === 'request') return 'По заявке'
-  return 'Только по приглашению'
+  return 'По приглашению'
 }
 
 function accentStyle(value) {
@@ -123,7 +123,7 @@ function nationActionMeta(nation) {
   if (myNation.value?.slug === nation.slug) {
     return {
       title: 'Твоё государство',
-      description: 'Можно открыть публичную страницу или перейти в управление.',
+      description: 'Можно открыть страницу или перейти в управление.',
       button: 'Открыть',
     }
   }
@@ -171,23 +171,23 @@ onMounted(loadPage)
 </script>
 
 <template>
-  <section class="py-7 md:py-9">
-    <div class="container-shell space-y-5">
-      <section class="surface-card p-5 md:p-6">
-        <div class="grid gap-5 xl:grid-cols-[1.06fr_0.94fr] xl:items-end">
+  <section class="py-6 md:py-8">
+    <div class="container-shell nations-catalog-shell space-y-4">
+      <section class="surface-card p-4 md:p-5">
+        <div class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr] xl:items-end">
           <div>
             <div class="section-kicker !mb-2">Государства</div>
-            <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">
+            <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
               Каталог сообществ
             </h1>
-            <p class="mt-4 max-w-3xl text-sm leading-7 text-slate-400 md:text-[15px]">
-              Здесь легко понять, куда можно вступить сразу, куда нужна заявка и где набор идёт только по приглашению.
+            <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-400">
+              Выбери государство, открой страницу и сразу пойми, можно ли вступить напрямую или нужна заявка.
             </p>
           </div>
 
-          <div class="grid gap-3 md:grid-cols-2">
+          <div class="grid gap-2 sm:grid-cols-2 xl:justify-self-end">
             <RouterLink to="/nations/rankings" class="btn btn-outline">
-              Смотреть рейтинг
+              Рейтинг
             </RouterLink>
 
             <RouterLink
@@ -195,10 +195,10 @@ onMounted(loadPage)
               to="/nation/studio"
               class="btn btn-primary"
             >
-              {{ myNation ? 'Моё государство' : 'Создать государство' }}
+              {{ myNation ? 'Моё государство' : 'Создать своё' }}
             </RouterLink>
 
-            <RouterLink v-else to="/login" class="btn btn-primary md:col-span-2">
+            <RouterLink v-else to="/login" class="btn btn-primary sm:col-span-2">
               Войти, чтобы вступить
             </RouterLink>
           </div>
@@ -209,77 +209,77 @@ onMounted(loadPage)
         {{ error }}
       </div>
 
-      <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div v-for="item in summaryCounters" :key="item.label" class="metric-card text-center">
-          <p class="metric-value !text-[1.3rem]">{{ item.value }}</p>
-          <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">{{ item.label }}</p>
+          <p class="metric-value !text-[1.15rem]">{{ item.value }}</p>
+          <p class="mt-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{{ item.label }}</p>
         </div>
       </section>
 
-      <section v-if="myNation" class="surface-card p-5 md:p-6">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <section v-if="myNation" class="surface-card p-4 md:p-5">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div class="min-w-0">
             <div class="section-kicker !mb-2">Твоё государство</div>
-            <h2 class="truncate text-2xl font-black tracking-tight text-slate-50">
+            <h2 class="truncate text-xl font-black tracking-tight text-slate-50">
               {{ myNation.title }}
             </h2>
-            <p class="mt-3 text-sm leading-7 text-slate-400">
+            <p class="mt-2 text-sm leading-6 text-slate-400">
               [{{ myNation.tag }}] · {{ myNation.short_description || 'Короткое описание пока не заполнено.' }}
             </p>
           </div>
 
-          <div class="grid gap-3 md:grid-cols-2">
+          <div class="grid gap-2 sm:grid-cols-2">
             <RouterLink :to="myNation.viewer_can_manage ? '/nation/studio' : `/nation/${myNation.slug}`" class="btn btn-primary">
-              {{ myNation.viewer_can_manage ? 'Открыть управление' : 'Открыть страницу' }}
+              {{ myNation.viewer_can_manage ? 'Управление' : 'Открыть страницу' }}
             </RouterLink>
             <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-outline">Публичная страница</RouterLink>
           </div>
         </div>
       </section>
 
-      <section v-if="topThree.length" class="grid gap-4 lg:grid-cols-3">
+      <section v-if="topThree.length" class="grid gap-3 lg:grid-cols-3">
         <article
           v-for="(item, index) in topThree"
           :key="item.nation_id || item.slug || item.title"
-          class="surface-card p-5 md:p-6"
+          class="surface-card p-4 md:p-5"
         >
           <div class="flex items-start justify-between gap-3">
-            <div>
+            <div class="min-w-0">
               <div class="section-kicker !mb-2">Топ {{ index + 1 }}</div>
-              <h2 class="text-xl font-black tracking-tight text-slate-50">{{ item.title }}</h2>
-              <p class="mt-2 text-sm leading-6 text-slate-400">
+              <h2 class="truncate text-lg font-black tracking-tight text-slate-50">{{ item.title }}</h2>
+              <p class="mt-1.5 text-sm leading-6 text-slate-400">
                 [{{ item.tag }}] · score {{ formatNumber(item.score ?? 0) }}
               </p>
             </div>
 
-            <span class="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-black text-slate-100">
+            <span class="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-black text-slate-100">
               #{{ index + 1 }}
             </span>
           </div>
 
-          <div class="metric-grid metric-grid-2 mt-5">
+          <div class="metric-grid metric-grid-2 mt-4">
             <div class="metric-card text-center">
-              <p class="metric-value !text-[1.15rem]">{{ formatNumber(item.members_count ?? 0) }}</p>
-              <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              <p class="metric-value !text-[1.02rem]">{{ formatNumber(item.members_count ?? 0) }}</p>
+              <p class="mt-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
                 Участники
               </p>
             </div>
             <div class="metric-card text-center">
-              <p class="metric-value !text-[1.15rem]">{{ formatNumber(item.treasury_balance ?? 0) }}</p>
-              <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              <p class="metric-value !text-[1.02rem]">{{ formatNumber(item.treasury_balance ?? 0) }}</p>
+              <p class="mt-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
                 Баланс
               </p>
             </div>
           </div>
 
-          <RouterLink :to="`/nation/${item.slug}`" class="btn btn-outline mt-5 w-full">
+          <RouterLink :to="`/nation/${item.slug}`" class="btn btn-outline mt-4 w-full">
             Открыть страницу
           </RouterLink>
         </article>
       </section>
 
-      <section class="surface-card p-5 md:p-6">
-        <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
+      <section class="surface-card p-4 md:p-5">
+        <div class="grid gap-2 lg:grid-cols-[minmax(0,1fr)_200px_200px]">
           <label>
             <span class="field-label">Поиск</span>
             <input v-model="search" class="input" placeholder="Название, тег или описание" />
@@ -306,44 +306,44 @@ onMounted(loadPage)
         </div>
       </section>
 
-      <div v-if="loading" class="grid gap-4 xl:grid-cols-2">
-        <div class="skeleton h-64 rounded-[28px]"></div>
-        <div class="skeleton h-64 rounded-[28px]"></div>
-        <div class="skeleton h-64 rounded-[28px]"></div>
-        <div class="skeleton h-64 rounded-[28px]"></div>
+      <div v-if="loading" class="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
+        <div class="skeleton h-[22rem] rounded-[24px]"></div>
+        <div class="skeleton h-[22rem] rounded-[24px]"></div>
+        <div class="skeleton h-[22rem] rounded-[24px]"></div>
+        <div class="skeleton h-[22rem] rounded-[24px]"></div>
       </div>
 
-      <section v-else-if="!nations.items.length" class="surface-card p-6 md:p-7">
+      <section v-else-if="!nations.items.length" class="surface-card p-5 md:p-6">
         <div class="max-w-2xl">
           <div class="section-kicker">Пока пусто</div>
-          <h2 class="text-2xl font-black tracking-tight text-slate-50">
+          <h2 class="text-xl font-black tracking-tight text-slate-50">
             Каталог государств пока пуст
           </h2>
-          <p class="mt-4 text-sm leading-7 text-slate-400">
+          <p class="mt-3 text-sm leading-6 text-slate-400">
             {{ emptyText }}
           </p>
         </div>
       </section>
 
-      <section v-else-if="!filteredNations.length" class="surface-card p-6 md:p-7">
+      <section v-else-if="!filteredNations.length" class="surface-card p-5 md:p-6">
         <div class="max-w-2xl">
           <div class="section-kicker">Ничего не найдено</div>
-          <h2 class="text-2xl font-black tracking-tight text-slate-50">
+          <h2 class="text-xl font-black tracking-tight text-slate-50">
             Фильтр слишком строгий
           </h2>
-          <p class="mt-4 text-sm leading-7 text-slate-400">
+          <p class="mt-3 text-sm leading-6 text-slate-400">
             Попробуй очистить поиск или сменить тип набора.
           </p>
         </div>
       </section>
 
-      <section v-else class="grid gap-4 xl:grid-cols-2">
+      <section v-else class="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
         <article
           v-for="nation in filteredNations"
           :key="nation.id || nation.slug"
-          class="surface-card overflow-hidden p-0"
+          class="surface-card nation-tile overflow-hidden p-0"
         >
-          <div class="relative h-28 overflow-hidden border-b border-white/10 bg-slate-950">
+          <div class="relative h-20 overflow-hidden border-b border-white/10 bg-slate-950">
             <img
               v-if="nation.assets?.banner_url || nation.assets?.banner_preview_url"
               :src="nation.assets?.banner_url || nation.assets?.banner_preview_url"
@@ -352,23 +352,23 @@ onMounted(loadPage)
             />
             <div v-else class="h-full w-full bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.45),transparent_36%),linear-gradient(135deg,rgba(15,23,42,0.92),rgba(9,14,27,1))]"></div>
 
-            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/65"></div>
-            <div class="absolute left-4 top-4 flex flex-wrap gap-2">
-              <span class="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-200">
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/70"></div>
+            <div class="absolute left-3 top-3 flex flex-wrap gap-1.5">
+              <span class="rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-200">
                 {{ recruitmentLabel(nation.recruitment_policy) }}
               </span>
               <span
                 v-if="nation.viewer_request_status === 'pending'"
-                class="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-200"
+                class="rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200"
               >
                 Заявка отправлена
               </span>
             </div>
           </div>
 
-          <div class="p-5 md:p-6">
+          <div class="p-4">
             <div class="flex items-end gap-3">
-              <div class="preview-avatar h-16 w-16 border-4 border-[#09101d] bg-[#0f172a] shadow-[0_16px_40px_rgba(0,0,0,0.35)]">
+              <div class="preview-avatar h-12 w-12 shrink-0 border-2 border-[#09101d] bg-[#0f172a] shadow-[0_12px_30px_rgba(0,0,0,0.3)]">
                 <img
                   v-if="nation.assets?.icon_url || nation.assets?.icon_preview_url"
                   :src="nation.assets?.icon_url || nation.assets?.icon_preview_url"
@@ -378,56 +378,56 @@ onMounted(loadPage)
                 <span v-else>{{ nation.tag?.slice(0, 2).toUpperCase() }}</span>
               </div>
 
-              <div class="min-w-0 pb-1">
+              <div class="min-w-0 flex-1 pb-0.5">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="h-2.5 w-2.5 rounded-full" :style="accentStyle(nation.accent_color)"></span>
-                  <span class="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">[{{ nation.tag }}]</span>
+                  <span class="h-2 w-2 rounded-full" :style="accentStyle(nation.accent_color)"></span>
+                  <span class="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">[{{ nation.tag }}]</span>
                 </div>
-                <h2 class="mt-2 truncate text-xl font-black tracking-tight text-slate-50">
+                <h2 class="mt-1.5 truncate text-base font-black tracking-tight text-slate-50">
                   {{ nation.title }}
                 </h2>
               </div>
             </div>
 
-            <p class="mt-4 text-sm leading-7 text-slate-400">
+            <p class="mt-3 line-clamp-2 min-h-[2.9rem] text-sm leading-5 text-slate-400">
               {{ nation.short_description || 'Короткое описание пока не добавлено.' }}
             </p>
 
-            <div class="metric-grid metric-grid-3 mt-5">
-              <div class="metric-card text-center">
-                <p class="metric-value !text-[1.08rem]">{{ formatNumber(nation.stats?.members_count ?? 0) }}</p>
-                <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                  Участники
+            <div class="metric-grid metric-grid-3 mt-3.5">
+              <div class="metric-card text-center !p-3">
+                <p class="metric-value !text-[0.98rem]">{{ formatNumber(nation.stats?.members_count ?? 0) }}</p>
+                <p class="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Люди
                 </p>
               </div>
-              <div class="metric-card text-center">
-                <p class="metric-value !text-[1.08rem]">{{ formatNumber(nation.stats?.pending_requests_count ?? 0) }}</p>
-                <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              <div class="metric-card text-center !p-3">
+                <p class="metric-value !text-[0.98rem]">{{ formatNumber(nation.stats?.pending_requests_count ?? 0) }}</p>
+                <p class="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
                   Заявки
                 </p>
               </div>
-              <div class="metric-card text-center">
-                <p class="metric-value !text-[1.08rem]">{{ formatNumber(nation.stats?.territory_points ?? 0) }}</p>
-                <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                  Территория
+              <div class="metric-card text-center !p-3">
+                <p class="metric-value !text-[0.98rem]">{{ formatNumber(nation.stats?.territory_points ?? 0) }}</p>
+                <p class="mt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Земля
                 </p>
               </div>
             </div>
 
-            <div class="action-card mt-5">
+            <div class="action-card mt-3.5 !p-3.5">
               <p class="metric-label">{{ nationActionMeta(nation).title }}</p>
-              <p class="mt-2 text-sm leading-6 text-slate-400">{{ nationActionMeta(nation).description }}</p>
+              <p class="mt-1.5 text-sm leading-5 text-slate-400">{{ nationActionMeta(nation).description }}</p>
             </div>
 
-            <div class="mt-5 flex flex-wrap gap-3">
-              <RouterLink :to="`/nation/${nation.slug}`" class="btn btn-primary">
+            <div class="mt-3.5 grid gap-2">
+              <RouterLink :to="`/nation/${nation.slug}`" class="btn btn-primary w-full">
                 {{ nationActionMeta(nation).button }}
               </RouterLink>
 
               <RouterLink
                 v-if="myNation?.slug === nation.slug && myNation.viewer_can_manage"
                 to="/nation/studio"
-                class="btn btn-outline"
+                class="btn btn-outline w-full"
               >
                 Управлять
               </RouterLink>
@@ -438,3 +438,19 @@ onMounted(loadPage)
     </div>
   </section>
 </template>
+
+<style scoped>
+.nations-catalog-shell {
+  max-width: 1520px;
+}
+
+.nation-tile {
+  min-height: 100%;
+}
+
+@media (min-width: 1536px) {
+  .nations-catalog-shell {
+    max-width: 1660px;
+  }
+}
+</style>

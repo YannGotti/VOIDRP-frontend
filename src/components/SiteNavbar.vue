@@ -46,7 +46,7 @@ async function handleLogout() {
 
           <div class="site-navbar__brand-text">
             <div class="site-navbar__title">{{ siteConfig.serverName }}</div>
-            <div class="site-navbar__meta">Better MC 5 · Minecraft {{ siteConfig.serverVersion }} · {{ siteConfig.serverIp }}</div>
+            <div class="site-navbar__meta">MC {{ siteConfig.serverVersion }} · Better MC 5 · {{ siteConfig.serverIp }}</div>
           </div>
         </RouterLink>
 
@@ -85,7 +85,7 @@ async function handleLogout() {
 
           <template v-else>
             <RouterLink to="/login" class="btn btn-outline btn-sm">Войти</RouterLink>
-            <RouterLink to="/register" class="btn btn-primary btn-sm">Создать аккаунт</RouterLink>
+            <RouterLink to="/register" class="btn btn-primary btn-sm">Создать</RouterLink>
           </template>
         </div>
 

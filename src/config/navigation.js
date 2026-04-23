@@ -10,4 +10,5 @@ export const primaryNavigation = [
 
 export const externalNavigation = [
   { label: 'Карта', href: siteConfig.dynmapUrl },
+  { label: 'Discord', href: siteConfig.discordUrl },
 ]

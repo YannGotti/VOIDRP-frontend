@@ -33,6 +33,21 @@ function statusLabel(item) {
   return 'Открыто'
 }
 
+function proposalTypeLabel(value) {
+  switch (String(value || '').toLowerCase()) {
+    case 'set_policy':
+      return 'Изменение правил'
+    case 'treasury_transfer':
+      return 'Финансовый перевод'
+    case 'add_member':
+      return 'Принятие государства'
+    case 'remove_member':
+      return 'Исключение государства'
+    default:
+      return 'Решение союза'
+  }
+}
+
 function canVoteForItem(item) {
   return props.canVote && !props.votingDisabled && String(item?.status || '').toLowerCase() === 'open'
 }
@@ -44,8 +59,8 @@ function vote(id, value) {
 
 <template>
   <section class="surface-card p-5 md:p-6">
-    <div class="section-kicker !mb-2">Голосования</div>
-    <h2 class="text-xl font-black text-slate-50 md:text-2xl">Предложения альянса</h2>
+    <div class="section-kicker !mb-2">Решения</div>
+    <h2 class="text-xl font-black text-slate-50 md:text-2xl">Что обсуждает союз</h2>
 
     <div v-if="loading" class="mt-5 space-y-3">
       <div class="skeleton h-28 rounded-[22px]"></div>
@@ -53,7 +68,7 @@ function vote(id, value) {
     </div>
 
     <div v-else-if="!items.length" class="action-card mt-5 text-sm text-slate-400">
-      Пока нет предложений.
+      Пока нет открытых или завершённых решений.
     </div>
 
     <div v-else class="mt-5 space-y-3">
@@ -62,16 +77,17 @@ function vote(id, value) {
           <div class="min-w-0">
             <p class="font-semibold text-slate-100">{{ item.title }}</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              {{ item.description || 'Описание не указано.' }}
+              {{ item.description || 'Подробное описание не добавлено.' }}
             </p>
           </div>
 
-          <div class="footer-chip">
-            {{ statusLabel(item) }}
+          <div class="flex flex-wrap gap-2">
+            <span class="footer-chip">{{ proposalTypeLabel(item.proposal_type) }}</span>
+            <span class="footer-chip">{{ statusLabel(item) }}</span>
           </div>
         </div>
 
-        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+        <div class="mt-4 grid gap-3 sm:grid-cols-4">
           <div class="metric-card text-center">
             <p class="metric-value !text-[1.05rem]">{{ item.vote_summary?.yes ?? 0 }}</p>
             <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">За</p>
@@ -83,6 +99,10 @@ function vote(id, value) {
           <div class="metric-card text-center">
             <p class="metric-value !text-[1.05rem]">{{ item.vote_summary?.veto ?? 0 }}</p>
             <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Вето</p>
+          </div>
+          <div class="metric-card text-center">
+            <p class="metric-value !text-[1.05rem]">{{ item.vote_summary?.total ?? 0 }}</p>
+            <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Всего голосов</p>
           </div>
         </div>
 
