@@ -1,9 +1,9 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import {computed, onMounted, reactive, ref, watch} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { previewReferralCode } from '../services/referralApi'
 import { registerAndOptionallyStay } from '../stores/authStore'
-import { toastInfo, toastSuccess } from '../services/toast'
+import { toastError, toastInfo } from '../services/toast'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,7 +19,9 @@ const form = reactive({
 
 const isSubmitting = ref(false)
 const isCheckingReferral = ref(false)
+const errorMessage = ref('')
 const referralMessage = ref('')
+const referralError = ref('')
 const referralPreview = ref(null)
 
 const referralPreviewLabel = computed(() => {
@@ -40,6 +42,7 @@ async function resolveReferralCode(code) {
   const normalized = (code || '').trim()
   referralPreview.value = null
   referralMessage.value = ''
+  referralError.value = ''
 
   if (!normalized) {
     return
@@ -52,13 +55,15 @@ async function resolveReferralCode(code) {
     referralMessage.value = referralPreviewLabel.value
       ? `Код найден: ${referralPreviewLabel.value}.`
       : 'Код приглашения найден.'
-    toastSuccess('Код приглашения найден и принят.', 'Приглашение')
+  } catch (error) {
+    referralError.value = error.message || 'Не удалось проверить код приглашения.'
   } finally {
     isCheckingReferral.value = false
   }
 }
 
 async function submit() {
+  errorMessage.value = ''
   isSubmitting.value = true
 
   try {
@@ -71,8 +76,6 @@ async function submit() {
       referral_code: form.referral_code.trim() || null,
     })
 
-    toastSuccess('Аккаунт создан. Мы отправили письмо для подтверждения почты.', 'Регистрация завершена')
-
     await router.push({
       path: '/verify-email',
       query: {
@@ -81,13 +84,11 @@ async function submit() {
         redirect: typeof route.query.redirect === 'string' ? route.query.redirect : '',
       },
     })
+  } catch (error) {
+    errorMessage.value = error.message || 'Не удалось создать аккаунт.'
   } finally {
     isSubmitting.value = false
   }
-}
-
-function showPasswordHint() {
-  toastInfo('Пароль должен быть не короче 8 символов. Лучше использовать буквы разного регистра и цифры.', 'Подсказка по паролю')
 }
 
 watch(
@@ -95,6 +96,7 @@ watch(
   () => {
     referralPreview.value = null
     referralMessage.value = ''
+    referralError.value = ''
   },
 )
 
@@ -109,6 +111,9 @@ onMounted(async () => {
     await resolveReferralCode(refFromQuery)
   }
 })
+watch(errorMessage, (value) => { if (value) toastError(value) })
+watch(referralError, (value) => { if (value) toastError(value, 'Код приглашения') })
+watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приглашения') })
 </script>
 
 <template>
@@ -117,36 +122,36 @@ onMounted(async () => {
       <div class="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
         <div class="surface-card p-6 md:p-8 lg:p-10">
           <div class="section-kicker">Регистрация</div>
-          <h1 class="section-title">Создать аккаунт</h1>
+          <h1 class="section-title">Создать аккаунт VoidRP</h1>
           <p class="section-subtitle max-w-3xl">
-            Этот аккаунт будет работать для сайта, кабинета и официального лаунчера.
-            После регистрации письмо для подтверждения почты отправится автоматически.
+            Один аккаунт нужен для сайта, кабинета и официального лаунчера. После регистрации
+            письмо для подтверждения почты отправится автоматически.
           </p>
 
           <form class="mt-8 grid gap-4 md:grid-cols-2" @submit.prevent="submit">
             <label>
               <span class="field-label">Логин</span>
-              <input v-model="form.site_login" class="input" placeholder="Как тебя видеть на сайте" required />
+              <input v-model="form.site_login" class="input" required />
             </label>
 
             <label>
               <span class="field-label">Игровой ник</span>
-              <input v-model="form.minecraft_nickname" class="input" placeholder="Ник в Minecraft" required />
+              <input v-model="form.minecraft_nickname" class="input" required />
             </label>
 
             <label class="md:col-span-2">
-              <span class="field-label">Почта</span>
-              <input v-model="form.email" type="email" class="input" placeholder="name@example.com" required />
+              <span class="field-label">Email</span>
+              <input v-model="form.email" type="email" class="input" required />
             </label>
 
             <label>
               <span class="field-label">Пароль</span>
-              <input v-model="form.password" type="password" class="input" placeholder="Минимум 8 символов" required />
+              <input v-model="form.password" type="password" class="input" required />
             </label>
 
             <label>
               <span class="field-label">Повтори пароль</span>
-              <input v-model="form.password_repeat" type="password" class="input" placeholder="Повтори пароль" required />
+              <input v-model="form.password_repeat" type="password" class="input" required />
             </label>
 
             <div class="md:col-span-2 rounded-[1.5rem] border border-white/10 bg-slate-950/65 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
@@ -157,13 +162,12 @@ onMounted(async () => {
                     v-model="form.referral_code"
                     class="input"
                     placeholder="Необязательно"
-                    autocomplete="off"
                   />
                 </label>
 
                 <button
                   type="button"
-                  class="btn btn-outline md:w-[220px]"
+                  class="btn btn-outline md:min-w-[12.5rem]"
                   :disabled="isCheckingReferral || !form.referral_code.trim()"
                   @click="resolveReferralCode(form.referral_code)"
                 >
@@ -172,46 +176,50 @@ onMounted(async () => {
                 </button>
               </div>
 
-              <p v-if="referralMessage" class="mt-3 text-sm leading-6 text-emerald-300">
-                {{ referralMessage }}
+              <p class="helper-text mt-3">
+                Если тебя пригласил другой игрок, укажи его код. Это зачтётся в его реферальный прогресс.
               </p>
+
             </div>
 
-            <div class="md:col-span-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+
+            <div class="md:col-span-2 flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
                 <span v-if="isSubmitting" class="spinner"></span>
                 <span>{{ isSubmitting ? 'Создаём аккаунт...' : 'Создать аккаунт' }}</span>
               </button>
-
-              <button type="button" class="btn btn-outline" @click="showPasswordHint">
-                Подсказка по паролю
-              </button>
+              <RouterLink to="/login" class="text-sm font-semibold text-violet-300 transition hover:text-violet-200">
+                Уже зарегистрирован? Войти
+              </RouterLink>
             </div>
           </form>
         </div>
 
-        <aside class="gradient-panel p-6 md:p-8 lg:p-10">
-          <div class="section-kicker section-kicker--light">Что дальше</div>
-          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">
-            После регистрации всё будет понятно
-          </h2>
+        <aside class="gradient-panel p-6 md:p-8">
+          <div class="section-kicker section-kicker--light">Что получит игрок</div>
+          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Нормальный старт без ручной настройки</h2>
           <p class="mt-4 text-base leading-8 text-white/78">
-            Сначала подтверждаешь почту, потом скачиваешь лаунчер и входишь под тем же аккаунтом.
-            Ничего отдельно настраивать не нужно.
+            После регистрации откроется кабинет, публичный профиль и прямой путь к скачиванию лаунчера.
           </p>
 
           <div class="mt-8 grid gap-3">
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Шаг 1</p>
-              <p class="mt-1.5 text-sm leading-6 text-white/74">Подтверди почту по письму, которое сайт отправит автоматически.</p>
+              <p class="text-sm font-black text-white">Один аккаунт</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                Для сайта, кабинета, публичного профиля и лаунчера не нужны разные входы.
+              </p>
             </div>
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Шаг 2</p>
-              <p class="mt-1.5 text-sm leading-6 text-white/74">Скачай официальный лаунчер и войди под тем же аккаунтом.</p>
+              <p class="text-sm font-black text-white">Письмо придёт автоматически</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                Сразу после регистрации можно подтвердить почту и продолжить путь к игре.
+              </p>
             </div>
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Шаг 3</p>
-              <p class="mt-1.5 text-sm leading-6 text-white/74">Запускай игру без поиска модпака, версии и лишних инструкций.</p>
+              <p class="text-sm font-black text-white">Оформление потом</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">
+                Аватар, баннер, фон и описание можно спокойно настроить уже после входа.
+              </p>
             </div>
           </div>
         </aside>
@@ -219,3 +227,5 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+

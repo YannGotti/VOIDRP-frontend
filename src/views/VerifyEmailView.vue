@@ -1,9 +1,9 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import {computed, reactive, ref, watch} from 'vue'
 import { useRoute } from 'vue-router'
 import { resendVerification, verifyEmail } from '../services/authApi'
+import { toastError, toastSuccess, toastInfo } from '../services/toast'
 import { reloadMe, useAuthStore } from '../stores/authStore'
-import { toastSuccess } from '../services/toast'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -13,6 +13,9 @@ const form = reactive({
   email: typeof route.query.email === 'string' ? route.query.email : '',
 })
 
+const verifyMessage = ref('')
+const resendMessage = ref('')
+const errorMessage = ref('')
 const isSubmitting = ref(false)
 const isResending = ref(false)
 
@@ -24,40 +27,48 @@ const hasToken = computed(() => typeof form.token === 'string' && form.token.tri
 async function submitVerify() {
   if (!hasToken.value) return
 
+  errorMessage.value = ''
+  verifyMessage.value = ''
   isSubmitting.value = true
 
   try {
     await verifyEmail({ token: form.token.trim() })
-    toastSuccess('Почта успешно подтверждена. Теперь можно переходить к игре.', 'Почта подтверждена')
+    verifyMessage.value = 'Почта успешно подтверждена.'
 
     if (auth.isAuthenticated.value) {
       await reloadMe()
     }
+  } catch (error) {
+    errorMessage.value = error.message || 'Не удалось подтвердить почту.'
   } finally {
     isSubmitting.value = false
   }
 }
 
 async function submitResend() {
+  errorMessage.value = ''
+  resendMessage.value = ''
   isResending.value = true
 
   try {
     await resendVerification({ email: form.email.trim() })
-    toastSuccess(
-      'Если почта привязана к аккаунту и ещё не подтверждена, новое письмо уже отправлено.',
-      'Письмо отправлено',
-    )
+    resendMessage.value = 'Если аккаунт существует и почта ещё не подтверждена, новое письмо уже отправлено.'
+  } catch (error) {
+    errorMessage.value = error.message || 'Не удалось отправить письмо повторно.'
   } finally {
     isResending.value = false
   }
 }
+watch(errorMessage, (value) => { if (value) toastError(value) })
+watch(verifyMessage, (value) => { if (value) toastSuccess(value, 'Почта подтверждена') })
+watch(resendMessage, (value) => { if (value) toastInfo(value, 'Письмо отправлено') })
 </script>
 
 <template>
   <section class="py-12 md:py-20">
     <div class="container-shell max-w-6xl">
       <div v-if="isAlreadyVerified" class="alert alert-success mb-6">
-        Почта уже подтверждена. Можно возвращаться в профиль или скачивать лаунчер.
+        Почта уже подтверждена. Можно возвращаться в профиль или переходить к скачиванию лаунчера.
       </div>
 
       <div class="grid gap-6 lg:grid-cols-2">
@@ -82,6 +93,9 @@ async function submitResend() {
               <input v-model="form.token" class="input" placeholder="Вставь токен, если нужно" />
             </label>
 
+            <p v-if="verifyMessage" class="alert alert-success">{{ verifyMessage }}</p>
+            <p v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</p>
+
             <button type="submit" class="btn btn-primary" :disabled="isSubmitting || !hasToken">
               <span v-if="isSubmitting" class="spinner"></span>
               <span>{{ isSubmitting ? 'Проверяем...' : 'Подтвердить вручную' }}</span>
@@ -103,16 +117,18 @@ async function submitResend() {
 
         <div class="gradient-panel p-6 md:p-8 lg:p-10">
           <div class="section-kicker section-kicker--light">Не пришло письмо?</div>
-          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Запроси новое письмо</h2>
+          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Запроси новое письмо подтверждения</h2>
           <p class="mt-4 text-base leading-8 text-white/78">
-            Укажи почту ещё раз, и сайт отправит новое письмо, если подтверждение всё ещё нужно.
+            Для безопасности мы всегда показываем нейтральный ответ. Даже если почта уже подтверждена, экран останется аккуратным и понятным.
           </p>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submitResend">
             <label>
-              <span class="field-label !text-white/88">Почта</span>
+              <span class="field-label !text-white/88">Email</span>
               <input v-model="form.email" type="email" class="input" required />
             </label>
+
+            <p v-if="resendMessage" class="alert alert-success">{{ resendMessage }}</p>
 
             <button type="submit" class="btn btn-light" :disabled="isResending">
               <span v-if="isResending" class="spinner"></span>
@@ -124,3 +140,5 @@ async function submitResend() {
     </div>
   </section>
 </template>
+
+

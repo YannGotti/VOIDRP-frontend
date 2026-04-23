@@ -1,11 +1,12 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import { bootstrapAuth } from './stores/authStore'
+import { bootstrapAuth, installAuthApiHooks } from './stores/authStore'
 import './styles.css'
 import './styles.toast-nations.css'
 
 ;(async () => {
+  installAuthApiHooks()
   await bootstrapAuth()
   createApp(App).use(router).mount('#app')
 })().catch((error) => {

@@ -2,6 +2,12 @@ import { toastError } from './toast'
 
 const DEFAULT_REMOTE_API_BASE_URL = 'https://api.void-rp.ru/api/v1'
 
+let unauthorizedHandler = null
+
+export function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = typeof handler === 'function' ? handler : null
+}
+
 function normalizeBaseUrl(value) {
   return String(value || '').trim().replace(/\/$/, '')
 }
@@ -28,15 +34,44 @@ const FIELD_LABELS = {
   password: 'пароль',
   password_repeat: 'повтор пароля',
   login: 'логин или почта',
+  device_name: 'устройство',
   token: 'токен',
+  refresh_token: 'сессионный ключ',
   new_password: 'новый пароль',
   new_password_repeat: 'повтор нового пароля',
   referral_code: 'код приглашения',
   slug: 'адрес страницы',
+  title: 'название',
+  tag: 'тег',
+  short_description: 'краткое описание',
+  description: 'описание',
   display_name: 'отображаемое имя',
   bio: 'описание',
   status_text: 'статус',
+  theme_mode: 'тема',
   accent_color: 'цвет',
+  recruitment_policy: 'тип вступления',
+  is_public: 'публичная страница',
+  allow_followers_list_public: 'видимость подписчиков',
+  allow_friends_list_public: 'видимость друзей',
+  allow_profile_comments: 'комментарии профиля',
+  alliance_slug: 'альянс',
+  alliance_type: 'тип альянса',
+  proposal_type: 'тип предложения',
+  payload_json: 'дополнительные параметры',
+  policy_flags_json: 'дополнительные настройки',
+  transfer_fee_percent: 'комиссия перевода',
+  allow_internal_transfers: 'внутренние переводы',
+  allow_joint_defense: 'совместная защита',
+  allow_trade_bonus: 'торговый бонус',
+  allow_pvp_protection: 'защита PvP',
+  from_nation_slug: 'государство-отправитель',
+  to_nation_slug: 'государство-получатель',
+  amount: 'сумма',
+  comment: 'комментарий',
+  role: 'роль',
+  target_user_id: 'участник',
+  vote: 'голос',
 }
 
 function humanizeFieldName(name) {
@@ -125,6 +160,24 @@ function formatValidationErrorItem(item) {
     return 'Укажи корректную почту.'
   }
 
+  if (lowered.includes('input should be greater than') || lowered.includes('greater than 0')) {
+    return `Поле «${label}» должно быть больше нуля.`
+  }
+
+  if (lowered.includes('greater than or equal to')) {
+    const minimum = ctx.ge
+    return minimum != null
+      ? `Поле «${label}» должно быть не меньше ${minimum}.`
+      : `Поле «${label}» заполнено слишком маленьким значением.`
+  }
+
+  if (lowered.includes('less than or equal to')) {
+    const maximum = ctx.le
+    return maximum != null
+      ? `Поле «${label}» должно быть не больше ${maximum}.`
+      : `Поле «${label}» заполнено слишком большим значением.`
+  }
+
   if (lowered.includes('input should be a valid string')) {
     return `Поле «${label}» заполнено некорректно.`
   }
@@ -167,7 +220,7 @@ function extractMessage(body) {
       return body.detail.trim()
     }
 
-    const validationMessage = formatValidationErrors(body.detail || body.errors)
+    const validationMessage = formatValidationErrors(body.errors || body.detail)
     if (validationMessage) {
       return validationMessage
     }
@@ -180,9 +233,33 @@ function extractMessage(body) {
   return ''
 }
 
+function isAuthRoute(path) {
+  const normalized = String(path || '')
+  return normalized.startsWith('/auth/login')
+    || normalized.startsWith('/auth/register')
+    || normalized.startsWith('/auth/refresh')
+    || normalized.startsWith('/auth/logout')
+}
+
+function looksLikeExpiredSession(message, response) {
+  const lowered = String(message || '').toLowerCase()
+  return response.status === 401 && (
+    lowered.includes('access token')
+    || lowered.includes('invalid token')
+    || lowered.includes('expired token')
+    || lowered.includes('invalid or expired')
+    || lowered.includes('сессия')
+    || lowered.includes('нужна авторизация')
+    || lowered.includes('user is not available')
+  )
+}
+
 function buildErrorMessage(response, body) {
   const extracted = extractMessage(body)
   if (extracted) {
+    if (looksLikeExpiredSession(extracted, response)) {
+      return 'Сессия истекла. Войди снова.'
+    }
     return extracted
   }
 
@@ -191,7 +268,7 @@ function buildErrorMessage(response, body) {
   }
 
   if (response.status === 401) {
-    return 'Нужна авторизация. Войди в аккаунт и попробуй снова.'
+    return 'Сессия истекла. Войди снова.'
   }
 
   if (response.status === 403) {
@@ -233,6 +310,23 @@ export async function apiRequest(path, options = {}) {
   const body = response.status === 204 ? null : await readResponseBody(response)
 
   if (!response.ok) {
+    if (
+      response.status === 401
+      && !options._retried
+      && !isAuthRoute(path)
+      && options.handleAuth !== false
+      && unauthorizedHandler
+    ) {
+      try {
+        const handled = await unauthorizedHandler({ path, response, body, options })
+        if (handled === true || handled?.retry === true) {
+          return await apiRequest(path, { ...options, _retried: true })
+        }
+      } catch {
+        // continue to normal error below
+      }
+    }
+
     const error = new Error(buildErrorMessage(response, body))
     error.status = response.status
     error.body = body

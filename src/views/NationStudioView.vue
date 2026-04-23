@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import {computed, onMounted, reactive, ref, watch} from 'vue'
 import { RouterLink } from 'vue-router'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import NationMediaSlotCard from '../features/nations/components/NationMediaSlotCard.vue'
@@ -21,6 +21,7 @@ import {
   uploadNationBanner,
   uploadNationIcon,
 } from '../services/nationsApi'
+import { toastError, toastSuccess } from '../services/toast'
 import { getMyNationActivity } from '../services/nationActivityApi'
 import { depositNationTreasury, getNationTopDonors, getNationTreasuryTransactions, withdrawNationTreasury } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
@@ -502,6 +503,8 @@ onMounted(async () => {
   await loadNation()
   await Promise.all([loadActivity(), loadTreasury(), loadDonors()])
 })
+watch(error, (value) => { if (value) toastError(value) })
+watch(success, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
@@ -519,8 +522,6 @@ onMounted(async () => {
         </div>
       </section>
 
-      <div v-if="error" class="alert alert-error">{{ error }}</div>
-      <div v-if="success" class="alert alert-success">{{ success }}</div>
 
       <div v-if="loading" class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
         <div class="skeleton h-[540px] rounded-[28px]"></div>
@@ -552,7 +553,7 @@ onMounted(async () => {
 
           <div class="mt-5 grid gap-4">
             <input v-model="createForm.title" class="input rounded-2xl" placeholder="Название" />
-            <input v-model="createForm.slug" class="input rounded-2xl" placeholder="slug" />
+            <input v-model="createForm.slug" class="input rounded-2xl" placeholder="Адрес страницы" />
             <input v-model="createForm.tag" class="input rounded-2xl" placeholder="Тег" />
             <input v-model="createForm.short_description" class="input rounded-2xl" placeholder="Короткое описание" />
             <textarea v-model="createForm.description" class="textarea rounded-2xl" rows="6" placeholder="Подробное описание"></textarea>
@@ -798,7 +799,7 @@ onMounted(async () => {
 
             <div class="mt-5 grid gap-4">
               <input v-model="editForm.title" class="input rounded-2xl" placeholder="Название" />
-              <input v-model="editForm.slug" class="input rounded-2xl" placeholder="slug" />
+              <input v-model="editForm.slug" class="input rounded-2xl" placeholder="Адрес страницы" />
               <input v-model="editForm.tag" class="input rounded-2xl" placeholder="Тег" />
               <input v-model="editForm.short_description" class="input rounded-2xl" placeholder="Короткое описание" />
               <textarea v-model="editForm.description" class="textarea rounded-2xl" rows="6" placeholder="Подробное описание"></textarea>
@@ -1027,4 +1028,6 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+
 

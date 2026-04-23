@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import {computed, onMounted, reactive, ref, watch} from 'vue'
 import AllianceProposalFeed from '../features/alliances/components/AllianceProposalFeed.vue'
 import AllianceRelationsPanel from '../features/alliances/components/AllianceRelationsPanel.vue'
 import {
@@ -16,6 +16,7 @@ import {
   voteAllianceProposal,
 } from '../services/alliancesApi'
 import { getMyNation } from '../services/nationsApi'
+import { toastError, toastSuccess } from '../services/toast'
 import { depositNationTreasury, getNationTreasuryTransactions, withdrawNationTreasury } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
 import { formatNumber } from '../utils/formatters'
@@ -389,6 +390,8 @@ async function submitNationWithdraw() {
 }
 
 onMounted(loadPage)
+watch(error, (value) => { if (value) toastError(value) })
+watch(success, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
@@ -423,8 +426,6 @@ onMounted(loadPage)
         </div>
       </section>
 
-      <div v-if="error" class="alert alert-error">{{ error }}</div>
-      <div v-if="success" class="alert alert-success">{{ success }}</div>
 
       <div v-if="loading" class="space-y-4">
         <div class="skeleton h-28 rounded-[28px]"></div>
@@ -514,7 +515,7 @@ onMounted(loadPage)
 
             <div v-else class="mt-5 grid gap-3">
               <label>
-                <span class="field-label">Slug</span>
+                <span class="field-label">Адрес страницы</span>
                 <input v-model="createForm.slug" class="input" />
               </label>
               <label>
@@ -783,3 +784,5 @@ onMounted(loadPage)
     </div>
   </section>
 </template>
+
+

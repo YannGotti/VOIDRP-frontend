@@ -1,7 +1,8 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { getNationsList } from '../services/nationsApi'
+import { toastError, toastSuccess } from '../services/toast'
 import { getPublicProfileBySlug } from '../services/profileApi'
 import { followProfile, unfollowProfile } from '../services/socialApi'
 import { useAuthStore } from '../stores/authStore'
@@ -214,6 +215,8 @@ onMounted(loadProfile)
 onBeforeUnmount(() => {
   document.documentElement.style.removeProperty('--route-bg')
 })
+watch(error, (value) => { if (value) toastError(value) })
+watch(actionMessage, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
@@ -227,7 +230,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">{{ error }}</div>
+      <div v-else-if="error" class="mx-auto max-w-3xl text-center text-sm text-slate-300">Открываем профиль…</div>
 
       <div v-else-if="profile" class="page-backdrop route-shell overflow-hidden rounded-[32px] border" :style="pageShellStyle">
         <div class="p-3 md:p-4">
@@ -298,9 +301,6 @@ onBeforeUnmount(() => {
               </div>
             </section>
 
-            <div v-if="actionMessage" class="alert alert-success">
-              {{ actionMessage }}
-            </div>
 
             <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
               <section class="surface-card p-4 md:p-5" :style="cardStyle">
@@ -353,3 +353,5 @@ onBeforeUnmount(() => {
     </div>
   </section>
 </template>
+
+

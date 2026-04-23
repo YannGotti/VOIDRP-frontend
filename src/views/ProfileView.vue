@@ -1,9 +1,10 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import { RouterLink } from 'vue-router'
 import AccountTabs from '../components/AccountTabs.vue'
 import { resendVerification } from '../services/authApi'
 import { getMyNation } from '../services/nationsApi'
+import { toastError, toastSuccess, toastInfo } from '../services/toast'
 import { getMyPublicProfile } from '../services/profileApi'
 import { reloadMe, useAuthStore } from '../stores/authStore'
 
@@ -227,17 +228,13 @@ async function copyPublicProfileUrl() {
 }
 
 onMounted(loadData)
+watch(errorMessage, (value) => { if (value) toastError(value) })
+watch(actionMessage, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
   <section class="py-8 md:py-10">
     <div class="container-shell space-y-5">
-      <div v-if="errorMessage" class="alert alert-error">
-        {{ errorMessage }}
-      </div>
-      <div v-if="actionMessage" class="alert alert-success">
-        {{ actionMessage }}
-      </div>
 
       <section class="surface-card p-5 md:p-7 lg:p-8">
         <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
@@ -464,3 +461,5 @@ onMounted(loadData)
     </div>
   </section>
 </template>
+
+

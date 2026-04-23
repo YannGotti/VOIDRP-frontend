@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import {
@@ -9,6 +9,7 @@ import {
   joinNation,
   rejectNationRequest,
 } from '../services/nationsApi'
+import { toastError, toastSuccess, toastInfo } from '../services/toast'
 import { getNationActivity } from '../services/nationActivityApi'
 import { getNationStatsBySlug, getNationTopDonors, getNationTreasuryTransactions } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
@@ -327,6 +328,8 @@ onMounted(loadPage)
 onBeforeUnmount(() => {
   document.documentElement.style.removeProperty('--route-bg')
 })
+watch(error, (value) => { if (value) toastError(value) })
+watch(actionMessage, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
@@ -340,7 +343,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">{{ error }}</div>
+      <div v-else-if="error" class="mx-auto max-w-3xl text-center text-sm text-slate-300">Страница пока недоступна.</div>
 
       <div v-else-if="nation" class="page-backdrop route-shell overflow-hidden rounded-[32px] border" :style="pageShellStyle">
         <div class="p-3 md:p-4">
@@ -398,7 +401,6 @@ onBeforeUnmount(() => {
               </div>
             </section>
 
-            <div v-if="actionMessage" class="alert alert-success">{{ actionMessage }}</div>
 
             <div class="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_340px]">
               <div class="space-y-4">
@@ -697,3 +699,5 @@ onBeforeUnmount(() => {
     </div>
   </section>
 </template>
+
+

@@ -8,7 +8,7 @@ import { siteConfig } from '../config.site'
       <div class="mb-6 max-w-3xl">
         <div class="section-kicker !mb-2">Всё собрано в одном месте</div>
         <h2 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
-          Игроку не нужно ничего искать отдельно
+          Тебе не нужно ничего искать отдельно
         </h2>
         <p class="mt-3 text-sm leading-7 text-slate-400 md:text-[15px]">
           Главная страница объясняет путь к игре, кабинет помогает с аккаунтом,

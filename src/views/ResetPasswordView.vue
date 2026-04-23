@@ -1,7 +1,8 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
+import {computed, reactive, ref, watch} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { resetPassword } from '../services/authApi'
+import { toastError, toastSuccess } from '../services/toast'
 
 const route = useRoute()
 const router = useRouter()
@@ -43,6 +44,8 @@ async function submit() {
     isSubmitting.value = false
   }
 }
+watch(errorMessage, (value) => { if (value) toastError(value) })
+watch(successMessage, (value) => { if (value) toastSuccess(value, 'Пароль обновлён') })
 </script>
 
 <template>
@@ -87,3 +90,5 @@ async function submit() {
     </div>
   </section>
 </template>
+
+

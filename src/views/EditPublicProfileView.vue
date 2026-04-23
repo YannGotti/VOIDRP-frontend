@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import {computed, onMounted, reactive, ref, watch} from 'vue'
 import { RouterLink } from 'vue-router'
 import ProfileMediaSlotCard from '../features/profile/components/ProfileMediaSlotCard.vue'
 import PublicProfileStudioPreview from '../features/profile/components/PublicProfileStudioPreview.vue'
@@ -13,6 +13,7 @@ import {
   uploadBackground,
   uploadBanner,
 } from '../services/profileApi'
+import { toastError, toastSuccess } from '../services/toast'
 import { useAuthStore } from '../stores/authStore'
 
 const authStore = useAuthStore()
@@ -204,6 +205,8 @@ async function copyPublicLink() {
 }
 
 onMounted(loadProfile)
+watch(error, (value) => { if (value) toastError(value) })
+watch(success, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
@@ -274,8 +277,6 @@ onMounted(loadProfile)
             </div>
           </div>
 
-          <p v-if="error" class="alert alert-error mt-4">{{ error }}</p>
-          <p v-if="success" class="alert alert-success mt-4">{{ success }}</p>
         </section>
 
         <div class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
@@ -432,3 +433,5 @@ onMounted(loadProfile)
     </div>
   </section>
 </template>
+
+

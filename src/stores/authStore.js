@@ -1,4 +1,5 @@
 import { computed, reactive } from 'vue'
+import { setUnauthorizedHandler } from '../services/apiBase'
 import {
   getMe,
   loginAccount,
@@ -21,6 +22,8 @@ export const authState = reactive({
 })
 
 let bootstrapPromise = null
+let refreshPromise = null
+let sessionExpiredToastShown = false
 
 function loadStoredAuth() {
   const raw = localStorage.getItem(STORAGE_KEY)
@@ -51,7 +54,7 @@ function persistAuth() {
   )
 }
 
-function clearAuthState() {
+export function clearAuthState() {
   authState.accessToken = null
   authState.refreshToken = null
   authState.user = null
@@ -67,10 +70,59 @@ function applyTokenResponse(payload) {
   authState.playerAccount = payload.player_account
   authState.security = payload.security || null
   persistAuth()
+  sessionExpiredToastShown = false
 }
 
 export function getIsAuthenticated() {
   return Boolean(authState.accessToken && authState.user)
+}
+
+export async function refreshCurrentSessionSilently() {
+  if (!authState.refreshToken) {
+    return false
+  }
+
+  if (refreshPromise) {
+    return await refreshPromise
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await refreshSession(
+        {
+          refresh_token: authState.refreshToken,
+          device_name: 'VoidRP Site',
+        },
+        { handleAuth: false, toast: false },
+      )
+      applyTokenResponse(response)
+      return true
+    } catch {
+      clearAuthState()
+      authState.ready = true
+      return false
+    } finally {
+      refreshPromise = null
+    }
+  })()
+
+  return await refreshPromise
+}
+
+export function installAuthApiHooks() {
+  setUnauthorizedHandler(async () => {
+    const refreshed = await refreshCurrentSessionSilently()
+    if (refreshed) {
+      return true
+    }
+
+    if (!sessionExpiredToastShown) {
+      toastInfo('Сессия истекла. Войди снова, чтобы продолжить.', 'Нужно войти снова')
+      sessionExpiredToastShown = true
+    }
+
+    return false
+  })
 }
 
 export async function bootstrapAuth() {
@@ -86,13 +138,10 @@ export async function bootstrapAuth() {
     }
 
     try {
-      const response = await refreshSession({
-        refresh_token: authState.refreshToken,
-        device_name: 'VoidRP Site',
-      })
-      applyTokenResponse(response)
-    } catch {
-      clearAuthState()
+      const refreshed = await refreshCurrentSessionSilently()
+      if (!refreshed) {
+        clearAuthState()
+      }
     } finally {
       authState.ready = true
     }
@@ -110,7 +159,7 @@ export async function registerAndOptionallyStay(payload) {
 }
 
 export async function loginWithPassword(payload) {
-  const response = await loginAccount(payload)
+  const response = await loginAccount(payload, { handleAuth: false })
   applyTokenResponse(response)
   authState.ready = true
   return response
@@ -122,12 +171,27 @@ export async function reloadMe() {
     return null
   }
 
-  const response = await getMe(authState.accessToken)
-  authState.user = response.user
-  authState.playerAccount = response.player_account
-  authState.security = response.security || null
-  persistAuth()
-  return response
+  try {
+    const response = await getMe(authState.accessToken)
+    authState.user = response.user
+    authState.playerAccount = response.player_account
+    authState.security = response.security || null
+    persistAuth()
+    return response
+  } catch (error) {
+    if (error?.status === 401) {
+      const refreshed = await refreshCurrentSessionSilently()
+      if (refreshed && authState.accessToken) {
+        const response = await getMe(authState.accessToken)
+        authState.user = response.user
+        authState.playerAccount = response.player_account
+        authState.security = response.security || null
+        persistAuth()
+        return response
+      }
+    }
+    throw error
+  }
 }
 
 export async function revokeOtherSessionsForCurrentAccount() {
@@ -140,7 +204,6 @@ export async function revokeOtherSessionsForCurrentAccount() {
   })
 
   await reloadMe()
-  toastSuccess(response?.message || 'Другие активные входы завершены.', 'Безопасность')
   return response
 }
 
@@ -148,14 +211,13 @@ export async function logoutCurrentSession() {
   const refreshToken = authState.refreshToken
   clearAuthState()
   authState.ready = true
-  toastInfo('Ты вышел из аккаунта.', 'Выход выполнен')
 
   if (!refreshToken) return
 
   try {
-    await logoutSession({ refresh_token: refreshToken })
+    await logoutSession({ refresh_token: refreshToken }, { handleAuth: false, toast: false })
   } catch {
-    // ignore logout transport errors; local state is already cleared
+    // local state is already cleared
   }
 }
 
@@ -187,10 +249,9 @@ export function useAuthStore() {
     legacyHashPresent: computed(() => Boolean(authState.security?.legacy_hash_present)),
 
     accountModeText: computed(() => {
-      if (authState.security?.mustUseLauncher) return 'Только официальный лаунчер'
       if (authState.security?.must_use_launcher) return 'Только официальный лаунчер'
-      if (authState.playerAccount?.legacy_auth_enabled) return 'Официальный лаунчер и старый вход'
-      return 'Основной вход через сайт'
+      if (authState.playerAccount?.legacy_auth_enabled) return 'Лаунчер и старый вход'
+      return 'Стандартный режим'
     }),
   }
 }
