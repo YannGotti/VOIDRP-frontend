@@ -74,7 +74,7 @@ const summaryCounters = computed(() => {
     { label: 'Всего', value: items.length },
     { label: 'Свободный вход', value: items.filter((item) => item.recruitment_policy === 'open').length },
     { label: 'По заявке', value: items.filter((item) => item.recruitment_policy === 'request').length },
-    { label: 'Invite only', value: items.filter((item) => item.recruitment_policy === 'invite_only').length },
+    { label: 'По приглашению', value: items.filter((item) => item.recruitment_policy === 'invite_only').length },
   ]
 })
 
@@ -115,16 +115,20 @@ function nationActionMeta(nation) {
   if (!auth.isAuthenticated.value) {
     return {
       title: 'Нужен вход',
-      description: 'Открой страницу государства и войди в аккаунт, чтобы вступить.',
-      button: 'Открыть',
+      description: 'Войди в аккаунт, чтобы вступить или отправить заявку.',
+      actionLabel: 'Войти',
+      actionTo: '/login',
+      showAction: true,
     }
   }
 
   if (myNation.value?.slug === nation.slug) {
     return {
       title: 'Твоё государство',
-      description: 'Можно открыть публичную страницу или перейти в управление.',
-      button: 'Открыть',
+      description: 'Можно открыть страницу или сразу перейти в управление.',
+      actionLabel: myNation.value.viewer_can_manage ? 'Управлять' : 'Открыть',
+      actionTo: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${nation.slug}`,
+      showAction: true,
     }
   }
 
@@ -132,38 +136,48 @@ function nationActionMeta(nation) {
     return {
       title: 'Уже есть государство',
       description: `Сейчас ты состоишь в «${myNation.value.title}».`,
-      button: 'Открыть',
+      actionLabel: 'Моё государство',
+      actionTo: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${myNation.value.slug}`,
+      showAction: true,
     }
   }
 
   if (nation.viewer_request_status === 'pending') {
     return {
-      title: 'Заявка уже отправлена',
-      description: 'Остаётся дождаться решения лидера.',
-      button: 'Открыть',
+      title: 'Заявка отправлена',
+      description: 'Повторно отправлять ничего не нужно — осталось дождаться решения.',
+      actionLabel: 'Открыть',
+      actionTo: `/nation/${nation.slug}`,
+      showAction: true,
     }
   }
 
   if (nation.recruitment_policy === 'invite_only') {
     return {
       title: 'Только по приглашению',
-      description: 'Без приглашения вступить не получится.',
-      button: 'Открыть',
+      description: 'Вступление возможно только после приглашения от лидера или офицера.',
+      actionLabel: '',
+      actionTo: '',
+      showAction: false,
     }
   }
 
   if (nation.recruitment_policy === 'open') {
     return {
       title: 'Можно вступить сразу',
-      description: 'На странице государства будет доступна прямая кнопка вступления.',
-      button: 'Открыть и вступить',
+      description: 'На странице государства доступна прямая кнопка вступления.',
+      actionLabel: 'Вступить',
+      actionTo: `/nation/${nation.slug}`,
+      showAction: true,
     }
   }
 
   return {
     title: 'Можно подать заявку',
-    description: 'На странице государства можно оставить сообщение лидеру.',
-    button: 'Открыть и подать заявку',
+    description: 'На странице государства можно отправить сообщение лидеру и дождаться ответа.',
+    actionLabel: 'Подать заявку',
+    actionTo: `/nation/${nation.slug}`,
+    showAction: true,
   }
 }
 
@@ -307,10 +321,10 @@ onMounted(loadPage)
       </section>
 
       <div v-if="loading" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        <div class="skeleton h-[420px] rounded-[24px]"></div>
-        <div class="skeleton h-[420px] rounded-[24px]"></div>
-        <div class="skeleton h-[420px] rounded-[24px]"></div>
-        <div class="skeleton h-[420px] rounded-[24px]"></div>
+        <div class="skeleton h-[390px] rounded-[24px]"></div>
+        <div class="skeleton h-[390px] rounded-[24px]"></div>
+        <div class="skeleton h-[390px] rounded-[24px]"></div>
+        <div class="skeleton h-[390px] rounded-[24px]"></div>
       </div>
 
       <section v-else-if="!nations.items.length" class="surface-card p-6 md:p-7">
@@ -341,34 +355,38 @@ onMounted(loadPage)
         <article
           v-for="nation in filteredNations"
           :key="nation.id || nation.slug"
-          class="surface-card overflow-hidden p-0 nation-card-compact"
+          class="surface-card nation-card"
         >
-          <div class="relative h-[86px] overflow-hidden border-b border-white/10 bg-slate-950">
+          <div class="nation-card__banner">
             <img
               v-if="nation.assets?.banner_url || nation.assets?.banner_preview_url"
               :src="nation.assets?.banner_url || nation.assets?.banner_preview_url"
               :alt="nation.title"
               class="h-full w-full object-cover"
             />
-            <div v-else class="h-full w-full bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.45),transparent_36%),linear-gradient(135deg,rgba(15,23,42,0.92),rgba(9,14,27,1))]"></div>
+            <div
+              v-else
+              class="h-full w-full bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.45),transparent_36%),linear-gradient(135deg,rgba(15,23,42,0.92),rgba(9,14,27,1))]"
+            ></div>
 
-            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/10 to-black/65"></div>
-            <div class="absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
-              <span class="rounded-full border border-white/10 bg-black/35 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-200">
+            <div class="nation-card__overlay"></div>
+
+            <div class="nation-card__badges">
+              <span class="nation-card__badge">
                 {{ recruitmentLabel(nation.recruitment_policy) }}
               </span>
               <span
                 v-if="nation.viewer_request_status === 'pending'"
-                class="rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-amber-200"
+                class="nation-card__badge nation-card__badge--warning"
               >
                 Заявка отправлена
               </span>
             </div>
           </div>
 
-          <div class="nation-card-compact__body p-3.5 md:p-4">
-            <div class="flex items-end gap-3">
-              <div class="preview-avatar h-12 w-12 shrink-0 border-2 border-[#09101d] bg-[#0f172a] shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+          <div class="nation-card__body">
+            <div class="nation-card__head">
+              <div class="preview-avatar nation-card__avatar">
                 <img
                   v-if="nation.assets?.icon_url || nation.assets?.icon_preview_url"
                   :src="nation.assets?.icon_url || nation.assets?.icon_preview_url"
@@ -378,58 +396,59 @@ onMounted(loadPage)
                 <span v-else>{{ nation.tag?.slice(0, 2).toUpperCase() }}</span>
               </div>
 
-              <div class="min-w-0 flex-1 pb-0.5">
-                <div class="flex min-w-0 flex-wrap items-center gap-2">
-                  <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="accentStyle(nation.accent_color)"></span>
-                  <span class="truncate text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">[{{ nation.tag }}]</span>
+              <div class="min-w-0 flex-1">
+                <div class="flex min-w-0 items-center gap-2">
+                  <span class="nation-card__accent" :style="accentStyle(nation.accent_color)"></span>
+                  <span class="truncate text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    [{{ nation.tag }}]
+                  </span>
                 </div>
-                <h2 class="mt-1.5 line-clamp-2 text-[1.1rem] font-black leading-6 tracking-tight text-slate-50">
+
+                <h2 class="nation-card__title">
                   {{ nation.title }}
                 </h2>
               </div>
             </div>
 
-            <p class="line-clamp-2 min-h-[3rem] text-sm leading-6 text-slate-400">
+            <p class="nation-card__description">
               {{ nation.short_description || 'Короткое описание пока не добавлено.' }}
             </p>
 
-            <div class="nation-card-compact__stats">
-              <div class="nation-card-compact__stat metric-card text-center">
+            <div class="nation-card__stats">
+              <div class="nation-card__stat metric-card text-center">
                 <p class="metric-value !text-[1rem]">{{ formatNumber(nation.stats?.members_count ?? 0) }}</p>
-                <p class="nation-card-compact__stat-label mt-1.5 text-slate-500">
-                  Участники
-                </p>
+                <p class="nation-card__stat-label">Участники</p>
               </div>
-              <div class="nation-card-compact__stat metric-card text-center">
+
+              <div class="nation-card__stat metric-card text-center">
                 <p class="metric-value !text-[1rem]">{{ formatNumber(nation.stats?.pending_requests_count ?? 0) }}</p>
-                <p class="nation-card-compact__stat-label mt-1.5 text-slate-500">
-                  Заявки
-                </p>
+                <p class="nation-card__stat-label">Заявки</p>
               </div>
-              <div class="nation-card-compact__stat metric-card text-center">
+
+              <div class="nation-card__stat metric-card text-center">
                 <p class="metric-value !text-[1rem]">{{ formatNumber(nation.stats?.territory_points ?? 0) }}</p>
-                <p class="nation-card-compact__stat-label mt-1.5 text-slate-500">
-                  Территория
-                </p>
+                <p class="nation-card__stat-label">Территории</p>
               </div>
             </div>
 
-            <div class="nation-card-compact__action action-card">
+            <div class="nation-card__info action-card">
               <p class="metric-label">{{ nationActionMeta(nation).title }}</p>
-              <p class="mt-2 text-sm leading-6 text-slate-400">{{ nationActionMeta(nation).description }}</p>
+              <p class="nation-card__info-text">
+                {{ nationActionMeta(nation).description }}
+              </p>
             </div>
 
-            <div class="nation-card-compact__footer">
-              <RouterLink :to="`/nation/${nation.slug}`" class="btn btn-primary nation-card-compact__primary-btn">
-                {{ nationActionMeta(nation).button }}
+            <div class="nation-card__actions">
+              <RouterLink :to="`/nation/${nation.slug}`" class="btn btn-primary nation-card__button">
+                Страница государства
               </RouterLink>
 
               <RouterLink
-                v-if="myNation?.slug === nation.slug && myNation.viewer_can_manage"
-                to="/nation/studio"
-                class="btn btn-outline nation-card-compact__secondary-btn"
+                v-if="nationActionMeta(nation).showAction"
+                :to="nationActionMeta(nation).actionTo"
+                class="btn btn-outline nation-card__button"
               >
-                Управлять
+                {{ nationActionMeta(nation).actionLabel }}
               </RouterLink>
             </div>
           </div>
@@ -440,66 +459,180 @@ onMounted(loadPage)
 </template>
 
 <style scoped>
-.nation-card-compact {
-  min-height: 100%;
-}
-
-.nation-card-compact__body {
+.nation-card {
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
-  min-height: 0;
-  height: 100%;
+  gap: 0;
+  min-height: 100%;
+  overflow: hidden;
+  padding: 0 !important;
 }
 
-.nation-card-compact__stats {
+.nation-card__banner {
+  position: relative;
+  height: 96px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #020817;
+}
+
+.nation-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.5));
+}
+
+.nation-card__badges {
+  position: absolute;
+  inset: 12px 12px auto 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nation-card__badge {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.34);
+  padding: 0.34rem 0.65rem;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(226 232 240);
+}
+
+.nation-card__badge--warning {
+  border-color: rgba(251, 191, 36, 0.2);
+  background: rgba(251, 191, 36, 0.1);
+  color: rgb(253 230 138);
+}
+
+.nation-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 16px;
+}
+
+.nation-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nation-card__avatar {
+  height: 52px;
+  width: 52px;
+  flex-shrink: 0;
+  border: 2px solid #09101d;
+  background: #0f172a;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.nation-card__accent {
+  height: 9px;
+  width: 9px;
+  flex-shrink: 0;
+  border-radius: 999px;
+}
+
+.nation-card__title {
+  margin-top: 5px;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 1.08rem;
+  font-weight: 900;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: rgb(248 250 252);
+}
+
+.nation-card__description {
+  min-height: 46px;
+  color: rgb(148 163 184);
+  font-size: 0.91rem;
+  line-height: 1.55;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.nation-card__stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: 8px;
 }
 
-.nation-card-compact__stat {
+.nation-card__stat {
   min-width: 0;
-  padding: 0.65rem 0.4rem !important;
   border-radius: 1rem !important;
+  padding: 0.7rem 0.45rem !important;
 }
 
-.nation-card-compact__stat-label {
-  font-size: 0.6rem;
+.nation-card__stat-label {
+  margin-top: 6px;
+  min-height: 22px;
+  font-size: 9px;
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: 0.11em;
+  line-height: 1.2;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
+  color: rgb(100 116 139);
   white-space: normal;
-  word-break: break-word;
 }
 
-.nation-card-compact__action {
-  min-height: 120px;
+.nation-card__info {
+  min-height: 92px;
+  border-radius: 1.1rem !important;
   padding: 0.85rem !important;
 }
 
-.nation-card-compact__footer {
-  margin-top: auto;
-  display: grid;
-  gap: 0.55rem;
+.nation-card__info-text {
+  margin-top: 8px;
+  color: rgb(148 163 184);
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
-.nation-card-compact__primary-btn,
-.nation-card-compact__secondary-btn {
+.nation-card__actions {
+  margin-top: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.nation-card__button {
   width: 100%;
   justify-content: center;
 }
 
-@media (min-width: 520px) {
-  .nation-card-compact__footer {
+@media (max-width: 460px) {
+  .nation-card__stats {
     grid-template-columns: 1fr;
+  }
+
+  .nation-card__info {
+    min-height: 0;
   }
 }
 
-@media (min-width: 1280px) {
-  .nation-card-compact__action {
-    min-height: 126px;
+@media (min-width: 1536px) {
+  .nation-card__body {
+    padding: 15px;
+  }
+
+  .nation-card__title {
+    font-size: 1.02rem;
+  }
+
+  .nation-card__description,
+  .nation-card__info-text {
+    font-size: 0.86rem;
   }
 }
 </style>
