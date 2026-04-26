@@ -21,11 +21,16 @@ import NationRankingsView from '../views/NationRankingsView.vue'
 import AllianceHubView from '../views/AllianceHubView.vue'
 import AdminLegacyView from '../views/AdminLegacyView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
+import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
+import OfferAgreementView from '../views/OfferAgreementView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
   { path: '/guide', name: 'expert-guide', component: ExpertGuideView, meta: { title: 'Гайд сборки' } },
   { path: '/links', name: 'links', component: LinksView, meta: { title: 'Ссылки' } },
+
+  { path: '/privacy', name: 'privacy-policy', component: PrivacyPolicyView, meta: { title: 'Политика конфиденциальности' } },
+  { path: '/offer', name: 'offer-agreement', component: OfferAgreementView, meta: { title: 'Договор оферты' } },
 
   { path: '/login', name: 'login', component: LoginView, meta: { title: 'Вход', guestOnly: true } },
   { path: '/register', name: 'register', component: RegisterView, meta: { title: 'Регистрация', guestOnly: true } },

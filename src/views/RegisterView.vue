@@ -179,9 +179,7 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
               <p class="helper-text mt-3">
                 Если тебя пригласил другой игрок, укажи его код. Это зачтётся в его реферальный прогресс.
               </p>
-
             </div>
-
 
             <div class="md:col-span-2 flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
@@ -192,6 +190,25 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
                 Уже зарегистрирован? Войти
               </RouterLink>
             </div>
+
+            <p class="md:col-span-2 -mt-1 rounded-[1.1rem] border border-white/10 bg-slate-950/45 px-4 py-3 text-xs leading-5 text-slate-400">
+              Регистрируясь и играя на сервере, вы соглашаетесь с
+              <RouterLink
+                to="/privacy"
+                target="_blank"
+                class="font-bold text-violet-300 transition hover:text-violet-200"
+              >
+                Политикой конфиденциальности
+              </RouterLink>
+              и
+              <RouterLink
+                to="/offer"
+                target="_blank"
+                class="font-bold text-violet-300 transition hover:text-violet-200"
+              >
+                Договором оферты
+              </RouterLink>.
+            </p>
           </form>
         </div>
 
@@ -227,5 +244,3 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
     </div>
   </section>
 </template>
-
-
