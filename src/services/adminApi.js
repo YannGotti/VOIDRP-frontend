@@ -67,3 +67,42 @@ export function updateAdminLegacy(playerAccountId, payload) {
     body: JSON.stringify(payload),
   })
 }
+
+export function getAdminMarketSummary() {
+  return adminRequest('/market/summary')
+}
+
+export function listAdminMarketItems(params = {}) {
+  return adminRequest(`/market/items${buildQuery(params)}`)
+}
+
+export function patchAdminMarketItem(material, payload) {
+  return adminRequest(`/market/items/${encodeURIComponent(material)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function enableAdminMarketItem(material) {
+  return adminRequest(`/market/items/${encodeURIComponent(material)}/enable`, {
+    method: 'POST',
+  })
+}
+
+export function disableAdminMarketItem(material) {
+  return adminRequest(`/market/items/${encodeURIComponent(material)}/disable`, {
+    method: 'POST',
+  })
+}
+
+export function resetAdminMarketItem(material) {
+  return adminRequest(`/market/items/${encodeURIComponent(material)}/reset`, {
+    method: 'POST',
+  })
+}
+
+export function recalculateAdminMarket(decayScores = true) {
+  return adminRequest(`/market/recalculate${buildQuery({ decay_scores: decayScores })}`, {
+    method: 'POST',
+  })
+}
