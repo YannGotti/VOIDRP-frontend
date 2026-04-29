@@ -31,3 +31,7 @@ export async function getNationMarketListings(params = {}) {
 export async function getMarketTransactions(params = {}) {
   return await apiRequest(`/market/transactions${buildQuery(params)}`, { method: 'GET' })
 }
+
+export async function getMarketItemHistory(material, days = 30) {
+  return await apiRequest(`/market/items/${encodeURIComponent(material)}/history?days=${days}`, { method: 'GET' })
+}

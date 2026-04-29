@@ -262,11 +262,19 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
           </div>
 
           <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <div class="metric-card text-center">
-              <p class="metric-label">Готовность профиля</p>
-              <p class="metric-value mt-2">{{ readinessPercent }}%</p>
-              <p class="mt-2 text-sm leading-6 text-slate-400">
-                {{ checkpoints.filter((item) => item.done).length }} из {{ checkpoints.length }} ключевых шагов завершено.
+            <div class="metric-card">
+              <p class="metric-label">Профиль заполнен</p>
+              <div class="mt-3" style="background: rgba(255,255,255,0.07); height: 8px; border-radius: 999px; overflow: hidden;">
+                <div :style="{
+                  width: readinessPercent + '%',
+                  background: 'linear-gradient(90deg, #8b5cf6, #22c55e)',
+                  height: '100%',
+                  borderRadius: '999px',
+                  transition: 'width 0.5s ease',
+                }"></div>
+              </div>
+              <p class="mt-2 text-xs text-slate-400">
+                {{ checkpoints.filter(c => c.done).length }} из {{ checkpoints.length }} шагов
               </p>
             </div>
 
@@ -308,14 +316,11 @@ watch(actionMessage, (value) => { if (value) toastSuccess(value) })
       <div v-else class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <div class="space-y-4">
           <section class="surface-card p-5 md:p-6">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <div class="section-kicker !mb-2">Старт</div>
-                <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-                  Что сделать дальше
-                </h2>
-              </div>
-              <span class="footer-chip">{{ readinessPercent }}%</span>
+            <div>
+              <div class="section-kicker !mb-2">Старт</div>
+              <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
+                Что сделать дальше
+              </h2>
             </div>
 
             <div class="mt-5 grid gap-3">

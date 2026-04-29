@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   getMarketItems,
   getMarketSummary,
@@ -7,6 +8,9 @@ import {
   getNationMarketListings,
 } from '../services/marketApi'
 import { formatNumber } from '../utils/formatters'
+import { getMaterialName, getRussianMaterialName } from '../utils/materialNames'
+
+const router = useRouter()
 
 const loading = ref(true)
 const error = ref('')
@@ -38,7 +42,12 @@ function money(value) {
 }
 
 function materialLabel(item) {
-  return item?.display_name || item?.material || 'Предмет'
+  if (!item) return 'Предмет'
+  return getRussianMaterialName(item.material) || item.display_name || getMaterialName(item.material)
+}
+
+function openItem(item) {
+  router.push({ name: 'market-item', params: { material: item.material } })
 }
 
 function stateLabel(value) {
@@ -150,31 +159,62 @@ onMounted(loadMarket)
             <div v-for="i in 8" :key="i" class="skeleton h-14 rounded-2xl"></div>
           </div>
 
-          <div v-else class="market-table-wrap mt-4">
-            <table class="market-table">
-              <thead>
-                <tr>
-                  <th>Предмет</th>
-                  <th>Покупка</th>
-                  <th>Скупка</th>
-                  <th>Изм.</th>
-                  <th>Спрос</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in items" :key="item.material">
-                  <td>
+          <template v-else>
+            <div class="market-table-desktop market-table-wrap mt-4">
+              <table class="market-table">
+                <thead>
+                  <tr>
+                    <th>Предмет</th>
+                    <th>Покупка</th>
+                    <th>Скупка</th>
+                    <th>Изм.</th>
+                    <th>Спрос</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in items" :key="item.material" class="market-row" @click="openItem(item)">
+                    <td>
+                      <strong>{{ materialLabel(item) }}</strong>
+                      <span>{{ item.material }}</span>
+                    </td>
+                    <td>{{ money(item.current_buy_price) }}</td>
+                    <td>{{ money(item.current_sell_price) }}</td>
+                    <td :class="trendClass(item.trend_percent)">{{ Number(item.trend_percent || 0) > 0 ? '+' : '' }}{{ money(item.trend_percent) }}%</td>
+                    <td>{{ stateLabel(item.demand_state) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="market-table-mobile mt-4">
+              <div
+                v-for="item in items"
+                :key="item.material"
+                class="market-mobile-card"
+                @click="openItem(item)"
+              >
+                <div class="market-mobile-card__header">
+                  <div class="market-mobile-card__name">
                     <strong>{{ materialLabel(item) }}</strong>
-                    <span>{{ item.material }}</span>
-                  </td>
-                  <td>{{ money(item.current_buy_price) }}</td>
-                  <td>{{ money(item.current_sell_price) }}</td>
-                  <td :class="trendClass(item.trend_percent)">{{ Number(item.trend_percent || 0) > 0 ? '+' : '' }}{{ money(item.trend_percent) }}%</td>
-                  <td>{{ stateLabel(item.demand_state) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+                    <small>{{ item.material }}</small>
+                  </div>
+                  <span :class="['market-mobile-card__trend', trendClass(item.trend_percent)]">
+                    {{ Number(item.trend_percent || 0) > 0 ? '+' : '' }}{{ money(item.trend_percent) }}%
+                  </span>
+                </div>
+                <div class="market-mobile-card__prices">
+                  <div class="market-mobile-card__price market-mobile-card__price--buy">
+                    <small>Покупка</small>
+                    <strong>{{ money(item.current_buy_price) }}</strong>
+                  </div>
+                  <div class="market-mobile-card__price market-mobile-card__price--sell">
+                    <small>Скупка</small>
+                    <strong>{{ money(item.current_sell_price) }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
         <aside class="space-y-4">
@@ -216,7 +256,7 @@ onMounted(loadMarket)
           <article v-for="lot in listings" :key="lot.id" class="market-listing-card">
             <div class="flex items-start justify-between gap-3">
               <div>
-                <h3>{{ lot.display_name || lot.material }}</h3>
+                <h3>{{ getRussianMaterialName(lot.material) || lot.display_name || lot.material }}</h3>
                 <p>[{{ lot.nation_tag }}] {{ lot.nation_title }}</p>
               </div>
               <span>{{ lot.remaining_amount }} / {{ lot.total_amount }}</span>
@@ -271,6 +311,15 @@ onMounted(loadMarket)
   width: 100%;
   border-collapse: collapse;
   min-width: 760px;
+}
+
+.market-row {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.market-row:hover td {
+  background: rgba(255,255,255,.045);
 }
 
 .market-table th,
@@ -358,5 +407,124 @@ onMounted(loadMarket)
   .market-search {
     grid-template-columns: 1fr;
   }
+}
+
+/* Mobile / desktop table toggle */
+.market-table-desktop {
+  display: none;
+}
+
+.market-table-mobile {
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .market-table-desktop {
+    display: block;
+  }
+
+  .market-table-mobile {
+    display: none;
+  }
+}
+
+/* Mobile card styles */
+.market-mobile-card {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 1rem;
+  background: rgba(255,255,255,.035);
+  padding: .75rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.market-mobile-card:hover {
+  background: rgba(255,255,255,.065);
+}
+
+.market-mobile-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .55rem;
+}
+
+.market-mobile-card__name strong {
+  display: block;
+  color: rgb(226 232 240);
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.market-mobile-card__name small {
+  display: block;
+  margin-top: .1rem;
+  color: rgb(100 116 139);
+  font-size: .72rem;
+  font-family: monospace;
+}
+
+.market-mobile-card__trend {
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  padding: .25rem .55rem;
+  font-size: .75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.market-mobile-card__prices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+
+.market-mobile-card__price {
+  border-radius: .65rem;
+  padding: .45rem .6rem;
+}
+
+.market-mobile-card__price small {
+  display: block;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: .15rem;
+}
+
+.market-mobile-card__price strong {
+  display: block;
+  font-size: .88rem;
+  font-weight: 900;
+}
+
+.market-mobile-card__price--buy {
+  background: rgba(34, 197, 94, .07);
+  border: 1px solid rgba(34, 197, 94, .15);
+}
+
+.market-mobile-card__price--buy small {
+  color: rgb(134 239 172);
+}
+
+.market-mobile-card__price--buy strong {
+  color: rgb(167 243 208);
+}
+
+.market-mobile-card__price--sell {
+  background: rgba(244, 63, 94, .07);
+  border: 1px solid rgba(244, 63, 94, .15);
+}
+
+.market-mobile-card__price--sell small {
+  color: rgb(253 164 175);
+}
+
+.market-mobile-card__price--sell strong {
+  color: rgb(254 202 202);
 }
 </style>

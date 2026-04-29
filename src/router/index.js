@@ -23,6 +23,7 @@ import AdminLegacyView from '../views/AdminLegacyView.vue'
 import AdminMarketView from '../views/AdminMarketView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
 import MarketView from '../views/MarketView.vue'
+import MarketItemView from '../views/MarketItemView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import OfferAgreementView from '../views/OfferAgreementView.vue'
 
@@ -30,6 +31,7 @@ const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
   { path: '/guide', name: 'expert-guide', component: ExpertGuideView, meta: { title: 'Гайд сборки' } },
   { path: '/market', name: 'market', component: MarketView, meta: { title: 'Рынок' } },
+  { path: '/market/:material', name: 'market-item', component: MarketItemView, meta: { title: 'Товар' } },
   { path: '/links', name: 'links', component: LinksView, meta: { title: 'Ссылки' } },
   { path: '/privacy', name: 'privacy-policy', component: PrivacyPolicyView, meta: { title: 'Политика конфиденциальности' } },
   { path: '/offer', name: 'offer-agreement', component: OfferAgreementView, meta: { title: 'Договор оферты' } },

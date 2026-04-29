@@ -356,6 +356,7 @@ onMounted(loadPage)
           v-for="nation in filteredNations"
           :key="nation.id || nation.slug"
           class="surface-card nation-card"
+          :style="`border-left: 3px solid ${nation.accent_color || '#6d5df6'}`"
         >
           <div class="nation-card__banner">
             <img
@@ -399,14 +400,25 @@ onMounted(loadPage)
               <div class="min-w-0 flex-1">
                 <div class="flex min-w-0 items-center gap-2">
                   <span class="nation-card__accent" :style="accentStyle(nation.accent_color)"></span>
-                  <span class="truncate text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                  <span
+                    class="nation-card__tag-badge truncate"
+                    :style="`background: ${nation.accent_color || '#6d5df6'}22; color: ${nation.accent_color || '#6d5df6'}; border: 1px solid ${nation.accent_color || '#6d5df6'}44`"
+                  >
                     [{{ nation.tag }}]
                   </span>
                 </div>
 
-                <h2 class="nation-card__title">
-                  {{ nation.title }}
-                </h2>
+                <div class="flex items-center gap-2 mt-[5px]">
+                  <img
+                    v-if="nation.assets?.icon_preview_url"
+                    :src="nation.assets.icon_preview_url"
+                    :alt="nation.title"
+                    class="nation-card__title-icon"
+                  />
+                  <h2 class="nation-card__title !mt-0">
+                    {{ nation.title }}
+                  </h2>
+                </div>
               </div>
             </div>
 
@@ -537,6 +549,25 @@ onMounted(loadPage)
   width: 9px;
   flex-shrink: 0;
   border-radius: 999px;
+}
+
+.nation-card__tag-badge {
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.nation-card__title-icon {
+  height: 36px;
+  width: 36px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .nation-card__title {

@@ -23,6 +23,8 @@ import { formatNumber, formatRoleLabel } from '../utils/formatters'
 
 const auth = useAuthStore()
 
+const activeTab = ref('overview')
+
 const loading = ref(true)
 const detailLoading = ref(false)
 const actionLoading = ref(false)
@@ -345,225 +347,266 @@ onMounted(loadPage)
 
       <div v-if="error" class="alert alert-error">{{ error }}</div>
 
+      <div class="alliance-tabs">
+        <button class="alliance-tab" :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">Обзор</button>
+        <button class="alliance-tab" :class="{ active: activeTab === 'proposals' }" @click="activeTab = 'proposals'">Предложения</button>
+        <button class="alliance-tab" :class="{ active: activeTab === 'manage' }" @click="activeTab = 'manage'">Управление</button>
+      </div>
+
       <div v-if="loading" class="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
         <div class="skeleton h-[520px] rounded-[24px]"></div>
         <div class="skeleton h-[520px] rounded-[24px]"></div>
       </div>
 
-      <div v-else class="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-        <aside class="space-y-4">
-          <section class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-2">Каталог</div>
-            <h2 class="text-xl font-black text-slate-50">Доступные союзы</h2>
+      <template v-else>
+        <!-- Обзор tab -->
+        <div v-show="activeTab === 'overview'" class="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
+          <aside class="space-y-4">
+            <section class="surface-card p-4 md:p-5">
+              <div class="section-kicker !mb-2">Каталог</div>
+              <h2 class="text-xl font-black text-slate-50">Доступные союзы</h2>
 
-            <div class="mt-4 space-y-3">
-              <button
-                v-for="item in selectableAlliances"
-                :key="item.id"
-                type="button"
-                class="action-card w-full text-left transition"
-                :class="selectedSlug === item.slug ? 'ring-1 ring-violet-400/40' : ''"
-                @click="selectedSlug = item.slug"
-              >
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="truncate font-semibold text-slate-100">{{ item.title }}</p>
-                    <p class="mt-1 text-sm text-slate-400">[{{ item.tag }}] · {{ allianceTypeLabel(item.alliance_type) }}</p>
+              <div class="mt-4 space-y-3">
+                <button
+                  v-for="item in selectableAlliances"
+                  :key="item.id"
+                  type="button"
+                  class="action-card w-full text-left transition"
+                  :class="selectedSlug === item.slug ? 'ring-1 ring-violet-400/40' : ''"
+                  @click="selectedSlug = item.slug"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <p class="truncate font-semibold text-slate-100">{{ item.title }}</p>
+                      <p class="mt-1 text-sm text-slate-400">[{{ item.tag }}] · {{ allianceTypeLabel(item.alliance_type) }}</p>
+                    </div>
+                    <span class="footer-chip">{{ item.members_count ?? item.members?.length ?? 0 }}</span>
                   </div>
-                  <span class="footer-chip">{{ item.members_count ?? item.members?.length ?? 0 }}</span>
+                </button>
+
+                <div v-if="!selectableAlliances.length" class="action-card text-sm text-slate-400">
+                  Пока нет ни одного альянса.
                 </div>
-              </button>
-
-              <div v-if="!selectableAlliances.length" class="action-card text-sm text-slate-400">
-                Пока нет ни одного альянса.
               </div>
-            </div>
-          </section>
+            </section>
 
-          <section class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-2">Твоё положение</div>
-            <h2 class="text-xl font-black text-slate-50">Статус</h2>
+            <section class="surface-card p-4 md:p-5">
+              <div class="section-kicker !mb-2">Твоё положение</div>
+              <h2 class="text-xl font-black text-slate-50">Статус</h2>
 
-            <div v-if="currentMembershipCard" class="mt-4 action-card">
-              <p class="font-semibold text-slate-100">{{ currentMembershipCard.title }}</p>
-              <p class="mt-2 text-sm text-slate-400">{{ currentMembershipCard.role }}</p>
-              <p v-if="currentMembershipCard.allianceTitle" class="mt-3 text-sm leading-6 text-slate-300">
-                Сейчас государство состоит в альянсе «{{ currentMembershipCard.allianceTitle }}» [{{ currentMembershipCard.allianceTag }}].
-              </p>
-            </div>
+              <div v-if="currentMembershipCard" class="mt-4 action-card">
+                <p class="font-semibold text-slate-100">{{ currentMembershipCard.title }}</p>
+                <p class="mt-2 text-sm text-slate-400">{{ currentMembershipCard.role }}</p>
+                <p v-if="currentMembershipCard.allianceTitle" class="mt-3 text-sm leading-6 text-slate-300">
+                  Сейчас государство состоит в альянсе «{{ currentMembershipCard.allianceTitle }}» [{{ currentMembershipCard.allianceTag }}].
+                </p>
+              </div>
 
-            <div v-else class="mt-4 action-card text-sm text-slate-400">
-              У тебя пока нет государства, поэтому ты можешь только смотреть союзы как игрок.
-            </div>
+              <div v-else class="mt-4 action-card text-sm text-slate-400">
+                У тебя пока нет государства, поэтому ты можешь только смотреть союзы как игрок.
+              </div>
 
-            <div v-if="selectedAlliance" class="mt-4 grid gap-2.5">
-              <button
-                v-if="canJoinSelected"
-                type="button"
-                class="btn btn-primary"
-                :disabled="actionLoading"
-                @click="joinSelectedAlliance"
-              >
-                Вступить в альянс
-              </button>
-              <button
-                v-if="canLeaveSelected"
-                type="button"
-                class="btn btn-outline"
-                :disabled="actionLoading"
-                @click="leaveSelectedAlliance"
-              >
-                Покинуть альянс
-              </button>
-            </div>
-          </section>
+              <div v-if="selectedAlliance" class="mt-4 grid gap-2.5">
+                <button
+                  v-if="canJoinSelected"
+                  type="button"
+                  class="btn btn-primary"
+                  :disabled="actionLoading"
+                  @click="joinSelectedAlliance"
+                >
+                  Вступить в альянс
+                </button>
+                <button
+                  v-if="canLeaveSelected"
+                  type="button"
+                  class="btn btn-outline"
+                  :disabled="actionLoading"
+                  @click="leaveSelectedAlliance"
+                >
+                  Покинуть альянс
+                </button>
+              </div>
+            </section>
 
-          <section v-if="isAuthenticated && hasNation && !selectedAlliance && canManageNation" class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-2">Новый союз</div>
-            <h2 class="text-xl font-black text-slate-50">Создать альянс</h2>
+            <section v-if="isAuthenticated && hasNation && !selectedAlliance && canManageNation" class="surface-card p-4 md:p-5">
+              <div class="section-kicker !mb-2">Новый союз</div>
+              <h2 class="text-xl font-black text-slate-50">Создать альянс</h2>
 
-            <div class="mt-4 grid gap-3">
-              <input v-model="createForm.title" class="input" placeholder="Название" />
-              <input v-model="createForm.tag" class="input" placeholder="Тег" />
-              <input v-model="createForm.slug" class="input" placeholder="Slug" />
-              <select v-model="createForm.alliance_type" class="select">
-                <option value="un">Политический союз</option>
-                <option value="nato">Военный союз</option>
-                <option value="economic">Экономический союз</option>
-              </select>
-              <textarea v-model="createForm.description" class="textarea" rows="4" placeholder="Короткое описание"></textarea>
-              <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="createAllianceAction">
-                Создать альянс
-              </button>
-            </div>
-          </section>
-        </aside>
+              <div class="mt-4 grid gap-3">
+                <input v-model="createForm.title" class="input" placeholder="Название" />
+                <input v-model="createForm.tag" class="input" placeholder="Тег" />
+                <input v-model="createForm.slug" class="input" placeholder="Slug" />
+                <select v-model="createForm.alliance_type" class="select">
+                  <option value="un">Политический союз</option>
+                  <option value="nato">Военный союз</option>
+                  <option value="economic">Экономический союз</option>
+                </select>
+                <textarea v-model="createForm.description" class="textarea" rows="4" placeholder="Короткое описание"></textarea>
+                <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="createAllianceAction">
+                  Создать альянс
+                </button>
+              </div>
+            </section>
+          </aside>
 
-        <div class="space-y-4">
-          <AllianceRelationsPanel
-            :alliance="selectedAlliance"
-            :loading="detailLoading"
-            :editable="canManageAlliance"
+          <div class="space-y-4">
+            <AllianceRelationsPanel
+              :alliance="selectedAlliance"
+              :loading="detailLoading"
+              :editable="canManageAlliance"
+            />
+          </div>
+        </div>
+
+        <!-- Предложения tab -->
+        <div v-show="activeTab === 'proposals'" class="space-y-4">
+          <AllianceProposalFeed
+            :items="proposals"
+            :loading="proposalsLoading || detailLoading"
+            :can-vote="canVote"
+            :voting-disabled="actionLoading"
+            @vote="castVote"
           />
 
-          <section v-if="selectedAlliance" class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_360px]">
-            <div class="space-y-4">
-              <AllianceProposalFeed
-                :items="proposals"
-                :loading="proposalsLoading || detailLoading"
-                :can-vote="canVote"
-                :voting-disabled="actionLoading"
-                @vote="castVote"
-              />
+          <section v-if="canCreateProposals" class="surface-card p-4 md:p-5">
+            <div class="section-kicker !mb-2">Решения</div>
+            <h2 class="text-xl font-black text-slate-50">Новое предложение</h2>
 
-              <section class="surface-card p-4 md:p-5">
-                <div class="section-kicker !mb-2">Финансы</div>
-                <h2 class="text-xl font-black text-slate-50">Последние операции</h2>
-
-                <div v-if="detailLoading" class="mt-4 space-y-3">
-                  <div class="skeleton h-16 rounded-[20px]"></div>
-                  <div class="skeleton h-16 rounded-[20px]"></div>
-                </div>
-
-                <div v-else-if="!allianceTransactions.length" class="mt-4 action-card text-sm text-slate-400">
-                  Операций пока нет.
-                </div>
-
-                <div v-else class="mt-4 space-y-3">
-                  <article v-for="item in allianceTransactions.slice(0, 8)" :key="item.id" class="action-card">
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="min-w-0">
-                        <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
-                        <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария' }}</p>
-                      </div>
-                      <div class="shrink-0 text-right">
-                        <p class="font-semibold text-slate-100">{{ formatNumber(item.net_amount ?? item.amount ?? 0) }}</p>
-                      </div>
-                    </div>
-                  </article>
-                </div>
-              </section>
+            <div class="mt-4 grid gap-3">
+              <select v-model="proposalForm.proposal_type" class="select">
+                <option value="set_policy">Изменение правил</option>
+                <option value="transfer">Перевод средств</option>
+                <option value="accept_member">Принятие участника</option>
+                <option value="remove_member">Исключение участника</option>
+              </select>
+              <input v-model="proposalForm.title" class="input" placeholder="Заголовок предложения" />
+              <textarea v-model="proposalForm.description" class="textarea" rows="3" placeholder="Короткое объяснение"></textarea>
+              <textarea v-model="proposalForm.payload_json" class="textarea font-mono text-xs" rows="6" placeholder='{"field":"allow_trade_bonus","value":true}'></textarea>
+              <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="createProposalAction">
+                Создать предложение
+              </button>
             </div>
-
-            <aside class="space-y-4">
-              <section v-if="canManagePolicies" class="surface-card p-4 md:p-5">
-                <div class="section-kicker !mb-2">Правила союза</div>
-                <h2 class="text-xl font-black text-slate-50">Изменить параметры</h2>
-
-                <div class="mt-4 grid gap-3">
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input v-model="policyForm.allow_internal_transfers" type="checkbox" class="checkbox checkbox-sm" />
-                    <span>Разрешить внутренние переводы</span>
-                  </label>
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input v-model="policyForm.allow_joint_defense" type="checkbox" class="checkbox checkbox-sm" />
-                    <span>Включить совместную оборону</span>
-                  </label>
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input v-model="policyForm.allow_trade_bonus" type="checkbox" class="checkbox checkbox-sm" />
-                    <span>Включить торговый бонус</span>
-                  </label>
-                  <label class="label cursor-pointer justify-start gap-3">
-                    <input v-model="policyForm.allow_pvp_protection" type="checkbox" class="checkbox checkbox-sm" />
-                    <span>Включить PvP-защиту</span>
-                  </label>
-                  <input v-model="policyForm.transfer_fee_percent" type="number" min="0" step="0.1" class="input" placeholder="Комиссия %" />
-                  <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="savePolicies">
-                    Сохранить правила
-                  </button>
-                </div>
-              </section>
-
-              <section v-if="canCreateProposals" class="surface-card p-4 md:p-5">
-                <div class="section-kicker !mb-2">Решения</div>
-                <h2 class="text-xl font-black text-slate-50">Новое предложение</h2>
-
-                <div class="mt-4 grid gap-3">
-                  <select v-model="proposalForm.proposal_type" class="select">
-                    <option value="set_policy">Изменение правил</option>
-                    <option value="transfer">Перевод средств</option>
-                    <option value="accept_member">Принятие участника</option>
-                    <option value="remove_member">Исключение участника</option>
-                  </select>
-                  <input v-model="proposalForm.title" class="input" placeholder="Заголовок предложения" />
-                  <textarea v-model="proposalForm.description" class="textarea" rows="3" placeholder="Короткое объяснение"></textarea>
-                  <textarea v-model="proposalForm.payload_json" class="textarea font-mono text-xs" rows="6" placeholder='{"field":"allow_trade_bonus","value":true}'></textarea>
-                  <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="createProposalAction">
-                    Создать предложение
-                  </button>
-                </div>
-              </section>
-
-              <section v-if="canTransfer" class="surface-card p-4 md:p-5">
-                <div class="section-kicker !mb-2">Перевод</div>
-                <h2 class="text-xl font-black text-slate-50">Отправить средства союзнику</h2>
-
-                <div class="mt-4 grid gap-3">
-                  <select v-model="transferForm.to_nation_slug" class="select">
-                    <option disabled value="">Выбери государство</option>
-                    <option v-for="nation in memberTargets" :key="nation.id" :value="nation.slug">
-                      {{ nation.title }} [{{ nation.tag }}]
-                    </option>
-                  </select>
-                  <input v-model="transferForm.amount" type="number" min="1" step="1" class="input" placeholder="Сумма" />
-                  <textarea v-model="transferForm.comment" class="textarea" rows="3" placeholder="Комментарий"></textarea>
-                  <button type="button" class="btn btn-primary" :disabled="actionLoading || !transferForm.to_nation_slug" @click="sendTransfer">
-                    Отправить перевод
-                  </button>
-                </div>
-              </section>
-
-              <section v-if="!canManageAlliance && selectedAlliance" class="surface-card p-4 md:p-5">
-                <div class="section-kicker !mb-2">Режим просмотра</div>
-                <h2 class="text-xl font-black text-slate-50">Что доступно тебе</h2>
-                <div class="mt-4 action-card text-sm text-slate-400">
-                  Обычные игроки и гости видят обзор союза, состав и последние решения. Управляющие действия появляются только у лидеров и офицеров нужного государства.
-                </div>
-              </section>
-            </aside>
           </section>
         </div>
-      </div>
+
+        <!-- Управление tab -->
+        <div v-show="activeTab === 'manage'" class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_360px]">
+          <div class="space-y-4">
+            <section class="surface-card p-4 md:p-5">
+              <div class="section-kicker !mb-2">Финансы</div>
+              <h2 class="text-xl font-black text-slate-50">Последние операции</h2>
+
+              <div v-if="detailLoading" class="mt-4 space-y-3">
+                <div class="skeleton h-16 rounded-[20px]"></div>
+                <div class="skeleton h-16 rounded-[20px]"></div>
+              </div>
+
+              <div v-else-if="!allianceTransactions.length" class="mt-4 action-card text-sm text-slate-400">
+                Операций пока нет.
+              </div>
+
+              <div v-else class="mt-4 space-y-3">
+                <article v-for="item in allianceTransactions.slice(0, 8)" :key="item.id" class="action-card">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
+                      <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария' }}</p>
+                    </div>
+                    <div class="shrink-0 text-right">
+                      <p class="font-semibold text-slate-100">{{ formatNumber(item.net_amount ?? item.amount ?? 0) }}</p>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+
+          <aside class="space-y-4">
+            <section v-if="canManagePolicies" class="surface-card p-4 md:p-5">
+              <div class="section-kicker !mb-2">Правила союза</div>
+              <h2 class="text-xl font-black text-slate-50">Изменить параметры</h2>
+
+              <div class="mt-4 grid gap-3">
+                <label class="label cursor-pointer justify-start gap-3">
+                  <input v-model="policyForm.allow_internal_transfers" type="checkbox" class="checkbox checkbox-sm" />
+                  <span>Разрешить внутренние переводы</span>
+                </label>
+                <label class="label cursor-pointer justify-start gap-3">
+                  <input v-model="policyForm.allow_joint_defense" type="checkbox" class="checkbox checkbox-sm" />
+                  <span>Включить совместную оборону</span>
+                </label>
+                <label class="label cursor-pointer justify-start gap-3">
+                  <input v-model="policyForm.allow_trade_bonus" type="checkbox" class="checkbox checkbox-sm" />
+                  <span>Включить торговый бонус</span>
+                </label>
+                <label class="label cursor-pointer justify-start gap-3">
+                  <input v-model="policyForm.allow_pvp_protection" type="checkbox" class="checkbox checkbox-sm" />
+                  <span>Включить PvP-защиту</span>
+                </label>
+                <input v-model="policyForm.transfer_fee_percent" type="number" min="0" step="0.1" class="input" placeholder="Комиссия %" />
+                <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="savePolicies">
+                  Сохранить правила
+                </button>
+              </div>
+            </section>
+
+            <section v-if="canTransfer" class="surface-card p-4 md:p-5">
+              <div class="section-kicker !mb-2">Перевод</div>
+              <h2 class="text-xl font-black text-slate-50">Отправить средства союзнику</h2>
+
+              <div class="mt-4 grid gap-3">
+                <select v-model="transferForm.to_nation_slug" class="select">
+                  <option disabled value="">Выбери государство</option>
+                  <option v-for="nation in memberTargets" :key="nation.id" :value="nation.slug">
+                    {{ nation.title }} [{{ nation.tag }}]
+                  </option>
+                </select>
+                <input v-model="transferForm.amount" type="number" min="1" step="1" class="input" placeholder="Сумма" />
+                <textarea v-model="transferForm.comment" class="textarea" rows="3" placeholder="Комментарий"></textarea>
+                <button type="button" class="btn btn-primary" :disabled="actionLoading || !transferForm.to_nation_slug" @click="sendTransfer">
+                  Отправить перевод
+                </button>
+              </div>
+            </section>
+
+            <section v-if="!canManageAlliance && selectedAlliance" class="surface-card p-4 md:p-5">
+              <div class="section-kicker !mb-2">Режим просмотра</div>
+              <h2 class="text-xl font-black text-slate-50">Что доступно тебе</h2>
+              <div class="mt-4 action-card text-sm text-slate-400">
+                Обычные игроки и гости видят обзор союза, состав и последние решения. Управляющие действия появляются только у лидеров и офицеров нужного государства.
+              </div>
+            </section>
+          </aside>
+        </div>
+      </template>
     </div>
   </section>
 </template>
+
+<style scoped>
+.alliance-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.alliance-tab {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgb(185 200 228);
+  padding: 0.6rem 1.1rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.alliance-tab:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+.alliance-tab.active {
+  border-color: rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.14);
+  color: #fff;
+}
+</style>
