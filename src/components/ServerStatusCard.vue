@@ -4,97 +4,47 @@ import { RouterLink } from 'vue-router'
 import { siteConfig } from '../config.site'
 
 const externalStatsUrl = computed(() => siteConfig.monitoringChartUrl)
-
 const copySuccess = ref(false)
 
 function copyIp() {
   navigator.clipboard.writeText('void-rp.ru').then(() => {
     copySuccess.value = true
-    setTimeout(() => {
-      copySuccess.value = false
-    }, 2000)
+    setTimeout(() => { copySuccess.value = false }, 2000)
   })
 }
 </script>
 
 <template>
-  <section class="py-4 md:py-5">
+  <section class="py-2 md:py-3">
     <div class="container-shell">
-      <div class="surface-card p-4 md:p-5">
-        <div class="grid gap-4 lg:grid-cols-[0.78fr_1.22fr] lg:gap-5">
-          <div>
-            <div class="section-kicker">Активность сервера</div>
-            <h2 class="section-title">Когда на сервере больше людей</h2>
-            <p class="section-subtitle">
-              Это внешний график за последние сутки. Блок встроен на сайт, но сам график рисует сторонний сервис.
-            </p>
-
-            <div class="mt-4 grid gap-2.5">
-              <div class="action-card flex items-start gap-3">
-                <span class="mt-2 h-2.5 w-2.5 rounded-full bg-indigo-400"></span>
-                <div>
-                  <p class="font-bold text-slate-100">Быстрый ориентир</p>
-                  <p class="mt-1 text-sm leading-6 text-slate-400">
-                    Помогает понять, когда на сервере чаще идёт движ.
-                  </p>
-                </div>
-              </div>
-
-              <div class="action-card flex items-start gap-3">
-                <span class="mt-2 h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
-                <div>
-                  <p class="font-bold text-slate-100">Полный вид отдельно</p>
-                  <p class="mt-1 text-sm leading-6 text-slate-400">
-                    При желании можно открыть график в новой вкладке.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-4 flex flex-wrap gap-2.5">
-              <RouterLink to="/download-launcher" class="btn btn-primary">Скачать лаунчер</RouterLink>
-              <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="btn btn-outline">Карта</a>
-              <a :href="externalStatsUrl" target="_blank" rel="noreferrer" class="btn btn-outline">График</a>
-            </div>
+      <div class="sc-card">
+        <div class="sc-left">
+          <div class="sc-ip-block">
+            <p class="sc-label">Адрес сервера</p>
+            <p class="sc-ip">void-rp.ru</p>
+            <button class="sc-copy-btn" @click="copyIp">
+              <svg v-if="!copySuccess" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+              <svg v-else viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              {{ copySuccess ? 'Скопировано' : 'Скопировать' }}
+            </button>
           </div>
 
-          <div class="server-frame rounded-[1.5rem] border border-white/10 bg-slate-950/70 shadow-[0_14px_38px_rgba(0,0,0,0.28)]">
-            <div class="server-frame__header border-b border-white/10 bg-white/5 px-3.5 py-2.5 text-sm font-semibold text-slate-200">
-              Информация о сервере
+          <div class="sc-meta">
+            <div class="sc-online-chip">
+              <span class="sc-online-dot"></span>
+              1.21.1 · Better MC 5
             </div>
+            <p class="sc-peak">Пик активности: вечером 18–23 МСК</p>
+          </div>
+        </div>
 
-            <div class="server-frame__body p-4 md:p-5">
-              <div class="server-info-grid">
-                <div class="server-info-ip">
-                  <p class="server-info-ip__label">Адрес сервера</p>
-                  <p class="server-info-ip__value">void-rp.ru</p>
-                  <button class="server-info-ip__copy btn btn-primary mt-3" @click="copyIp">
-                    <span v-if="copySuccess">Скопировано!</span>
-                    <span v-else>Скопировать IP</span>
-                  </button>
-                </div>
-
-                <div class="server-info-details">
-                  <div class="server-info-chip">
-                    <span class="server-info-chip__dot"></span>
-                    <span>1.21.1 · Better MC 5</span>
-                  </div>
-
-                  <p class="server-info-peak">
-                    Пик активности: вечером 18–23 МСК
-                  </p>
-
-                  <a
-                    :href="externalStatsUrl"
-                    target="_blank"
-                    rel="noreferrer"
-                    class="btn btn-outline server-info-monitoring"
-                  >
-                    Открыть мониторинг
-                  </a>
-                </div>
-              </div>
-            </div>
+        <div class="sc-right">
+          <p class="sc-section-label">Активность сервера</p>
+          <p class="sc-section-desc">Узнай, когда на сервере больше всего игроков.</p>
+          <div class="sc-btns">
+            <RouterLink to="/download-launcher" class="btn btn-primary btn-sm">Скачать лаунчер</RouterLink>
+            <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="btn btn-outline btn-sm">Карта</a>
+            <a :href="externalStatsUrl" target="_blank" rel="noreferrer" class="btn btn-outline btn-sm">График</a>
           </div>
         </div>
       </div>
@@ -103,84 +53,125 @@ function copyIp() {
 </template>
 
 <style scoped>
-.server-info-grid {
-  display: grid;
+.sc-card {
+  display: flex;
+  align-items: center;
   gap: 1.5rem;
+  flex-wrap: wrap;
+  border: 1px solid rgba(148,163,184,.1);
+  border-radius: 16px;
+  background: rgba(255,255,255,.025);
+  padding: 1rem 1.25rem;
 }
 
-@media (min-width: 480px) {
-  .server-info-grid {
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
-  }
+.sc-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  flex: 1;
 }
 
-.server-info-ip {
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 1.1rem;
-  background: rgba(255,255,255,.03);
-  padding: 1.1rem 1.2rem;
-  text-align: center;
+.sc-ip-block {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
 }
 
-.server-info-ip__label {
-  font-size: .7rem;
-  font-weight: 800;
+.sc-label {
+  font-size: .62rem;
+  font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
   color: rgb(100 116 139);
-  margin-bottom: .35rem;
+  margin: 0;
 }
 
-.server-info-ip__value {
-  font-size: 1.35rem;
+.sc-ip {
+  font-size: 1.2rem;
   font-weight: 900;
-  letter-spacing: -.01em;
-  color: rgb(248 250 252);
+  color: #f8fbff;
   font-family: monospace;
+  letter-spacing: -.01em;
+  margin: 0;
 }
 
-.server-info-ip__copy {
-  width: 100%;
-  justify-content: center;
-}
-
-.server-info-details {
-  display: flex;
-  flex-direction: column;
-  gap: .85rem;
-}
-
-.server-info-chip {
+.sc-copy-btn {
   display: inline-flex;
   align-items: center;
-  gap: .45rem;
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 999px;
-  background: rgba(255,255,255,.05);
-  padding: .35rem .75rem;
-  font-size: .8rem;
+  gap: .35rem;
+  border: 1px solid rgba(148,163,184,.14);
+  border-radius: 8px;
+  background: rgba(255,255,255,.04);
+  color: rgb(148 163 184);
+  font: inherit;
+  font-size: .78rem;
   font-weight: 700;
-  color: rgb(203 213 225);
-  align-self: flex-start;
+  padding: .3rem .65rem;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
 }
 
-.server-info-chip__dot {
-  height: 8px;
+.sc-copy-btn:hover { border-color: rgba(139,92,246,.3); color: #fff; }
+.sc-copy-btn svg { width: .85rem; height: .85rem; }
+
+.sc-meta {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.sc-online-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  padding: .28rem .65rem;
+  font-size: .78rem;
+  font-weight: 700;
+  color: rgb(203 213 225);
+}
+
+.sc-online-dot {
   width: 8px;
+  height: 8px;
   border-radius: 999px;
   background: rgb(74 222 128);
-  box-shadow: 0 0 6px rgb(74 222 128 / 0.7);
+  box-shadow: 0 0 6px rgba(74,222,128,.7);
   flex-shrink: 0;
 }
 
-.server-info-peak {
-  font-size: .83rem;
-  line-height: 1.55;
-  color: rgb(148 163 184);
+.sc-peak {
+  font-size: .8rem;
+  color: rgb(100 116 139);
+  margin: 0;
 }
 
-.server-info-monitoring {
-  align-self: flex-start;
+.sc-right {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  flex-shrink: 0;
+}
+
+.sc-section-label {
+  font-size: .75rem;
+  font-weight: 800;
+  color: rgb(148 163 184);
+  margin: 0;
+}
+
+.sc-section-desc {
+  font-size: .78rem;
+  color: rgb(100 116 139);
+  margin: 0;
+}
+
+.sc-btns {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
 }
 </style>

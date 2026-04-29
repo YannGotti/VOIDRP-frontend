@@ -946,3 +946,12 @@ footer,
     width: auto;
   }
 }
+
+/* NProgress bar */
+#nprogress .bar {
+  background: #8b5cf6;
+  height: 2px;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px #8b5cf6, 0 0 5px #8b5cf6;
+}

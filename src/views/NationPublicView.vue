@@ -50,26 +50,32 @@ function hexToRgba(hex, alpha) {
 
 function formatAllianceType(value) {
   switch (String(value || '').toLowerCase()) {
-    case 'nato':
-      return 'Военный блок'
-    case 'economic':
-      return 'Экономический союз'
-    case 'un':
-      return 'Политический союз'
-    default:
-      return 'Альянс'
+    case 'nato': return 'Военный блок'
+    case 'economic': return 'Экономический союз'
+    case 'un': return 'Политический союз'
+    default: return 'Альянс'
   }
 }
 
 function txLabel(item) {
   const type = String(item?.transaction_type || '').toLowerCase()
-  if (type === 'player_donation') return `Донат игрока ${item?.metadata_json?.minecraft_nickname || ''}`.trim()
+  if (type === 'player_donation') return `Донат · ${item?.metadata_json?.minecraft_nickname || 'игрок'}`.trim()
   if (type === 'deposit') return 'Пополнение'
   if (type === 'withdraw') return 'Списание'
   if (type === 'alliance_transfer_out') return 'Перевод союзнику'
-  if (type === 'alliance_transfer_in') return 'Перевод от союзника'
+  if (type === 'alliance_transfer_in') return 'От союзника'
   if (type === 'alliance_fee_income') return 'Комиссия альянса'
   return item?.transaction_type || 'Операция'
+}
+
+function money(value) {
+  const n = Number(value ?? 0)
+  if (!Number.isFinite(n)) return '0'
+  return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(n)
+}
+
+function avatarChar(member) {
+  return ((member.minecraft_nickname || member.site_login || '?')[0]).toUpperCase()
 }
 
 const accent = computed(() => nation.value?.accent_color || '#6d5df6')
@@ -81,15 +87,15 @@ const allianceSummary = computed(() => nation.value?.alliance_summary || null)
 
 const allianceMembersPreview = computed(() => {
   const members = Array.isArray(allianceSummary.value?.members) ? allianceSummary.value.members : []
-  return members.filter((item) => item.slug !== nation.value?.slug).slice(0, 6)
+  return members.filter((item) => item.slug !== nation.value?.slug).slice(0, 5)
 })
 
 const routeBackground = computed(() => {
-  const accentGlow = hexToRgba(accent.value, 0.22)
+  const accentGlow = hexToRgba(accent.value, 0.2)
   if (!backgroundUrl.value) {
     return [
-      `radial-gradient(circle at top left, ${accentGlow} 0%, transparent 24%)`,
-      `radial-gradient(circle at top right, ${hexToRgba(accent.value, 0.16)} 0%, transparent 28%)`,
+      `radial-gradient(circle at top left, ${accentGlow} 0%, transparent 26%)`,
+      `radial-gradient(circle at top right, ${hexToRgba(accent.value, 0.14)} 0%, transparent 30%)`,
       'linear-gradient(180deg, #05070f 0%, #0a0f1c 48%, #10192c 100%)',
     ].join(', ')
   }
@@ -100,18 +106,12 @@ const routeBackground = computed(() => {
   ].join(', ')
 })
 
-const pageShellStyle = computed(() => ({
-  borderColor: hexToRgba(accent.value, 0.2),
-  boxShadow: `0 28px 80px ${hexToRgba(accent.value, 0.16)}`,
-  background: 'linear-gradient(180deg, rgba(7,11,20,0.48), rgba(7,11,20,0.32))',
-}))
-
 const heroStyle = computed(() => {
   if (bannerUrl.value) {
     return {
       backgroundImage: [
-        'linear-gradient(180deg, rgba(4,6,11,0.05), rgba(4,6,11,0.74))',
-        `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.28)} 0%, transparent 32%)`,
+        'linear-gradient(180deg, rgba(4,6,11,0.08) 0%, rgba(4,6,11,0.78) 100%)',
+        `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.3)} 0%, transparent 36%)`,
         `url(${bannerUrl.value})`,
       ].join(', '),
       backgroundSize: 'cover',
@@ -120,15 +120,21 @@ const heroStyle = computed(() => {
   }
   return {
     background: [
-      `radial-gradient(circle at top left, ${hexToRgba(accent.value, 0.36)} 0%, transparent 32%)`,
-      'linear-gradient(135deg, rgba(6,9,19,0.96) 0%, rgba(10,15,27,0.98) 56%, rgba(22,28,48,1) 100%)',
+      `radial-gradient(ellipse at top left, ${hexToRgba(accent.value, 0.38)} 0%, transparent 40%)`,
+      `radial-gradient(ellipse at bottom right, ${hexToRgba(accent.value, 0.14)} 0%, transparent 36%)`,
+      'linear-gradient(135deg, rgba(8,12,24,0.98) 0%, rgba(14,20,36,1) 100%)',
     ].join(', '),
   }
 })
 
 const cardStyle = computed(() => ({
   borderColor: hexToRgba(accent.value, 0.16),
-  background: `linear-gradient(180deg, rgba(10,15,27,0.84), ${hexToRgba(accent.value, 0.08)})`,
+}))
+
+const accentBtnStyle = computed(() => ({
+  background: `linear-gradient(135deg, ${accent.value} 0%, ${hexToRgba(accent.value, 0.7)} 100%)`,
+  borderColor: 'transparent',
+  color: '#fff',
 }))
 
 const isAuthenticated = computed(() => auth.isAuthenticated.value)
@@ -154,33 +160,6 @@ const canRequestJoin = computed(() => {
 
 const canShowJoinAction = computed(() => canJoinDirectly.value || canRequestJoin.value)
 
-const actionCardTitle = computed(() => {
-  if (!isAuthenticated.value) return 'Войти для вступления'
-  if (viewerCanManage.value) return 'Это твоё государство'
-  if (viewerIsMember.value) return 'Ты уже состоишь здесь'
-  if (viewerOwnsOtherNation.value) return 'Сначала покинь текущее государство'
-  if (viewerHasPendingRequest.value) return 'Заявка уже отправлена'
-  if (nation.value?.recruitment_policy === 'invite_only') return 'Вступление только по приглашению'
-  if (canJoinDirectly.value) return 'Можно вступить сразу'
-  if (canRequestJoin.value) return 'Можно подать заявку'
-  return 'Действия'
-})
-
-const actionCardText = computed(() => {
-  if (!nation.value) return ''
-  if (!isAuthenticated.value) return 'После входа ты сможешь сразу вступить или отправить заявку без лишних шагов.'
-  if (viewerCanManage.value) return 'Ты можешь редактировать страницу, принимать заявки и управлять участниками.'
-  if (viewerIsMember.value) return 'Ты уже находишься в составе этого государства.'
-  if (viewerOwnsOtherNation.value) {
-    return `Сейчас ты состоишь в «${currentNation.value?.title || 'другом государстве'}». Одновременно можно быть только в одном.`
-  }
-  if (viewerHasPendingRequest.value) return 'Лидеры ещё не приняли решение. Повторно отправлять заявку не нужно.'
-  if (nation.value.recruitment_policy === 'invite_only') return 'Это государство принимает игроков только по прямому приглашению от лидера или офицеров.'
-  if (canJoinDirectly.value) return 'У этого государства открытый набор. Вступление произойдёт сразу после нажатия кнопки.'
-  if (canRequestJoin.value) return 'Оставь короткое сообщение, чтобы лидер понял, зачем ты хочешь присоединиться.'
-  return 'Доступных действий сейчас нет.'
-})
-
 function applyRouteBackground(value) {
   document.documentElement.style.setProperty('--route-bg', value)
 }
@@ -199,30 +178,18 @@ async function loadNation() {
 }
 
 async function loadCurrentNation() {
-  if (!auth.accessToken) {
-    currentNation.value = null
-    return
-  }
-
+  if (!auth.accessToken) { currentNation.value = null; return }
   currentNationLoading.value = true
-  try {
-    currentNation.value = await getMyNation(auth.accessToken)
-  } catch {
-    currentNation.value = null
-  } finally {
-    currentNationLoading.value = false
-  }
+  try { currentNation.value = await getMyNation(auth.accessToken) }
+  catch { currentNation.value = null }
+  finally { currentNationLoading.value = false }
 }
 
 async function loadStats() {
   statsLoading.value = true
-  try {
-    stats.value = await getNationStatsBySlug(route.params.slug, auth.accessToken || null)
-  } catch {
-    stats.value = null
-  } finally {
-    statsLoading.value = false
-  }
+  try { stats.value = await getNationStatsBySlug(route.params.slug, auth.accessToken || null) }
+  catch { stats.value = null }
+  finally { statsLoading.value = false }
 }
 
 async function loadActivity() {
@@ -230,11 +197,8 @@ async function loadActivity() {
   try {
     const payload = await getNationActivity(route.params.slug, auth.accessToken || null)
     activity.value = Array.isArray(payload?.items) ? payload.items : []
-  } catch {
-    activity.value = []
-  } finally {
-    activityLoading.value = false
-  }
+  } catch { activity.value = [] }
+  finally { activityLoading.value = false }
 }
 
 async function loadTreasury() {
@@ -242,11 +206,8 @@ async function loadTreasury() {
   try {
     const payload = await getNationTreasuryTransactions(route.params.slug, auth.accessToken || null)
     transactions.value = payload?.items || []
-  } catch {
-    transactions.value = []
-  } finally {
-    treasuryLoading.value = false
-  }
+  } catch { transactions.value = [] }
+  finally { treasuryLoading.value = false }
 }
 
 async function loadDonors() {
@@ -254,32 +215,22 @@ async function loadDonors() {
   try {
     const payload = await getNationTopDonors(route.params.slug, auth.accessToken || null)
     donors.value = payload?.items || []
-  } catch {
-    donors.value = []
-  } finally {
-    donorsLoading.value = false
-  }
+  } catch { donors.value = [] }
+  finally { donorsLoading.value = false }
 }
 
 async function handleJoin() {
   if (!nation.value || !auth.accessToken || !canShowJoinAction.value) return
-
   joinLoading.value = true
   error.value = ''
   actionMessage.value = ''
-
   try {
     const response = await joinNation(auth.accessToken, nation.value.slug, {
       message: canRequestJoin.value ? requestMessage.value || null : null,
     })
-
     nation.value = response?.nation || nation.value
-    actionMessage.value =
-      canJoinDirectly.value
-        ? 'Ты успешно вступил в государство.'
-        : 'Заявка отправлена. Теперь нужно дождаться решения лидера.'
+    actionMessage.value = canJoinDirectly.value ? 'Ты успешно вступил в государство.' : 'Заявка отправлена.'
     requestMessage.value = ''
-
     await Promise.all([loadActivity(), loadCurrentNation()])
   } catch (err) {
     error.value = err.message || 'Не удалось выполнить действие.'
@@ -309,404 +260,840 @@ async function handleReject(requestId) {
 }
 
 async function loadPage() {
-  await Promise.all([
-    loadNation(),
-    loadCurrentNation(),
-    loadStats(),
-    loadActivity(),
-    loadTreasury(),
-    loadDonors(),
-  ])
+  await Promise.all([loadNation(), loadCurrentNation(), loadStats(), loadActivity(), loadTreasury(), loadDonors()])
 }
 
 watch(() => route.params.slug, loadPage)
 watch(routeBackground, (value) => applyRouteBackground(value), { immediate: true })
-
 onMounted(loadPage)
-
-onBeforeUnmount(() => {
-  document.documentElement.style.removeProperty('--route-bg')
-})
+onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-bg') })
 </script>
 
 <template>
-  <section class="py-4 md:py-5">
-    <div class="container-shell max-w-[1380px]">
-      <div v-if="loading" class="space-y-2.5">
-        <div class="skeleton h-[220px] rounded-[24px]"></div>
-        <div class="grid gap-3 xl:grid-cols-[minmax(0,1.12fr)_320px]">
-          <div class="skeleton h-[220px] rounded-[24px]"></div>
-          <div class="skeleton h-[220px] rounded-[24px]"></div>
+  <section class="np py-3 md:py-4">
+    <div class="container-shell max-w-[1380px] space-y-3">
+
+      <!-- Loading -->
+      <template v-if="loading">
+        <div class="skeleton np-hero-skeleton"></div>
+        <div class="np-stats-skeleton">
+          <div v-for="i in 5" :key="i" class="skeleton" style="height:58px;border-radius:12px"></div>
         </div>
-      </div>
+        <div class="np-grid">
+          <div class="skeleton" style="height:320px;border-radius:20px"></div>
+          <div class="skeleton" style="height:320px;border-radius:20px"></div>
+        </div>
+      </template>
 
-      <div v-else-if="error" class="mx-auto max-w-3xl alert alert-error">{{ error }}</div>
+      <div v-else-if="error" class="alert alert-error">{{ error }}</div>
 
-      <div v-else-if="nation" class="page-backdrop route-shell overflow-hidden rounded-[26px] border" :style="pageShellStyle">
-        <div class="p-2.5 md:p-3">
-          <div class="space-y-2.5">
-            <section class="relative overflow-hidden rounded-[24px] shadow-[0_20px_72px_rgba(0,0,0,0.32)]" :style="heroStyle">
-              <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/72"></div>
-              <div class="relative px-4 pb-4 pt-4 md:px-5 md:pb-5 md:pt-5">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
-                    Государство
-                  </span>
-                  <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
-                    {{ formatRecruitmentLabel(nation.recruitment_policy) }}
-                  </span>
-                  <span
-                    v-if="viewerHasPendingRequest"
-                    class="rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-amber-200 backdrop-blur-md"
-                  >
-                    Заявка отправлена
-                  </span>
-                  <span
-                    v-if="allianceSummary"
-                    class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md"
-                  >
-                    Альянс: {{ allianceSummary.tag }}
-                  </span>
-                </div>
+      <template v-else-if="nation">
 
-                <div class="mt-7 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-                  <div class="flex min-w-0 items-end gap-4">
-                    <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[18px] border-2 border-white/90 bg-slate-900 text-2xl font-black uppercase text-slate-100 shadow-[0_12px_30px_rgba(0,0,0,0.34)] md:h-20 md:w-20">
-                      <img v-if="iconUrl" :src="iconUrl" alt="icon" class="h-full w-full object-cover" />
-                      <span v-else>{{ tagText.slice(0, 2).toUpperCase() }}</span>
-                    </div>
+        <!-- ─── HERO ─── -->
+        <header class="np-hero" :style="heroStyle">
+          <div class="np-hero__top">
+            <div class="np-chips">
+              <span class="np-chip">{{ formatRecruitmentLabel(nation.recruitment_policy) }}</span>
+              <span v-if="allianceSummary" class="np-chip">{{ allianceSummary.tag }}</span>
+              <span v-if="viewerHasPendingRequest" class="np-chip np-chip--amber">Заявка на рассмотрении</span>
+              <span v-if="viewerIsMember && !viewerCanManage" class="np-chip np-chip--green">Участник</span>
+              <span v-if="viewerCanManage" class="np-chip np-chip--green">Лидер / Офицер</span>
+            </div>
+          </div>
 
-                    <div class="min-w-0 pb-1 text-white">
-                      <h1 class="break-words text-2xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] md:text-3xl">
-                        {{ nation.title }}
-                      </h1>
-                      <p class="mt-1.5 text-sm text-white/76 md:text-[15px]">
-                        [{{ nation.tag }}] · {{ nation.short_description || 'Описание пока не добавлено' }}
-                      </p>
-                    </div>
+          <div class="np-hero__bottom">
+            <div class="np-hero__identity">
+              <div class="np-icon">
+                <img v-if="iconUrl" :src="iconUrl" :alt="nation.tag" class="np-icon__img" />
+                <span v-else>{{ tagText.slice(0, 2).toUpperCase() }}</span>
+              </div>
+              <div class="np-hero__text">
+                <h1 class="np-hero__title">{{ nation.title }}</h1>
+                <p class="np-hero__sub">[{{ nation.tag }}]<template v-if="nation.short_description"> · {{ nation.short_description }}</template></p>
+              </div>
+            </div>
+            <div class="np-hero__actions">
+              <RouterLink v-if="viewerCanManage" to="/nation/studio" class="btn btn-sm btn-light">Управлять</RouterLink>
+              <RouterLink to="/nations" class="btn btn-sm np-btn-ghost">Все государства</RouterLink>
+            </div>
+          </div>
+        </header>
+
+        <!-- ─── STATS STRIP ─── -->
+        <div class="np-stats">
+          <div class="np-stat">
+            <span>Баланс казны</span>
+            <strong v-if="statsLoading" class="np-stat__loading">···</strong>
+            <strong v-else>{{ money(stats?.treasury_balance ?? 0) }}</strong>
+          </div>
+          <div class="np-stat">
+            <span>Территория</span>
+            <strong v-if="statsLoading" class="np-stat__loading">···</strong>
+            <strong v-else>{{ formatNumber(stats?.territory_points ?? 0) }}</strong>
+          </div>
+          <div class="np-stat">
+            <span>Онлайн</span>
+            <strong v-if="statsLoading" class="np-stat__loading">···</strong>
+            <strong v-else>{{ formatCompactHoursFromMinutes(stats?.total_playtime_minutes ?? 0) }}</strong>
+          </div>
+          <div class="np-stat">
+            <span>Престиж</span>
+            <strong v-if="statsLoading" class="np-stat__loading">···</strong>
+            <strong v-else>{{ formatNumber(stats?.prestige_score ?? 0) }}</strong>
+          </div>
+          <div class="np-stat">
+            <span>Участников</span>
+            <strong>{{ nation.members.length }}</strong>
+          </div>
+        </div>
+
+        <div v-if="actionMessage" class="alert alert-success">{{ actionMessage }}</div>
+
+        <!-- ─── MAIN GRID ─── -->
+        <div class="np-grid">
+
+          <!-- Left column -->
+          <div class="np-left">
+
+            <!-- Description -->
+            <section v-if="nation.description" class="surface-card np-card" :style="cardStyle">
+              <h2 class="np-card__title">О государстве</h2>
+              <p class="np-desc">{{ nation.description }}</p>
+            </section>
+
+            <!-- Members -->
+            <section class="surface-card np-card" :style="cardStyle">
+              <div class="np-card__header">
+                <h2 class="np-card__title">Состав</h2>
+                <span class="np-badge">{{ nation.members.length }}</span>
+              </div>
+              <div class="np-members">
+                <div v-for="member in nation.members" :key="member.user_id" class="np-member">
+                  <div class="np-member__av" :style="{ background: hexToRgba(accent, 0.28), color: accent }">
+                    {{ avatarChar(member) }}
                   </div>
-
-                  <div class="flex flex-wrap gap-3">
-                    <RouterLink v-if="viewerCanManage" to="/nation/studio" class="btn btn-light rounded-2xl">
-                      Управлять
-                    </RouterLink>
-                    <RouterLink to="/nations" class="btn btn-outline rounded-2xl border-white/18 bg-black/10 text-white hover:border-white/30 hover:bg-black/20">
-                      Все государства
-                    </RouterLink>
+                  <div class="np-member__info">
+                    <strong>{{ member.minecraft_nickname || member.site_login }}</strong>
+                    <small>{{ formatRoleLabel(member.role) }}</small>
                   </div>
                 </div>
               </div>
             </section>
 
-            <div v-if="actionMessage" class="alert alert-success">{{ actionMessage }}</div>
+            <!-- Activity -->
+            <NationActivityFeed
+              :items="activity"
+              :loading="activityLoading"
+              :card-style="cardStyle"
+            />
+          </div>
 
-            <div class="grid gap-3 xl:grid-cols-[minmax(0,1.12fr)_320px]">
-              <div class="space-y-4">
-                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
-                  <div class="section-kicker !mb-2">О государстве</div>
-                  <h2 class="text-base font-black text-slate-50 md:text-lg">Описание</h2>
-                  <p class="mt-2.5 whitespace-pre-line text-sm leading-6 text-slate-300 md:text-[14px]">
-                    {{ nation.description || 'Подробное описание пока не заполнено.' }}
-                  </p>
-                </section>
+          <!-- Sidebar -->
+          <aside class="np-sidebar">
 
-                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
-                  <div class="section-kicker !mb-2">Участники</div>
-                  <div class="flex items-center justify-between gap-3">
-                    <h2 class="text-base font-black text-slate-50 md:text-lg">Состав государства</h2>
-                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                      {{ nation.members.length }} участников
-                    </span>
-                  </div>
+            <!-- Join / membership card -->
+            <section class="surface-card np-card" :style="cardStyle">
+              <!-- not authenticated -->
+              <template v-if="!isAuthenticated">
+                <h2 class="np-card__title">Вступить в государство</h2>
+                <p class="np-sidebar__text">Войди, чтобы присоединиться или подать заявку.</p>
+                <div class="np-card__actions">
+                  <RouterLink :to="`/login?redirect=${encodeURIComponent(`/nation/${nation.slug}`)}`" class="btn btn-primary w-full">Войти</RouterLink>
+                  <RouterLink to="/register" class="btn btn-outline w-full">Регистрация</RouterLink>
+                </div>
+              </template>
 
-                  <div class="mt-3 grid gap-2.5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                    <div v-for="member in nation.members" :key="member.user_id" class="action-card !p-3" :style="cardStyle">
-                      <p class="font-semibold text-slate-100">{{ member.minecraft_nickname || member.site_login }}</p>
-                      <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
-                      <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                        {{ formatRoleLabel(member.role) }}
-                      </p>
-                    </div>
-                  </div>
-                </section>
+              <!-- manager -->
+              <template v-else-if="viewerCanManage">
+                <h2 class="np-card__title">Твоё государство</h2>
+                <p class="np-sidebar__text">Ты управляешь этим государством. Принимай заявки и настраивай страницу.</p>
+                <RouterLink to="/nation/studio" class="btn btn-outline w-full mt-3" style="min-height:2.4rem">Открыть студию</RouterLink>
+              </template>
 
-                <NationActivityFeed
-                  :items="activity"
-                  :loading="activityLoading"
-                  title="Последняя активность"
-                  subtitle="Короткая лента последних событий государства."
-                  compact
-                />
+              <!-- already a member -->
+              <template v-else-if="viewerIsMember">
+                <div class="np-status-row np-status-row--green">
+                  <span class="np-status-dot"></span>
+                  <strong>Ты состоишь в этом государстве</strong>
+                </div>
+              </template>
+
+              <!-- owns another nation -->
+              <template v-else-if="viewerOwnsOtherNation">
+                <h2 class="np-card__title">Уже в другом государстве</h2>
+                <p class="np-sidebar__text">
+                  Ты состоишь в «{{ currentNation?.title || 'другом государстве' }}». Одновременно можно быть только в одном.
+                </p>
+                <RouterLink to="/nation/studio" class="btn btn-outline w-full mt-3" style="min-height:2.4rem">Открыть своё</RouterLink>
+              </template>
+
+              <!-- pending request -->
+              <template v-else-if="viewerHasPendingRequest">
+                <div class="np-status-row np-status-row--amber">
+                  <span class="np-status-dot"></span>
+                  <strong>Заявка ожидает решения</strong>
+                </div>
+                <p class="np-sidebar__text mt-2">Лидеры ещё не ответили. Повторно подавать не нужно.</p>
+              </template>
+
+              <!-- invite only -->
+              <template v-else-if="nation.recruitment_policy === 'invite_only'">
+                <h2 class="np-card__title">Только по приглашению</h2>
+                <p class="np-sidebar__text">Это государство принимает игроков только по прямому приглашению от лидера.</p>
+              </template>
+
+              <!-- request join -->
+              <template v-else-if="canRequestJoin">
+                <h2 class="np-card__title">Подать заявку</h2>
+                <textarea
+                  v-model="requestMessage"
+                  rows="3"
+                  class="textarea w-full mt-3"
+                  placeholder="Коротко — почему хочешь вступить"
+                ></textarea>
+                <button type="button" class="btn w-full mt-2.5" style="min-height:2.4rem" :style="accentBtnStyle" :disabled="joinLoading || currentNationLoading" @click="handleJoin">
+                  <span v-if="joinLoading" class="spinner mr-1.5"></span>
+                  {{ joinLoading ? 'Отправляем...' : 'Подать заявку' }}
+                </button>
+              </template>
+
+              <!-- open join -->
+              <template v-else-if="canJoinDirectly">
+                <h2 class="np-card__title">Открытый набор</h2>
+                <p class="np-sidebar__text">Вступление произойдёт сразу.</p>
+                <button type="button" class="btn w-full mt-3" style="min-height:2.4rem" :style="accentBtnStyle" :disabled="joinLoading || currentNationLoading" @click="handleJoin">
+                  <span v-if="joinLoading" class="spinner mr-1.5"></span>
+                  {{ joinLoading ? 'Вступаем...' : 'Вступить' }}
+                </button>
+              </template>
+            </section>
+
+            <!-- Alliance card -->
+            <section class="surface-card np-card" :style="cardStyle">
+              <div class="np-card__header">
+                <h2 class="np-card__title">Альянс</h2>
+                <span v-if="allianceSummary" class="np-badge">{{ allianceSummary.tag }}</span>
               </div>
 
-              <aside class="space-y-4">
-                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
-                  <div class="section-kicker !mb-2">Вступление</div>
-                  <h2 class="text-lg font-black text-slate-50">{{ actionCardTitle }}</h2>
-                  <p class="mt-3 text-sm leading-6 text-slate-300">
-                    {{ actionCardText }}
-                  </p>
+              <div v-if="!allianceSummary" class="np-empty">Не состоит в альянсах</div>
 
-                  <div v-if="!isAuthenticated" class="mt-3 grid gap-2.5">
-                    <RouterLink :to="`/login?redirect=${encodeURIComponent(`/nation/${nation.slug}`)}`" class="btn btn-primary w-full">
-                      Войти и продолжить
-                    </RouterLink>
-                    <RouterLink to="/register" class="btn btn-outline w-full">
-                      Создать аккаунт
-                    </RouterLink>
-                  </div>
+              <template v-else>
+                <p class="np-sidebar__text np-sidebar__text--name">{{ allianceSummary.title }}</p>
+                <p class="np-sidebar__text">{{ formatAllianceType(allianceSummary.alliance_type) }} · {{ allianceSummary.members_count }} государств</p>
+                <p v-if="allianceSummary.description" class="np-sidebar__text mt-2">{{ allianceSummary.description }}</p>
 
-                  <div v-else-if="viewerOwnsOtherNation" class="action-card mt-4" :style="cardStyle">
-                    <p class="metric-label">Текущее государство</p>
-                    <p class="mt-2 text-sm font-semibold text-slate-100">
-                      {{ currentNation?.title || 'Уже выбрано другое государство' }}
-                    </p>
-                    <div class="mt-3 grid gap-3">
-                      <RouterLink to="/nation/studio" class="btn btn-outline w-full">
-                        Открыть своё государство
-                      </RouterLink>
-                      <RouterLink to="/nations" class="btn btn-ghost w-full">
-                        Вернуться к каталогу
-                      </RouterLink>
-                    </div>
-                  </div>
-
-                  <div v-else-if="viewerHasPendingRequest" class="action-card mt-4" :style="cardStyle">
-                    <p class="metric-label">Статус</p>
-                    <p class="mt-2 text-sm font-semibold text-amber-200">Ожидает решения лидера</p>
-                  </div>
-
-                  <div v-else-if="viewerIsMember" class="action-card mt-4" :style="cardStyle">
-                    <p class="metric-label">Статус</p>
-                    <p class="mt-2 text-sm font-semibold text-emerald-200">Ты уже в составе государства</p>
-                  </div>
-
-                  <div v-else-if="canRequestJoin" class="mt-3 space-y-2.5">
-                    <div class="action-card" :style="cardStyle">
-                      <p class="metric-label">Сообщение лидеру</p>
-                      <textarea
-                        v-model="requestMessage"
-                        rows="4"
-                        class="textarea textarea-bordered mt-3 w-full rounded-2xl"
-                        placeholder="Коротко напиши, почему хочешь вступить"
-                      ></textarea>
-                    </div>
-                    <button type="button" class="btn btn-primary w-full" :disabled="joinLoading || currentNationLoading" @click="handleJoin">
-                      <span v-if="joinLoading" class="spinner"></span>
-                      <span>{{ joinLoading ? 'Отправляем...' : 'Подать заявку' }}</span>
-                    </button>
-                  </div>
-
-                  <button
-                    v-else-if="canJoinDirectly"
-                    type="button"
-                    class="btn btn-primary mt-3 w-full"
-                    :disabled="joinLoading || currentNationLoading"
-                    @click="handleJoin"
+                <div v-if="allianceMembersPreview.length" class="np-allies">
+                  <RouterLink
+                    v-for="member in allianceMembersPreview"
+                    :key="member.nation_id"
+                    :to="`/nation/${member.slug}`"
+                    class="np-ally"
                   >
-                    <span v-if="joinLoading" class="spinner"></span>
-                    <span>{{ joinLoading ? 'Вступаем...' : 'Вступить в государство' }}</span>
-                  </button>
-
-                  <div v-else-if="nation.recruitment_policy === 'invite_only'" class="action-card mt-4" :style="cardStyle">
-                    <p class="metric-label">Набор</p>
-                    <p class="mt-2 text-sm font-semibold text-slate-100">Только по приглашению</p>
-                  </div>
-                </section>
-
-                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
-                  <div class="section-kicker !mb-2">Статистика</div>
-                  <h2 class="text-lg font-black text-slate-50">Сила государства</h2>
-
-                  <div v-if="statsLoading" class="mt-3 space-y-2.5">
-                    <div class="skeleton h-16 rounded-2xl"></div>
-                    <div class="skeleton h-16 rounded-2xl"></div>
-                  </div>
-
-                  <div v-else class="metric-grid metric-grid-2 mt-3">
-                    <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.05rem]">{{ formatNumber(stats?.treasury_balance ?? 0) }}</p>
-                      <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Баланс</p>
+                    <div class="np-ally__av">
+                      <img v-if="member.icon_url || member.icon_preview_url" :src="member.icon_url || member.icon_preview_url" :alt="member.tag" />
+                      <span v-else>{{ member.tag?.slice(0, 2).toUpperCase() }}</span>
                     </div>
-                    <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.05rem]">{{ formatNumber(stats?.territory_points ?? 0) }}</p>
-                      <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Территория</p>
+                    <div>
+                      <strong>{{ member.title }}</strong>
+                      <small>[{{ member.tag }}]</small>
                     </div>
-                    <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.05rem]">{{ formatCompactHoursFromMinutes(stats?.total_playtime_minutes ?? 0) }}</p>
-                      <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Онлайн</p>
-                    </div>
-                    <div class="metric-card text-center">
-                      <p class="metric-value !text-[1.05rem]">{{ formatNumber(stats?.prestige_score ?? 0) }}</p>
-                      <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">Престиж</p>
-                    </div>
-                  </div>
-
-                  <RouterLink to="/nations/rankings" class="btn btn-outline mt-4 w-full rounded-2xl">
-                    Открыть рейтинг
                   </RouterLink>
-                </section>
-
-                <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
-                  <div class="section-kicker !mb-2">Альянс</div>
-                  <h2 class="text-lg font-black text-slate-50">
-                    {{ allianceSummary ? allianceSummary.title : 'Надгосударственный блок' }}
-                  </h2>
-
-                  <div v-if="!allianceSummary" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
-                    Это государство пока не состоит ни в одном альянсе.
-                  </div>
-
-                  <div v-else class="mt-3 space-y-3">
-                    <div class="action-card" :style="cardStyle">
-                      <p class="font-semibold text-slate-100">[{{ allianceSummary.tag }}] · {{ formatAllianceType(allianceSummary.alliance_type) }}</p>
-                      <p class="mt-2 text-sm leading-6 text-slate-400">
-                        {{ allianceSummary.description || 'Описание альянса пока не добавлено.' }}
-                      </p>
-                    </div>
-
-                    <div class="grid gap-2.5 sm:grid-cols-2">
-                      <div class="metric-card text-center">
-                        <p class="metric-value !text-[1.02rem]">{{ allianceSummary.members_count }}</p>
-                        <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Государств</p>
-                      </div>
-                      <div class="metric-card text-center">
-                        <p class="metric-value !text-[1.02rem]">{{ formatNumber(allianceSummary.treasury_balance ?? 0) }}</p>
-                        <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Казна</p>
-                      </div>
-                    </div>
-
-                    <div v-if="allianceMembersPreview.length">
-                      <div class="section-kicker !mb-2">Союзники</div>
-                      <div class="grid gap-3">
-                        <RouterLink
-                          v-for="member in allianceMembersPreview"
-                          :key="member.nation_id"
-                          :to="`/nation/${member.slug}`"
-                          class="action-card transition hover:-translate-y-[1px]"
-                          :style="cardStyle"
-                        >
-                          <div class="flex items-center gap-3">
-                            <div class="preview-avatar h-11 w-11 border border-white/10 text-sm">
-                              <img
-                                v-if="member.icon_url || member.icon_preview_url"
-                                :src="member.icon_url || member.icon_preview_url"
-                                :alt="member.title"
-                                class="h-full w-full object-cover"
-                              />
-                              <span v-else>{{ member.tag?.slice(0, 2).toUpperCase() }}</span>
-                            </div>
-                            <div class="min-w-0">
-                              <p class="truncate font-semibold text-slate-100">{{ member.title }}</p>
-                              <p class="mt-1 text-sm text-slate-400">[{{ member.tag }}]</p>
-                            </div>
-                          </div>
-                        </RouterLink>
-                      </div>
-                    </div>
-
-                    <RouterLink to="/alliances" class="btn btn-outline w-full rounded-2xl">
-                      Открыть центр альянсов
-                    </RouterLink>
-                  </div>
-                </section>
-
-                <section v-if="nation.viewer_can_manage" class="surface-card p-3.5 md:p-4" :style="cardStyle">
-                  <div class="section-kicker !mb-2">Заявки</div>
-                  <h2 class="text-lg font-black text-slate-50">Управление вступлением</h2>
-
-                  <div v-if="!nation.join_requests.length" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
-                    Сейчас нет активных заявок.
-                  </div>
-
-                  <div v-else class="mt-3 space-y-2.5">
-                    <div v-for="item in nation.join_requests" :key="item.id" class="action-card" :style="cardStyle">
-                      <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div class="min-w-0">
-                          <p class="font-semibold text-slate-100">{{ item.minecraft_nickname || item.site_login }}</p>
-                          <p class="mt-1 text-sm text-slate-400">@{{ item.site_login }}</p>
-                          <p v-if="item.message" class="mt-3 text-sm leading-6 text-slate-300">{{ item.message }}</p>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                          <button type="button" class="btn btn-outline btn-sm" @click="handleReject(item.id)">Отклонить</button>
-                          <button type="button" class="btn btn-primary btn-sm" @click="handleApprove(item.id)">Принять</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              </aside>
-            </div>
-
-            <div class="grid gap-3 xl:grid-cols-2">
-              <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
-                <div class="section-kicker !mb-2">Казна</div>
-                <h2 class="text-lg font-black text-slate-50">Последние операции</h2>
-
-                <div v-if="treasuryLoading" class="mt-3 space-y-2.5">
-                  <div class="skeleton h-16 rounded-2xl"></div>
-                  <div class="skeleton h-16 rounded-2xl"></div>
                 </div>
 
-                <div v-else-if="!transactions.length" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
-                  Операций пока нет.
-                </div>
+                <RouterLink to="/alliances" class="btn btn-outline w-full mt-3" style="min-height:2.4rem;font-size:.83rem">
+                  Центр альянсов
+                </RouterLink>
+              </template>
+            </section>
 
-                <div v-else class="mt-3 space-y-2.5">
-                  <div v-for="item in transactions.slice(0, 5)" :key="item.id" class="action-card" :style="cardStyle">
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="min-w-0">
-                        <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
-                        <p class="mt-1 text-sm text-slate-400">{{ item.comment || 'Без комментария' }}</p>
-                      </div>
-                      <p class="text-sm font-bold text-slate-100">{{ formatNumber(item.amount) }}</p>
-                    </div>
+            <!-- Requests (manager only) -->
+            <section v-if="viewerCanManage && nation.join_requests?.length" class="surface-card np-card" :style="cardStyle">
+              <div class="np-card__header">
+                <h2 class="np-card__title">Заявки</h2>
+                <span class="np-badge np-badge--accent">{{ nation.join_requests.length }}</span>
+              </div>
+              <div class="np-requests">
+                <div v-for="item in nation.join_requests" :key="item.id" class="np-request">
+                  <div class="np-request__info">
+                    <strong>{{ item.minecraft_nickname || item.site_login }}</strong>
+                    <small>@{{ item.site_login }}</small>
+                    <p v-if="item.message">{{ item.message }}</p>
+                  </div>
+                  <div class="np-request__btns">
+                    <button type="button" class="btn btn-outline btn-sm" @click="handleReject(item.id)">Отклонить</button>
+                    <button type="button" class="btn btn-sm" :style="accentBtnStyle" @click="handleApprove(item.id)">Принять</button>
                   </div>
                 </div>
-              </section>
+              </div>
+            </section>
 
-              <section class="surface-card p-3.5 md:p-4" :style="cardStyle">
-                <div class="section-kicker !mb-2">Поддержка</div>
-                <h2 class="text-lg font-black text-slate-50">Топ донатеров</h2>
-
-                <div v-if="donorsLoading" class="mt-3 space-y-2.5">
-                  <div class="skeleton h-16 rounded-2xl"></div>
-                  <div class="skeleton h-16 rounded-2xl"></div>
-                </div>
-
-                <div v-else-if="!donors.length" class="action-card mt-4 text-sm text-slate-400" :style="cardStyle">
-                  Пока никто не пополнял казну через сайт.
-                </div>
-
-                <div v-else class="mt-3 space-y-2.5">
-                  <div v-for="item in donors.slice(0, 5)" :key="item.user_id || item.site_login" class="action-card" :style="cardStyle">
-                    <div class="flex items-center justify-between gap-3">
-                      <div class="min-w-0">
-                        <p class="font-semibold text-slate-100">{{ item.minecraft_nickname || item.site_login }}</p>
-                        <p class="mt-1 text-sm text-slate-400">@{{ item.site_login }}</p>
-                      </div>
-                      <p class="text-sm font-bold text-slate-100">{{ formatNumber(item.total_amount ?? 0) }}</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>
-          </div>
+            <RouterLink to="/nations/rankings" class="btn btn-outline w-full" style="min-height:2.4rem;font-size:.83rem">
+              Рейтинг государств
+            </RouterLink>
+          </aside>
         </div>
-      </div>
+
+        <!-- ─── BOTTOM: TREASURY + DONORS ─── -->
+        <div class="np-bottom">
+          <section class="surface-card np-card" :style="cardStyle">
+            <h2 class="np-card__title">Последние операции казны</h2>
+            <div v-if="treasuryLoading" class="np-skeletons mt-3">
+              <div v-for="i in 4" :key="i" class="skeleton" style="height:32px;border-radius:8px"></div>
+            </div>
+            <div v-else-if="!transactions.length" class="np-empty mt-3">Операций пока нет</div>
+            <ul v-else class="np-list mt-3">
+              <li v-for="item in transactions.slice(0, 8)" :key="item.id">
+                <div class="np-list__left">
+                  <span>{{ txLabel(item) }}</span>
+                  <small>{{ item.comment || '' }}</small>
+                </div>
+                <strong :class="Number(item.amount) >= 0 ? 'positive' : 'negative'">
+                  {{ Number(item.amount) >= 0 ? '+' : '' }}{{ money(item.amount) }}
+                </strong>
+              </li>
+            </ul>
+          </section>
+
+          <section class="surface-card np-card" :style="cardStyle">
+            <h2 class="np-card__title">Топ донатеров</h2>
+            <div v-if="donorsLoading" class="np-skeletons mt-3">
+              <div v-for="i in 4" :key="i" class="skeleton" style="height:32px;border-radius:8px"></div>
+            </div>
+            <div v-else-if="!donors.length" class="np-empty mt-3">Пока никто не донатил через сайт</div>
+            <ul v-else class="np-list mt-3">
+              <li v-for="(item, idx) in donors.slice(0, 8)" :key="item.user_id || item.site_login">
+                <div class="np-list__left">
+                  <span>
+                    <span class="np-rank">#{{ idx + 1 }}</span>
+                    {{ item.minecraft_nickname || item.site_login }}
+                  </span>
+                  <small>@{{ item.site_login }}</small>
+                </div>
+                <strong class="positive">{{ money(item.total_amount ?? 0) }}</strong>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+      </template>
     </div>
   </section>
 </template>
 
 <style scoped>
-:deep(.route-shell .metric-card),
-:deep(.route-shell .action-card) {
-  padding: 0.8rem;
+/* ─── Hero ─── */
+.np-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 200px;
+  padding: 1.1rem 1.25rem 1.25rem;
 }
 
-:deep(.route-shell .btn) {
-  min-height: 2.55rem;
+.np-hero__top { display: flex; align-items: flex-start; justify-content: space-between; }
+
+.np-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.np-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+  padding: .22rem .7rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.8);
+}
+
+.np-chip--amber {
+  border-color: rgba(251,191,36,.24);
+  background: rgba(251,191,36,.12);
+  color: rgb(253 230 138);
+}
+
+.np-chip--green {
+  border-color: rgba(52,211,153,.24);
+  background: rgba(52,211,153,.1);
+  color: rgb(110 231 183);
+}
+
+.np-hero__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.np-hero__identity {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.np-icon {
+  flex-shrink: 0;
+  width: 68px;
+  height: 68px;
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,.85);
+  background: rgba(10,15,30,.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #f8fbff;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+.np-icon__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.np-hero__text { min-width: 0; padding-bottom: 2px; }
+
+.np-hero__title {
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -.03em;
+  text-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+
+.np-hero__sub {
+  margin: .3rem 0 0;
+  font-size: .875rem;
+  color: rgba(255,255,255,.68);
+}
+
+.np-hero__actions {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.np-btn-ghost {
+  border: 1px solid rgba(255,255,255,.16) !important;
+  background: rgba(0,0,0,.2) !important;
+  color: rgba(255,255,255,.8) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* ─── Stats strip ─── */
+.np-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: .5rem;
+}
+
+.np-stat {
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  background: rgba(5,10,20,.6);
+  padding: .65rem .85rem;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.np-stat span {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.np-stat strong {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #f8fbff;
+  letter-spacing: -.03em;
+}
+
+.np-stat__loading {
+  color: rgb(71 85 105) !important;
+  font-size: 1rem !important;
+  letter-spacing: .1em !important;
+}
+
+/* ─── Layout ─── */
+.np-grid {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (min-width: 1100px) {
+  .np-grid { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+
+.np-left { display: flex; flex-direction: column; gap: .75rem; }
+.np-sidebar { display: flex; flex-direction: column; gap: .75rem; }
+
+.np-bottom {
+  display: grid;
+  gap: .75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 860px) {
+  .np-bottom { grid-template-columns: 1fr 1fr; }
+}
+
+/* ─── Cards ─── */
+.np-card {
+  padding: 1rem;
+}
+
+.np-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .75rem;
+}
+
+.np-card__title {
+  font-size: .92rem;
+  font-weight: 800;
+  color: rgb(203 213 225);
+  margin: 0 0 .65rem;
+}
+
+.np-card__header .np-card__title { margin-bottom: 0; }
+
+.np-badge {
+  font-size: .7rem;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(255,255,255,.05);
+  padding: .2rem .55rem;
+  color: rgb(148 163 184);
+}
+
+.np-badge--accent {
+  border-color: rgba(251,191,36,.2);
+  background: rgba(251,191,36,.1);
+  color: rgb(253 230 138);
+}
+
+.np-card__actions {
+  display: grid;
+  gap: .5rem;
+  margin-top: .85rem;
+}
+
+/* ─── Description ─── */
+.np-desc {
+  font-size: .88rem;
+  line-height: 1.7;
+  color: rgb(148 163 184);
+  white-space: pre-line;
+  margin: 0;
+}
+
+/* ─── Members ─── */
+.np-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: .4rem;
+}
+
+.np-member {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+  padding: .55rem .65rem;
+}
+
+.np-member__av {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .72rem;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.np-member__info { min-width: 0; }
+
+.np-member__info strong {
+  display: block;
+  font-size: .82rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-member__info small {
+  display: block;
+  font-size: .68rem;
+  font-weight: 600;
+  color: rgb(100 116 139);
+  margin-top: .1rem;
+}
+
+/* ─── Sidebar text ─── */
+.np-sidebar__text {
+  font-size: .85rem;
+  line-height: 1.6;
+  color: rgb(148 163 184);
+  margin: 0;
+}
+
+.np-sidebar__text + .np-sidebar__text { margin-top: .3rem; }
+.np-sidebar__text.mt-2 { margin-top: .5rem; }
+
+.np-sidebar__text--name {
+  font-size: .92rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+}
+
+/* ─── Status rows ─── */
+.np-status-row {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .6rem .75rem;
+  border-radius: 10px;
+}
+
+.np-status-row--green {
+  background: rgba(52,211,153,.07);
+  border: 1px solid rgba(52,211,153,.16);
+}
+
+.np-status-row--green strong { color: rgb(110 231 183); font-size: .88rem; }
+
+.np-status-row--amber {
+  background: rgba(251,191,36,.07);
+  border: 1px solid rgba(251,191,36,.16);
+}
+
+.np-status-row--amber strong { color: rgb(253 230 138); font-size: .88rem; }
+
+.np-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: currentColor;
+}
+
+.np-status-row--green .np-status-dot { background: rgb(52 211 153); }
+.np-status-row--amber .np-status-dot { background: rgb(251 191 36); }
+
+/* ─── Alliance ─── */
+.np-allies {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin-top: .85rem;
+}
+
+.np-ally {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  padding: .45rem .6rem;
+  transition: background .12s;
+}
+
+.np-ally:hover { background: rgba(255,255,255,.05); }
+
+.np-ally__av {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(10,15,30,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .7rem;
+  font-weight: 900;
+  color: #f8fbff;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.np-ally__av img { width: 100%; height: 100%; object-fit: cover; }
+
+.np-ally div:last-child { min-width: 0; }
+
+.np-ally strong {
+  display: block;
+  font-size: .82rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-ally small {
+  display: block;
+  font-size: .68rem;
+  color: rgb(100 116 139);
+}
+
+/* ─── Requests ─── */
+.np-requests { display: flex; flex-direction: column; gap: .5rem; }
+
+.np-request {
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+  padding: .7rem .75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.np-request__info { min-width: 0; }
+
+.np-request__info strong {
+  display: block;
+  font-size: .88rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+}
+
+.np-request__info small {
+  display: block;
+  font-size: .75rem;
+  color: rgb(100 116 139);
+  margin-top: .1rem;
+}
+
+.np-request__info p {
+  font-size: .82rem;
+  color: rgb(148 163 184);
+  margin: .4rem 0 0;
+}
+
+.np-request__btns { display: flex; gap: .4rem; flex-shrink: 0; }
+
+/* ─── List (treasury/donors) ─── */
+.np-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+.np-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .45rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.np-list li:last-child { border-bottom: none; }
+
+.np-list__left { min-width: 0; }
+
+.np-list__left span {
+  display: block;
+  font-size: .85rem;
+  font-weight: 600;
+  color: rgb(203 213 225);
+}
+
+.np-list__left small {
+  display: block;
+  font-size: .72rem;
+  color: rgb(100 116 139);
+  margin-top: .05rem;
+}
+
+.np-list li > strong {
+  font-size: .85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.positive { color: rgb(110 231 183); }
+.negative { color: rgb(252 165 165); }
+
+.np-rank {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 800;
+  color: rgb(100 116 139);
+  margin-right: .3rem;
+}
+
+/* ─── Misc ─── */
+.np-empty {
+  font-size: .85rem;
+  color: rgb(100 116 139);
+  padding: .5rem 0;
+}
+
+.np-skeletons { display: grid; gap: .35rem; }
+
+.np-hero-skeleton {
+  height: 200px;
+  border-radius: 20px;
+}
+
+.np-stats-skeleton {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: .5rem;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 860px) {
+  .np-stats { grid-template-columns: repeat(3, 1fr); }
+  .np-stats-skeleton { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .np-stats { grid-template-columns: repeat(2, 1fr); }
+  .np-stats-skeleton { grid-template-columns: repeat(2, 1fr); }
+  .np-hero { min-height: 180px; }
+  .np-icon { width: 54px; height: 54px; font-size: 1.1rem; }
 }
 </style>
-
-

@@ -82,40 +82,32 @@ const selectableAlliances = computed(() => Array.isArray(alliances.value) ? alli
 const memberTargets = computed(() => {
   const members = Array.isArray(selectedAlliance.value?.members) ? selectedAlliance.value.members : []
   const sourceNationId = selectedViewer.value?.nation_id
-  return members
-    .map((member) => member?.nation)
-    .filter((nation) => nation?.slug && nation?.id !== sourceNationId)
+  return members.map((m) => m?.nation).filter((n) => n?.slug && n?.id !== sourceNationId)
 })
 
-const currentMembershipCard = computed(() => {
-  if (!hasNation.value) return null
-  return {
-    title: myNation.value?.title || 'Твоё государство',
-    role: formatRoleLabel(myNation.value?.viewer_role),
-    allianceTitle: myNation.value?.alliance_summary?.title || '',
-    allianceTag: myNation.value?.alliance_summary?.tag || '',
-  }
-})
+const myAllianceSlug = computed(() => myNation.value?.alliance_summary?.slug || '')
 
 function allianceTypeLabel(value) {
   switch (String(value || '').toLowerCase()) {
-    case 'nato':
-      return 'Военный союз'
-    case 'economic':
-      return 'Экономический союз'
-    case 'un':
-      return 'Политический союз'
-    default:
-      return 'Союз государств'
+    case 'nato': return 'Военный союз'
+    case 'economic': return 'Экономический союз'
+    case 'un': return 'Политический союз'
+    default: return 'Союз государств'
   }
 }
 
 function txLabel(item) {
   const type = String(item?.transaction_type || '').toLowerCase()
   if (type === 'alliance_transfer_out') return 'Перевод союзнику'
-  if (type === 'alliance_transfer_in') return 'Перевод от союзника'
+  if (type === 'alliance_transfer_in') return 'От союзника'
   if (type === 'alliance_fee_income') return 'Комиссия союза'
   return 'Операция'
+}
+
+function money(value) {
+  const n = Number(value ?? 0)
+  if (!Number.isFinite(n)) return '0'
+  return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(n)
 }
 
 function hydratePolicyForm(alliance) {
@@ -127,16 +119,9 @@ function hydratePolicyForm(alliance) {
 }
 
 async function loadMyNation() {
-  if (!auth.accessToken) {
-    myNation.value = null
-    return
-  }
-
-  try {
-    myNation.value = await getMyNation(auth.accessToken)
-  } catch {
-    myNation.value = null
-  }
+  if (!auth.accessToken) { myNation.value = null; return }
+  try { myNation.value = await getMyNation(auth.accessToken) }
+  catch { myNation.value = null }
 }
 
 async function loadAlliances() {
@@ -145,13 +130,7 @@ async function loadAlliances() {
 }
 
 async function loadSelectedAlliance(slug) {
-  if (!slug) {
-    selectedAlliance.value = null
-    proposals.value = []
-    allianceTransactions.value = []
-    return
-  }
-
+  if (!slug) { selectedAlliance.value = null; proposals.value = []; allianceTransactions.value = []; return }
   detailLoading.value = true
   try {
     const [alliance, proposalPayload, txPayload] = await Promise.all([
@@ -159,7 +138,6 @@ async function loadSelectedAlliance(slug) {
       getAllianceProposals(slug, auth.accessToken || null),
       getAllianceTransactions(slug, auth.accessToken || null),
     ])
-
     selectedAlliance.value = alliance
     selectedSlug.value = alliance?.slug || slug
     proposals.value = proposalPayload?.items || []
@@ -255,19 +233,14 @@ async function createProposalAction() {
   actionLoading.value = true
   try {
     let payloadJson = {}
-    try {
-      payloadJson = proposalForm.payload_json?.trim() ? JSON.parse(proposalForm.payload_json) : {}
-    } catch {
-      throw new Error('Поле JSON заполнено неверно.')
-    }
-
+    try { payloadJson = proposalForm.payload_json?.trim() ? JSON.parse(proposalForm.payload_json) : {} }
+    catch { throw new Error('Поле JSON заполнено неверно.') }
     await createAllianceProposal(auth.accessToken, selectedAlliance.value.slug, {
       proposal_type: proposalForm.proposal_type,
       title: proposalForm.title,
       description: proposalForm.description || null,
       payload_json: payloadJson,
     })
-
     toastSuccess('Предложение создано.')
     await loadSelectedAlliance(selectedAlliance.value.slug)
   } catch (err) {
@@ -282,9 +255,7 @@ async function castVote({ id, vote }) {
   try {
     await voteAllianceProposal(auth.accessToken, id, { vote })
     toastSuccess('Голос учтён.')
-    if (selectedAlliance.value?.slug) {
-      await loadSelectedAlliance(selectedAlliance.value.slug)
-    }
+    if (selectedAlliance.value?.slug) await loadSelectedAlliance(selectedAlliance.value.slug)
   } catch (err) {
     toastError(err?.message || 'Не удалось сохранить голос.')
   } finally {
@@ -312,144 +283,130 @@ async function sendTransfer() {
 }
 
 watch(selectedSlug, (value, oldValue) => {
-  if (value && value !== oldValue) {
-    loadSelectedAlliance(value)
-  }
+  if (value && value !== oldValue) loadSelectedAlliance(value)
 })
 
 onMounted(loadPage)
 </script>
 
 <template>
-  <section class="py-5 md:py-6">
-    <div class="container-shell max-w-[1380px] space-y-4">
-      <section class="surface-card p-4 md:p-5">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div class="section-kicker !mb-2">Альянсы</div>
-            <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
-              Союзы государств
-            </h1>
-            <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-[14px]">
-              Для обычного игрока это обзор союзов и их состава. Для лидеров и офицеров — ещё и рабочая панель управления.
-            </p>
-          </div>
+  <section class="ah py-3 md:py-4">
+    <div class="container-shell max-w-[1380px] space-y-3">
 
-          <div class="grid gap-2.5 sm:grid-cols-2">
-            <RouterLink to="/nations" class="btn btn-outline">К государствам</RouterLink>
-            <RouterLink v-if="hasNation" :to="canManageNation ? '/nation/studio' : `/nation/${myNation.slug}`" class="btn btn-primary">
-              {{ canManageNation ? 'Открыть своё государство' : 'Открыть страницу государства' }}
-            </RouterLink>
-            <RouterLink v-else to="/nation/studio" class="btn btn-primary">Создать государство</RouterLink>
-          </div>
+      <!-- header -->
+      <header class="ah-header">
+        <div>
+          <p class="ah-eyebrow">Политика · VoidRP</p>
+          <h1 class="ah-h1">Союзы государств</h1>
         </div>
-      </section>
+        <div class="ah-header__actions">
+          <RouterLink to="/nations" class="ah-link-btn">Государства</RouterLink>
+          <RouterLink
+            v-if="hasNation"
+            :to="canManageNation ? '/nation/studio' : `/nation/${myNation.slug}`"
+            class="ah-link-btn"
+          >
+            {{ canManageNation ? 'Управлять' : 'Моё государство' }}
+          </RouterLink>
+          <RouterLink v-else to="/nation/studio" class="ah-link-btn ah-link-btn--accent">Создать государство</RouterLink>
+        </div>
+      </header>
 
       <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-      <div class="alliance-tabs">
-        <button class="alliance-tab" :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">Обзор</button>
-        <button class="alliance-tab" :class="{ active: activeTab === 'proposals' }" @click="activeTab = 'proposals'">Предложения</button>
-        <button class="alliance-tab" :class="{ active: activeTab === 'manage' }" @click="activeTab = 'manage'">Управление</button>
+      <!-- tabs -->
+      <div class="ah-tabs">
+        <button class="ah-tab" :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">Обзор</button>
+        <button class="ah-tab" :class="{ active: activeTab === 'proposals' }" @click="activeTab = 'proposals'">
+          Предложения
+          <span v-if="proposals.length" class="ah-tab__badge">{{ proposals.length }}</span>
+        </button>
+        <button class="ah-tab" :class="{ active: activeTab === 'manage' }" @click="activeTab = 'manage'">Управление</button>
       </div>
 
-      <div v-if="loading" class="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-        <div class="skeleton h-[520px] rounded-[24px]"></div>
-        <div class="skeleton h-[520px] rounded-[24px]"></div>
+      <!-- loading -->
+      <div v-if="loading" class="ah-grid">
+        <div class="skeleton" style="height:400px;border-radius:18px"></div>
+        <div class="skeleton" style="height:400px;border-radius:18px"></div>
       </div>
 
       <template v-else>
-        <!-- Обзор tab -->
-        <div v-show="activeTab === 'overview'" class="grid gap-4 xl:grid-cols-[340px_minmax(0,1fr)]">
-          <aside class="space-y-4">
-            <section class="surface-card p-4 md:p-5">
-              <div class="section-kicker !mb-2">Каталог</div>
-              <h2 class="text-xl font-black text-slate-50">Доступные союзы</h2>
 
-              <div class="mt-4 space-y-3">
+        <!-- ─── OVERVIEW ─── -->
+        <div v-show="activeTab === 'overview'" class="ah-grid">
+
+          <!-- sidebar: alliance list -->
+          <aside class="ah-sidebar">
+            <div class="surface-card ah-card">
+              <h2 class="ah-card__title">Альянсы</h2>
+
+              <div v-if="!selectableAlliances.length" class="ah-empty">Пока нет альянсов</div>
+
+              <div v-else class="ah-alliance-list">
                 <button
                   v-for="item in selectableAlliances"
                   :key="item.id"
                   type="button"
-                  class="action-card w-full text-left transition"
-                  :class="selectedSlug === item.slug ? 'ring-1 ring-violet-400/40' : ''"
+                  class="ah-alliance-item"
+                  :class="{
+                    active: selectedSlug === item.slug,
+                    mine: myAllianceSlug === item.slug
+                  }"
                   @click="selectedSlug = item.slug"
                 >
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <p class="truncate font-semibold text-slate-100">{{ item.title }}</p>
-                      <p class="mt-1 text-sm text-slate-400">[{{ item.tag }}] · {{ allianceTypeLabel(item.alliance_type) }}</p>
-                    </div>
-                    <span class="footer-chip">{{ item.members_count ?? item.members?.length ?? 0 }}</span>
+                  <div class="ah-alliance-item__info">
+                    <strong>{{ item.title }}</strong>
+                    <small>[{{ item.tag }}] · {{ allianceTypeLabel(item.alliance_type) }}</small>
                   </div>
+                  <span class="ah-alliance-item__count">{{ item.members_count ?? item.members?.length ?? 0 }}</span>
                 </button>
+              </div>
 
-                <div v-if="!selectableAlliances.length" class="action-card text-sm text-slate-400">
-                  Пока нет ни одного альянса.
+              <!-- my status -->
+              <div v-if="hasNation" class="ah-status-block">
+                <p class="ah-status-label">Твоё государство</p>
+                <p class="ah-status-value">{{ myNation.title }}</p>
+                <p v-if="myNation.alliance_summary" class="ah-status-meta">
+                  В альянсе: {{ myNation.alliance_summary.title }} [{{ myNation.alliance_summary.tag }}]
+                </p>
+                <p v-else class="ah-status-meta">Не состоит в альянсе</p>
+
+                <div v-if="selectedAlliance" class="ah-status-actions">
+                  <button v-if="canJoinSelected" type="button" class="btn btn-primary btn-sm w-full" :disabled="actionLoading" @click="joinSelectedAlliance">
+                    Вступить в альянс
+                  </button>
+                  <button v-if="canLeaveSelected" type="button" class="btn btn-outline btn-sm w-full" :disabled="actionLoading" @click="leaveSelectedAlliance">
+                    Покинуть альянс
+                  </button>
                 </div>
               </div>
-            </section>
+              <div v-else class="ah-empty">Создай государство, чтобы вступить в альянс.</div>
+            </div>
 
-            <section class="surface-card p-4 md:p-5">
-              <div class="section-kicker !mb-2">Твоё положение</div>
-              <h2 class="text-xl font-black text-slate-50">Статус</h2>
-
-              <div v-if="currentMembershipCard" class="mt-4 action-card">
-                <p class="font-semibold text-slate-100">{{ currentMembershipCard.title }}</p>
-                <p class="mt-2 text-sm text-slate-400">{{ currentMembershipCard.role }}</p>
-                <p v-if="currentMembershipCard.allianceTitle" class="mt-3 text-sm leading-6 text-slate-300">
-                  Сейчас государство состоит в альянсе «{{ currentMembershipCard.allianceTitle }}» [{{ currentMembershipCard.allianceTag }}].
-                </p>
-              </div>
-
-              <div v-else class="mt-4 action-card text-sm text-slate-400">
-                У тебя пока нет государства, поэтому ты можешь только смотреть союзы как игрок.
-              </div>
-
-              <div v-if="selectedAlliance" class="mt-4 grid gap-2.5">
-                <button
-                  v-if="canJoinSelected"
-                  type="button"
-                  class="btn btn-primary"
-                  :disabled="actionLoading"
-                  @click="joinSelectedAlliance"
-                >
-                  Вступить в альянс
-                </button>
-                <button
-                  v-if="canLeaveSelected"
-                  type="button"
-                  class="btn btn-outline"
-                  :disabled="actionLoading"
-                  @click="leaveSelectedAlliance"
-                >
-                  Покинуть альянс
-                </button>
-              </div>
-            </section>
-
-            <section v-if="isAuthenticated && hasNation && !selectedAlliance && canManageNation" class="surface-card p-4 md:p-5">
-              <div class="section-kicker !mb-2">Новый союз</div>
-              <h2 class="text-xl font-black text-slate-50">Создать альянс</h2>
-
-              <div class="mt-4 grid gap-3">
+            <!-- create alliance form (for nation leaders without alliance) -->
+            <div v-if="isAuthenticated && hasNation && !myAllianceSlug && canManageNation" class="surface-card ah-card">
+              <h2 class="ah-card__title">Создать альянс</h2>
+              <div class="ah-form">
                 <input v-model="createForm.title" class="input" placeholder="Название" />
-                <input v-model="createForm.tag" class="input" placeholder="Тег" />
-                <input v-model="createForm.slug" class="input" placeholder="Slug" />
+                <div class="ah-form__row">
+                  <input v-model="createForm.tag" class="input" placeholder="Тег" />
+                  <input v-model="createForm.slug" class="input" placeholder="Slug" />
+                </div>
                 <select v-model="createForm.alliance_type" class="select">
                   <option value="un">Политический союз</option>
                   <option value="nato">Военный союз</option>
                   <option value="economic">Экономический союз</option>
                 </select>
-                <textarea v-model="createForm.description" class="textarea" rows="4" placeholder="Короткое описание"></textarea>
-                <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="createAllianceAction">
-                  Создать альянс
+                <textarea v-model="createForm.description" class="textarea" rows="3" placeholder="Описание"></textarea>
+                <button type="button" class="btn btn-primary w-full" :disabled="actionLoading" @click="createAllianceAction">
+                  Создать
                 </button>
               </div>
-            </section>
+            </div>
           </aside>
 
-          <div class="space-y-4">
+          <!-- main: alliance detail -->
+          <div>
             <AllianceRelationsPanel
               :alliance="selectedAlliance"
               :loading="detailLoading"
@@ -458,8 +415,8 @@ onMounted(loadPage)
           </div>
         </div>
 
-        <!-- Предложения tab -->
-        <div v-show="activeTab === 'proposals'" class="space-y-4">
+        <!-- ─── PROPOSALS ─── -->
+        <div v-show="activeTab === 'proposals'" class="ah-proposals-layout">
           <AllianceProposalFeed
             :items="proposals"
             :loading="proposalsLoading || detailLoading"
@@ -468,145 +425,396 @@ onMounted(loadPage)
             @vote="castVote"
           />
 
-          <section v-if="canCreateProposals" class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-2">Решения</div>
-            <h2 class="text-xl font-black text-slate-50">Новое предложение</h2>
-
-            <div class="mt-4 grid gap-3">
+          <div v-if="canCreateProposals" class="surface-card ah-card">
+            <h2 class="ah-card__title">Новое предложение</h2>
+            <div class="ah-form">
               <select v-model="proposalForm.proposal_type" class="select">
                 <option value="set_policy">Изменение правил</option>
                 <option value="transfer">Перевод средств</option>
                 <option value="accept_member">Принятие участника</option>
                 <option value="remove_member">Исключение участника</option>
               </select>
-              <input v-model="proposalForm.title" class="input" placeholder="Заголовок предложения" />
-              <textarea v-model="proposalForm.description" class="textarea" rows="3" placeholder="Короткое объяснение"></textarea>
-              <textarea v-model="proposalForm.payload_json" class="textarea font-mono text-xs" rows="6" placeholder='{"field":"allow_trade_bonus","value":true}'></textarea>
-              <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="createProposalAction">
+              <input v-model="proposalForm.title" class="input" placeholder="Заголовок" />
+              <textarea v-model="proposalForm.description" class="textarea" rows="2" placeholder="Описание (необязательно)"></textarea>
+              <textarea v-model="proposalForm.payload_json" class="textarea font-mono text-xs" rows="5" placeholder='{"field":"allow_trade_bonus","value":true}'></textarea>
+              <button type="button" class="btn btn-primary w-full" :disabled="actionLoading" @click="createProposalAction">
                 Создать предложение
               </button>
             </div>
-          </section>
+          </div>
         </div>
 
-        <!-- Управление tab -->
-        <div v-show="activeTab === 'manage'" class="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_360px]">
-          <div class="space-y-4">
-            <section class="surface-card p-4 md:p-5">
-              <div class="section-kicker !mb-2">Финансы</div>
-              <h2 class="text-xl font-black text-slate-50">Последние операции</h2>
-
-              <div v-if="detailLoading" class="mt-4 space-y-3">
-                <div class="skeleton h-16 rounded-[20px]"></div>
-                <div class="skeleton h-16 rounded-[20px]"></div>
-              </div>
-
-              <div v-else-if="!allianceTransactions.length" class="mt-4 action-card text-sm text-slate-400">
-                Операций пока нет.
-              </div>
-
-              <div v-else class="mt-4 space-y-3">
-                <article v-for="item in allianceTransactions.slice(0, 8)" :key="item.id" class="action-card">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
-                      <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария' }}</p>
-                    </div>
-                    <div class="shrink-0 text-right">
-                      <p class="font-semibold text-slate-100">{{ formatNumber(item.net_amount ?? item.amount ?? 0) }}</p>
-                    </div>
-                  </div>
-                </article>
-              </div>
-            </section>
+        <!-- ─── MANAGE ─── -->
+        <div v-show="activeTab === 'manage'" class="ah-manage-layout">
+          <!-- transactions -->
+          <div class="surface-card ah-card">
+            <h2 class="ah-card__title">Операции казны</h2>
+            <div v-if="detailLoading" class="ah-skeletons">
+              <div v-for="i in 4" :key="i" class="skeleton" style="height:32px;border-radius:8px"></div>
+            </div>
+            <div v-else-if="!allianceTransactions.length" class="ah-empty">Операций пока нет</div>
+            <ul v-else class="ah-tx-list">
+              <li v-for="item in allianceTransactions.slice(0, 10)" :key="item.id">
+                <div class="ah-tx-left">
+                  <span>{{ txLabel(item) }}</span>
+                  <small>{{ item.comment || '' }}</small>
+                </div>
+                <strong>{{ money(item.net_amount ?? item.amount ?? 0) }}</strong>
+              </li>
+            </ul>
           </div>
 
-          <aside class="space-y-4">
-            <section v-if="canManagePolicies" class="surface-card p-4 md:p-5">
-              <div class="section-kicker !mb-2">Правила союза</div>
-              <h2 class="text-xl font-black text-slate-50">Изменить параметры</h2>
-
-              <div class="mt-4 grid gap-3">
-                <label class="label cursor-pointer justify-start gap-3">
-                  <input v-model="policyForm.allow_internal_transfers" type="checkbox" class="checkbox checkbox-sm" />
-                  <span>Разрешить внутренние переводы</span>
+          <!-- sidebar: policies + transfer -->
+          <aside class="ah-manage-sidebar">
+            <div v-if="canManagePolicies" class="surface-card ah-card">
+              <h2 class="ah-card__title">Правила союза</h2>
+              <div class="ah-form">
+                <label class="ah-toggle-row">
+                  <input v-model="policyForm.allow_internal_transfers" type="checkbox" />
+                  <span>Внутренние переводы</span>
                 </label>
-                <label class="label cursor-pointer justify-start gap-3">
-                  <input v-model="policyForm.allow_joint_defense" type="checkbox" class="checkbox checkbox-sm" />
-                  <span>Включить совместную оборону</span>
+                <label class="ah-toggle-row">
+                  <input v-model="policyForm.allow_joint_defense" type="checkbox" />
+                  <span>Совместная оборона</span>
                 </label>
-                <label class="label cursor-pointer justify-start gap-3">
-                  <input v-model="policyForm.allow_trade_bonus" type="checkbox" class="checkbox checkbox-sm" />
-                  <span>Включить торговый бонус</span>
+                <label class="ah-toggle-row">
+                  <input v-model="policyForm.allow_trade_bonus" type="checkbox" />
+                  <span>Торговый бонус</span>
                 </label>
-                <label class="label cursor-pointer justify-start gap-3">
-                  <input v-model="policyForm.allow_pvp_protection" type="checkbox" class="checkbox checkbox-sm" />
-                  <span>Включить PvP-защиту</span>
+                <label class="ah-toggle-row">
+                  <input v-model="policyForm.allow_pvp_protection" type="checkbox" />
+                  <span>PvP-защита</span>
                 </label>
-                <input v-model="policyForm.transfer_fee_percent" type="number" min="0" step="0.1" class="input" placeholder="Комиссия %" />
-                <button type="button" class="btn btn-primary" :disabled="actionLoading" @click="savePolicies">
-                  Сохранить правила
+                <div class="ah-form__field">
+                  <label class="ah-field-label">Комиссия %</label>
+                  <input v-model="policyForm.transfer_fee_percent" type="number" min="0" step="0.1" class="input" />
+                </div>
+                <button type="button" class="btn btn-primary w-full" :disabled="actionLoading" @click="savePolicies">
+                  Сохранить
                 </button>
               </div>
-            </section>
+            </div>
 
-            <section v-if="canTransfer" class="surface-card p-4 md:p-5">
-              <div class="section-kicker !mb-2">Перевод</div>
-              <h2 class="text-xl font-black text-slate-50">Отправить средства союзнику</h2>
-
-              <div class="mt-4 grid gap-3">
+            <div v-if="canTransfer" class="surface-card ah-card">
+              <h2 class="ah-card__title">Перевод союзнику</h2>
+              <div class="ah-form">
                 <select v-model="transferForm.to_nation_slug" class="select">
-                  <option disabled value="">Выбери государство</option>
+                  <option disabled value="">Выбрать государство</option>
                   <option v-for="nation in memberTargets" :key="nation.id" :value="nation.slug">
                     {{ nation.title }} [{{ nation.tag }}]
                   </option>
                 </select>
                 <input v-model="transferForm.amount" type="number" min="1" step="1" class="input" placeholder="Сумма" />
-                <textarea v-model="transferForm.comment" class="textarea" rows="3" placeholder="Комментарий"></textarea>
-                <button type="button" class="btn btn-primary" :disabled="actionLoading || !transferForm.to_nation_slug" @click="sendTransfer">
-                  Отправить перевод
+                <textarea v-model="transferForm.comment" class="textarea" rows="2" placeholder="Комментарий"></textarea>
+                <button type="button" class="btn btn-primary w-full" :disabled="actionLoading || !transferForm.to_nation_slug" @click="sendTransfer">
+                  Отправить
                 </button>
               </div>
-            </section>
+            </div>
 
-            <section v-if="!canManageAlliance && selectedAlliance" class="surface-card p-4 md:p-5">
-              <div class="section-kicker !mb-2">Режим просмотра</div>
-              <h2 class="text-xl font-black text-slate-50">Что доступно тебе</h2>
-              <div class="mt-4 action-card text-sm text-slate-400">
-                Обычные игроки и гости видят обзор союза, состав и последние решения. Управляющие действия появляются только у лидеров и офицеров нужного государства.
-              </div>
-            </section>
+            <div v-if="!canManageAlliance && selectedAlliance" class="surface-card ah-card ah-readonly">
+              <p>Управляющие действия доступны лидерам и офицерам государства-участника.</p>
+            </div>
           </aside>
         </div>
+
       </template>
     </div>
   </section>
 </template>
 
 <style scoped>
-.alliance-tabs {
+/* ─── Header ─── */
+.ah-header {
   display: flex;
-  gap: 0.5rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
   flex-wrap: wrap;
 }
-.alliance-tab {
-  border: 1px solid rgba(148, 163, 184, 0.12);
+
+.ah-eyebrow {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .15rem;
+}
+
+.ah-h1 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #f8fbff;
+  margin: 0;
+  letter-spacing: -.03em;
+}
+
+.ah-header__actions {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+
+.ah-link-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  padding: 0 .85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(6,10,19,.7);
+  color: rgb(148 163 184);
+  font-size: .875rem;
+  font-weight: 700;
+  transition: border-color .15s, color .15s;
+}
+
+.ah-link-btn:hover { border-color: rgba(148,163,184,.28); color: #fff; }
+.ah-link-btn--accent { background: linear-gradient(135deg,#8b5cf6,#6366f1); color: #fff; border-color: transparent; }
+.ah-link-btn--accent:hover { filter: brightness(1.06); color: #fff; }
+
+/* ─── Tabs ─── */
+.ah-tabs {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+
+.ah-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  border: 1px solid rgba(148,163,184,.12);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgb(185 200 228);
-  padding: 0.6rem 1.1rem;
-  font-size: 0.88rem;
-  font-weight: 800;
+  background: rgba(255,255,255,.04);
+  color: rgb(148 163 184);
+  padding: .42rem .9rem;
+  font: inherit;
+  font-size: .83rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background .15s, color .15s, border-color .15s;
 }
-.alliance-tab:hover {
-  background: rgba(255, 255, 255, 0.07);
+
+.ah-tab:hover { background: rgba(255,255,255,.07); color: #fff; }
+
+.ah-tab.active {
+  border-color: rgba(139,92,246,.3);
+  background: rgba(139,92,246,.12);
   color: #fff;
 }
-.alliance-tab.active {
-  border-color: rgba(139, 92, 246, 0.35);
-  background: rgba(139, 92, 246, 0.14);
-  color: #fff;
+
+.ah-tab__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(139,92,246,.3);
+  color: rgb(196 181 253);
+  font-size: .65rem;
+  font-weight: 900;
+  padding: 0 .3rem;
+}
+
+/* ─── Layouts ─── */
+.ah-grid {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (min-width: 1000px) {
+  .ah-grid { grid-template-columns: 280px minmax(0, 1fr); }
+}
+
+.ah-proposals-layout {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (min-width: 900px) {
+  .ah-proposals-layout { grid-template-columns: minmax(0, 1fr) 320px; }
+}
+
+.ah-manage-layout {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (min-width: 900px) {
+  .ah-manage-layout { grid-template-columns: minmax(0, 1fr) 280px; }
+}
+
+.ah-sidebar { display: flex; flex-direction: column; gap: .75rem; }
+.ah-manage-sidebar { display: flex; flex-direction: column; gap: .75rem; }
+
+/* ─── Cards ─── */
+.ah-card { padding: 1rem; }
+.ah-card__title {
+  font-size: .92rem;
+  font-weight: 800;
+  color: rgb(203 213 225);
+  margin: 0 0 .75rem;
+}
+
+/* ─── Alliance list ─── */
+.ah-alliance-list { display: flex; flex-direction: column; gap: .35rem; margin-bottom: .75rem; }
+
+.ah-alliance-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+  padding: .55rem .7rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.ah-alliance-item:hover { background: rgba(255,255,255,.045); border-color: rgba(255,255,255,.1); }
+.ah-alliance-item.active { border-color: rgba(139,92,246,.3); background: rgba(139,92,246,.08); }
+.ah-alliance-item.mine { border-color: rgba(52,211,153,.2); }
+
+.ah-alliance-item__info { min-width: 0; }
+
+.ah-alliance-item__info strong {
+  display: block;
+  font-size: .85rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ah-alliance-item__info small {
+  display: block;
+  font-size: .72rem;
+  color: rgb(100 116 139);
+  margin-top: .05rem;
+}
+
+.ah-alliance-item__count {
+  font-size: .72rem;
+  font-weight: 700;
+  color: rgb(100 116 139);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  padding: .15rem .45rem;
+  flex-shrink: 0;
+}
+
+/* ─── Status block ─── */
+.ah-status-block {
+  border-top: 1px solid rgba(255,255,255,.07);
+  padding-top: .75rem;
+}
+
+.ah-status-label {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .25rem;
+}
+
+.ah-status-value {
+  font-size: .92rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+  margin: 0 0 .2rem;
+}
+
+.ah-status-meta {
+  font-size: .78rem;
+  color: rgb(100 116 139);
+  margin: 0 0 .6rem;
+}
+
+.ah-status-actions { display: flex; flex-direction: column; gap: .4rem; }
+
+/* ─── Forms ─── */
+.ah-form { display: flex; flex-direction: column; gap: .5rem; }
+
+.ah-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+}
+
+.ah-form__field { display: flex; flex-direction: column; gap: .35rem; }
+
+.ah-field-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: rgb(148 163 184);
+}
+
+.ah-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .45rem .6rem;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  cursor: pointer;
+  font-size: .83rem;
+  color: rgb(203 213 225);
+}
+
+.ah-toggle-row input { accent-color: #8b5cf6; }
+
+/* ─── Transactions ─── */
+.ah-tx-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ah-tx-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .45rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.ah-tx-list li:last-child { border-bottom: none; }
+
+.ah-tx-left { min-width: 0; }
+.ah-tx-left span { display: block; font-size: .83rem; font-weight: 600; color: rgb(203 213 225); }
+.ah-tx-left small { display: block; font-size: .72rem; color: rgb(100 116 139); margin-top: .05rem; }
+
+.ah-tx-list li > strong {
+  font-size: .83rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─── Misc ─── */
+.ah-empty {
+  font-size: .83rem;
+  color: rgb(100 116 139);
+  padding: .25rem 0;
+}
+
+.ah-skeletons { display: grid; gap: .35rem; }
+
+.ah-readonly {
+  font-size: .83rem;
+  color: rgb(100 116 139);
 }
 </style>

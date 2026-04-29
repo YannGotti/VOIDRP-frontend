@@ -1,134 +1,604 @@
 <script setup>
-import { onMounted, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
 import { getNationRankings } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
 import { formatCompactHoursFromMinutes, formatNumber } from '../utils/formatters'
 
 const auth = useAuthStore()
+const router = useRouter()
 const loading = ref(true)
 const error = ref('')
 const rankings = ref([])
 
+const podium = computed(() => rankings.value.slice(0, 3))
+const rest = computed(() => rankings.value.slice(3))
+
 async function loadRankings() {
   loading.value = true
   error.value = ''
-
   try {
     const payload = await getNationRankings(auth.accessToken || null)
     rankings.value = payload?.items || []
   } catch (err) {
-    error.value = err.message || 'Не удалось загрузить рейтинг государств.'
+    error.value = err.message || 'Не удалось загрузить рейтинг.'
   } finally {
     loading.value = false
   }
+}
+
+function iconUrl(item) {
+  return item.icon_url || item.icon_preview_url || ''
+}
+
+function podiumMedal(index) {
+  return ['🥇', '🥈', '🥉'][index] || ''
+}
+
+function podiumClass(index) {
+  return ['podium-gold', 'podium-silver', 'podium-bronze'][index] || ''
+}
+
+function goToNation(slug) {
+  router.push(`/nation/${slug}`)
 }
 
 onMounted(loadRankings)
 </script>
 
 <template>
-  <section class="py-5 md:py-6">
-    <div class="container-shell max-w-[1380px] space-y-4">
-      <section class="surface-card p-4 md:p-5">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div class="section-kicker !mb-2">Рейтинг</div>
-            <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
-              Топ государств
-            </h1>
-            <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-[14px]">
-              Короткий рейтинг по силе государства: активность, экономика, территория и общий вклад участников.
-            </p>
-          </div>
+  <section class="nr py-3 md:py-4">
+    <div class="container-shell max-w-[1380px] space-y-3">
 
-          <div class="grid gap-2.5 sm:grid-cols-2">
-            <RouterLink to="/nations" class="btn btn-outline">Назад к каталогу</RouterLink>
-            <RouterLink to="/nation/studio" class="btn btn-primary">Создать или настроить своё</RouterLink>
-          </div>
+      <!-- header -->
+      <header class="nr-header">
+        <div>
+          <p class="nr-eyebrow">Государства · VoidRP</p>
+          <h1 class="nr-h1">Рейтинг государств</h1>
         </div>
-      </section>
+        <RouterLink to="/nations" class="nr-back-btn">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+          Каталог
+        </RouterLink>
+      </header>
 
       <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-      <div v-if="loading" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        <div class="skeleton h-52 rounded-[24px]"></div>
-        <div class="skeleton h-52 rounded-[24px]"></div>
-        <div class="skeleton h-52 rounded-[24px]"></div>
-        <div class="skeleton h-52 rounded-[24px]"></div>
-      </div>
-
-      <section v-else-if="!rankings.length" class="surface-card p-5 md:p-6">
-        <div class="max-w-2xl">
-          <div class="section-kicker">Пока пусто</div>
-          <h2 class="text-xl font-black tracking-tight text-slate-50">
-            Рейтинг ещё не собран
-          </h2>
-          <p class="mt-3 text-sm leading-6 text-slate-400">
-            Нужен первый sync статистики с игрового сервера.
-          </p>
+      <!-- loading -->
+      <template v-if="loading">
+        <div class="nr-podium-skeleton">
+          <div v-for="i in 3" :key="i" class="skeleton" style="height:160px;border-radius:16px"></div>
         </div>
-      </section>
+        <div class="surface-card" style="padding:1rem">
+          <div class="nr-skeletons">
+            <div v-for="i in 6" :key="i" class="skeleton" style="height:44px;border-radius:8px"></div>
+          </div>
+        </div>
+      </template>
 
-      <section v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        <article
-          v-for="(item, index) in rankings"
-          :key="item.nation_id || item.slug || item.title"
-          class="surface-card p-4 ranking-card-compact"
-        >
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex min-w-0 items-start gap-3">
-              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-black text-slate-50">
-                #{{ index + 1 }}
+      <template v-else-if="!rankings.length">
+        <div class="surface-card nr-empty">
+          <h2>Рейтинг ещё не сформирован</h2>
+          <p>Нужен первый синк статистики с игрового сервера.</p>
+        </div>
+      </template>
+
+      <template v-else>
+
+        <!-- ─── PODIUM ─── -->
+        <div class="nr-podium">
+          <RouterLink
+            v-for="(item, index) in podium"
+            :key="item.nation_id || item.slug"
+            :to="`/nation/${item.slug}`"
+            class="nr-podium-card"
+            :class="podiumClass(index)"
+          >
+            <div class="nr-podium-card__top">
+              <span class="nr-medal">{{ podiumMedal(index) }}</span>
+              <span class="nr-rank-num">#{{ index + 1 }}</span>
+            </div>
+            <div class="nr-podium-card__identity">
+              <div class="nr-podium-icon">
+                <img v-if="iconUrl(item)" :src="iconUrl(item)" :alt="item.tag" />
+                <span v-else>{{ item.tag?.slice(0,2).toUpperCase() }}</span>
               </div>
-
-              <div class="preview-avatar h-12 w-12 shrink-0 border border-white/10 text-sm">
-                <img v-if="item.icon_url" :src="item.icon_url" alt="icon" class="h-full w-full object-cover" />
-                <span v-else>{{ item.tag?.slice(0, 2).toUpperCase() }}</span>
-              </div>
-
-              <div class="min-w-0">
-                <h2 class="truncate text-lg font-black tracking-tight text-slate-50">
-                  {{ item.title }}
-                </h2>
-                <p class="mt-1 text-sm leading-5 text-slate-400">
-                  [{{ item.tag }}] · {{ formatNumber(item.members_count ?? 0) }} уч.
-                </p>
+              <div class="nr-podium-card__name-block">
+                <strong>{{ item.title }}</strong>
+                <small>[{{ item.tag }}]</small>
               </div>
             </div>
+            <div class="nr-podium-card__stats">
+              <div>
+                <span>Score</span>
+                <strong>{{ formatNumber(item.score ?? 0) }}</strong>
+              </div>
+              <div>
+                <span>Участников</span>
+                <strong>{{ formatNumber(item.members_count ?? 0) }}</strong>
+              </div>
+              <div>
+                <span>Баланс</span>
+                <strong>{{ formatNumber(item.treasury_balance ?? 0) }}</strong>
+              </div>
+            </div>
+          </RouterLink>
+        </div>
+
+        <!-- ─── RANKING TABLE ─── -->
+        <div class="surface-card nr-table-card">
+          <div class="nr-table-header">
+            <h2 class="nr-section-title">Полная таблица</h2>
+            <span class="nr-count">{{ rankings.length }} государств</span>
           </div>
 
-          <div class="metric-grid metric-grid-2 mt-4">
-            <div class="metric-card text-center">
-              <p class="metric-value !text-[1.05rem]">{{ formatNumber(item.score ?? 0) }}</p>
-              <p class="mt-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Score</p>
-            </div>
-
-            <div class="metric-card text-center">
-              <p class="metric-value !text-[1.05rem]">{{ formatNumber(item.treasury_balance ?? 0) }}</p>
-              <p class="mt-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Баланс</p>
-            </div>
-
-            <div class="metric-card text-center">
-              <p class="metric-value !text-[1.05rem]">{{ formatNumber(item.territory_points ?? 0) }}</p>
-              <p class="mt-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Территория</p>
-            </div>
-
-            <div class="metric-card text-center">
-              <p class="metric-value !text-[1.05rem]">{{ formatCompactHoursFromMinutes(item.total_playtime_minutes ?? 0) }}</p>
-              <p class="mt-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Онлайн</p>
-            </div>
+          <!-- desktop table -->
+          <div class="nr-table-wrap nr-desktop">
+            <table class="nr-table">
+              <thead>
+                <tr>
+                  <th class="nr-th-rank">#</th>
+                  <th>Государство</th>
+                  <th class="num">Участников</th>
+                  <th class="num">Баланс</th>
+                  <th class="num">Территория</th>
+                  <th class="num">Онлайн</th>
+                  <th class="num">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(item, index) in rankings"
+                  :key="item.nation_id || item.slug"
+                  class="nr-row"
+                  :class="index < 3 ? `nr-row--${['gold','silver','bronze'][index]}` : ''"
+                  @click="goToNation(item.slug)"
+                >
+                  <td class="nr-td-rank">
+                    <span class="nr-pos" :class="index < 3 ? `nr-pos--${['gold','silver','bronze'][index]}` : ''">{{ index + 1 }}</span>
+                  </td>
+                  <td class="nr-td-nation">
+                    <div class="nr-nation-cell">
+                      <div class="nr-table-icon">
+                        <img v-if="iconUrl(item)" :src="iconUrl(item)" :alt="item.tag" />
+                        <span v-else>{{ item.tag?.slice(0,2).toUpperCase() }}</span>
+                      </div>
+                      <div>
+                        <span class="nr-nation-name">{{ item.title }}</span>
+                        <span class="nr-nation-tag">[{{ item.tag }}]</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="num">{{ formatNumber(item.members_count ?? 0) }}</td>
+                  <td class="num">{{ formatNumber(item.treasury_balance ?? 0) }}</td>
+                  <td class="num">{{ formatNumber(item.territory_points ?? 0) }}</td>
+                  <td class="num">{{ formatCompactHoursFromMinutes(item.total_playtime_minutes ?? 0) }}</td>
+                  <td class="num nr-score">{{ formatNumber(item.score ?? 0) }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <RouterLink :to="`/nation/${item.slug}`" class="btn btn-primary mt-4 w-full">Открыть страницу</RouterLink>
-        </article>
-      </section>
+          <!-- mobile list -->
+          <div class="nr-mobile">
+            <div
+              v-for="(item, index) in rankings"
+              :key="item.nation_id || item.slug"
+              class="nr-mitem"
+              :class="index < 3 ? `nr-mitem--${['gold','silver','bronze'][index]}` : ''"
+              @click="goToNation(item.slug)"
+            >
+              <span class="nr-mpos" :class="index < 3 ? `nr-pos--${['gold','silver','bronze'][index]}` : ''">{{ index + 1 }}</span>
+              <div class="nr-table-icon">
+                <img v-if="iconUrl(item)" :src="iconUrl(item)" :alt="item.tag" />
+                <span v-else>{{ item.tag?.slice(0,2).toUpperCase() }}</span>
+              </div>
+              <div class="nr-mitem__info">
+                <strong>{{ item.title }}</strong>
+                <small>[{{ item.tag }}] · {{ formatNumber(item.members_count ?? 0) }} уч. · {{ formatNumber(item.score ?? 0) }} pts</small>
+              </div>
+              <svg class="nr-mitem__arrow" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </div>
+          </div>
+        </div>
+
+      </template>
     </div>
   </section>
 </template>
 
 <style scoped>
-.ranking-card-compact {
-  min-height: 100%;
+/* ─── Header ─── */
+.nr-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nr-eyebrow {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .15rem;
+}
+
+.nr-h1 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #f8fbff;
+  margin: 0;
+  letter-spacing: -.03em;
+}
+
+.nr-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-height: 2.35rem;
+  padding: 0 .9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(6,10,19,.7);
+  color: rgb(148 163 184);
+  font-size: .875rem;
+  font-weight: 700;
+  transition: border-color .15s, color .15s;
+}
+
+.nr-back-btn:hover { border-color: rgba(148,163,184,.28); color: #fff; }
+
+.nr-back-btn svg { width: .9rem; height: .9rem; }
+
+/* ─── Empty / Loading ─── */
+.nr-podium-skeleton {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .65rem;
+}
+
+.nr-skeletons { display: grid; gap: .35rem; }
+
+.nr-empty {
+  padding: 2rem;
+  text-align: center;
+}
+
+.nr-empty h2 { font-size: 1.1rem; font-weight: 800; color: rgb(203 213 225); margin: 0 0 .5rem; }
+.nr-empty p  { font-size: .88rem; color: rgb(100 116 139); margin: 0; }
+
+/* ─── Podium ─── */
+.nr-podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .65rem;
+}
+
+.nr-podium-card {
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  background: rgba(13,19,36,.85);
+  padding: 1rem;
+  transition: border-color .15s, transform .15s;
+  cursor: pointer;
+}
+
+.nr-podium-card:hover { transform: translateY(-2px); }
+
+.podium-gold   { border-color: rgba(234,179,8,.24); background: rgba(234,179,8,.04); }
+.podium-silver { border-color: rgba(148,163,184,.2); background: rgba(148,163,184,.03); }
+.podium-bronze { border-color: rgba(180,83,9,.2); background: rgba(180,83,9,.04); }
+
+.nr-podium-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nr-medal { font-size: 1.4rem; line-height: 1; }
+
+.nr-rank-num {
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  color: rgb(100 116 139);
+}
+
+.nr-podium-card__identity {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  min-width: 0;
+}
+
+.nr-podium-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(10,15,30,.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .85rem;
+  font-weight: 900;
+  color: #f8fbff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.nr-podium-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+.nr-podium-card__name-block { min-width: 0; }
+
+.nr-podium-card__name-block strong {
+  display: block;
+  font-size: .97rem;
+  font-weight: 800;
+  color: #f0f4ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nr-podium-card__name-block small {
+  display: block;
+  font-size: .72rem;
+  color: rgb(100 116 139);
+  margin-top: .1rem;
+}
+
+.nr-podium-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .4rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+  padding-top: .75rem;
+}
+
+.nr-podium-card__stats div {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+}
+
+.nr-podium-card__stats span {
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.nr-podium-card__stats strong {
+  font-size: .88rem;
+  font-weight: 800;
+  color: rgb(226 232 240);
+}
+
+/* ─── Table Card ─── */
+.nr-table-card { padding: 1rem; }
+
+.nr-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .85rem;
+}
+
+.nr-section-title {
+  font-size: .92rem;
+  font-weight: 800;
+  color: rgb(203 213 225);
+  margin: 0;
+}
+
+.nr-count {
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: rgb(100 116 139);
+}
+
+/* ─── Desktop Table ─── */
+.nr-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+}
+
+.nr-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 660px;
+}
+
+.nr-table th {
+  background: rgba(255,255,255,.03);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  padding: .42rem .75rem;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  white-space: nowrap;
+  text-align: left;
+}
+
+.nr-table th.num,
+.nr-table td.num { text-align: right; }
+
+.nr-th-rank { width: 48px; text-align: center !important; }
+
+.nr-table td {
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  padding: .5rem .75rem;
+  font-size: .875rem;
+  color: rgb(203 213 225);
+}
+
+.nr-row {
+  cursor: pointer;
+  transition: background .1s;
+}
+
+.nr-row:last-child td { border-bottom: none; }
+.nr-row:hover td { background: rgba(255,255,255,.03); }
+
+.nr-row--gold td   { background: rgba(234,179,8,.03); }
+.nr-row--silver td { background: rgba(148,163,184,.02); }
+.nr-row--bronze td { background: rgba(180,83,9,.025); }
+
+.nr-row--gold:hover td   { background: rgba(234,179,8,.06); }
+.nr-row--silver:hover td { background: rgba(148,163,184,.04); }
+.nr-row--bronze:hover td { background: rgba(180,83,9,.05); }
+
+/* rank cell */
+.nr-td-rank { text-align: center; }
+
+.nr-pos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: .8rem;
+  font-weight: 900;
+  background: rgba(255,255,255,.05);
+  color: rgb(100 116 139);
+}
+
+.nr-pos--gold   { background: rgba(234,179,8,.15); color: rgb(234 179 8); }
+.nr-pos--silver { background: rgba(148,163,184,.12); color: rgb(203 213 225); }
+.nr-pos--bronze { background: rgba(180,83,9,.15); color: rgb(251 146 60); }
+
+/* nation cell */
+.nr-nation-cell {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.nr-table-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(10,15,30,.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  font-weight: 900;
+  color: #f8fbff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.nr-table-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+.nr-nation-name {
+  display: block;
+  font-weight: 700;
+  color: #f0f4ff;
+  font-size: .875rem;
+}
+
+.nr-nation-tag {
+  display: block;
+  font-size: .7rem;
+  color: rgb(100 116 139);
+  margin-top: .05rem;
+}
+
+.nr-score {
+  font-weight: 800;
+  color: rgb(196 181 253) !important;
+}
+
+/* ─── Mobile list ─── */
+.nr-desktop { display: none; }
+.nr-mobile  { display: flex; flex-direction: column; gap: 0; }
+
+@media (min-width: 640px) {
+  .nr-desktop { display: block; }
+  .nr-mobile  { display: none; }
+}
+
+.nr-mitem {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .55rem .25rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  cursor: pointer;
+  transition: background .1s;
+  border-radius: 8px;
+}
+
+.nr-mitem:last-child { border-bottom: none; }
+.nr-mitem:hover { background: rgba(255,255,255,.03); }
+
+.nr-mitem--gold   { background: rgba(234,179,8,.03); }
+.nr-mitem--silver { background: rgba(148,163,184,.02); }
+.nr-mitem--bronze { background: rgba(180,83,9,.025); }
+
+.nr-mpos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  font-size: .75rem;
+  font-weight: 900;
+  background: rgba(255,255,255,.05);
+  color: rgb(100 116 139);
+  flex-shrink: 0;
+}
+
+.nr-mitem__info { min-width: 0; flex: 1; }
+
+.nr-mitem__info strong {
+  display: block;
+  font-size: .88rem;
+  font-weight: 700;
+  color: #f0f4ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nr-mitem__info small {
+  display: block;
+  font-size: .72rem;
+  color: rgb(100 116 139);
+  margin-top: .05rem;
+}
+
+.nr-mitem__arrow {
+  width: .9rem;
+  height: .9rem;
+  color: rgb(71 85 105);
+  flex-shrink: 0;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .nr-podium { grid-template-columns: 1fr; }
+  .nr-podium-skeleton { grid-template-columns: 1fr; }
+  .nr-podium-card__stats { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .nr-podium { grid-template-columns: repeat(3, 1fr); }
 }
 </style>

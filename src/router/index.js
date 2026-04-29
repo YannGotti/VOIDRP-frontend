@@ -1,5 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { bootstrapAuth, getIsAuthenticated } from '../stores/authStore'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
+NProgress.configure({ showSpinner: false, speed: 350, minimum: 0.08 })
 
 import HomeView from '../views/HomeView.vue'
 import LinksView from '../views/LinksView.vue'
@@ -64,18 +68,25 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
+  NProgress.start()
   await bootstrapAuth()
   const isAuthenticated = getIsAuthenticated()
   if (to.meta?.requiresAuth && !isAuthenticated) {
+    NProgress.done()
     return { path: '/login', query: { redirect: to.fullPath } }
   }
   if (to.meta?.guestOnly && isAuthenticated) {
+    NProgress.done()
     return { path: '/profile' }
   }
   document.title = typeof to.meta?.title === 'string' && to.meta.title.length > 0
     ? `${to.meta.title} — VoidRP`
     : 'VoidRP'
   return true
+})
+
+router.afterEach(() => {
+  NProgress.done()
 })
 
 export default router

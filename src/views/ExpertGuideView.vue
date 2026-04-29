@@ -7,36 +7,21 @@ const CHECK_STORAGE_KEY = 'voidrp-expert-progression-guide-v1'
 const checked = ref({})
 
 const introCards = [
-  {
-    label: 'Главная идея',
-    title: 'Не спидранить один мод',
-    text: 'Сборка построена так, чтобы технологии, магия, измерения и боссы открывали друг друга постепенно.',
-    tone: 'green',
-  },
-  {
-    label: 'Правило крафтов',
-    title: 'Удалили — дали замену',
-    text: 'Ключевые рецепты усложняются точечно. База остаётся играбельной, но требует больше подготовки.',
-    tone: 'blue',
-  },
-  {
-    label: 'Финальная цель',
-    title: 'Пройти всю сборку',
-    text: 'Draconic Evolution и Avaritia требуют Create, магию, IE, Mekanism, AE2, боссов и автоматизацию.',
-    tone: 'gold',
-  },
+  { label: 'Главная идея', title: 'Не спидранить один мод', text: 'Сборка построена так, чтобы технологии, магия, измерения и боссы открывали друг друга постепенно.', icon: '🧩' },
+  { label: 'Правило крафтов', title: 'Удалили — дали замену', text: 'Ключевые рецепты усложняются точечно. База остаётся играбельной, но требует больше подготовки.', icon: '⚙️' },
+  { label: 'Финальная цель', title: 'Пройти всю сборку', text: 'Draconic Evolution и Avaritia требуют Create, магию, IE, Mekanism, AE2, боссов и автоматизацию.', icon: '🏆' },
 ]
 
 const routeSteps = [
   'Ваниль+ / выживание',
-  'Farmer’s Delight / еда и кожа',
+  'Farmer\'s Delight / еда',
   'Create / первая механика',
-  'Aether + Mahou Tsukai / ранняя магия',
+  'Aether + Mahou Tsukai / магия',
   'Immersive Engineering / сталь',
-  'Twilight + DeeperDarker / ключи средней игры',
-  'Mekanism / развитая промышленность',
+  'Twilight + DeeperDarker',
+  'Mekanism / промышленность',
   'AE2 / хранение и автокрафт',
-  'Industrial Foregoing / автоматизация',
+  'Industrial Foregoing',
   'Cataclysm / боссы',
   'Draconic Evolution',
   'Avaritia / финал',
@@ -46,18 +31,17 @@ const stages = [
   {
     id: 'survival',
     number: '01',
-    title: 'Базовое выживание и ремесленная основа',
-    tags: ['Ваниль+', 'Farmer’s Delight', 'удобство'],
-    goal:
-      'Стабилизировать еду, хранение, базовую добычу и подготовить материалы для первого технологического рывка.',
+    title: 'Базовое выживание',
+    tags: ['Ваниль+', 'Farmer\'s Delight', 'удобство'],
+    goal: 'Стабилизировать еду, хранение, базовую добычу и подготовить материалы для первого технологического рывка.',
     unlocks: [
-      'Книги, компас, карта, сундуки, печи и базовые полезные предметы',
-      'Рюкзак, компас природы, путевой камень / камень перемещения',
-      'Стартовый ресурсный запас под Create: железо, медь, редстоун, золото, цинк',
+      'Рюкзак, компас природы, путевой камень',
+      'Книги, карта, сундуки, базовые инструменты',
+      'Ресурсы под Create: железо, медь, редстоун, золото, цинк',
     ],
     checks: [
       'Есть безопасная база, еда и первичный склад',
-      'Сделан рюкзак или подготовлены материалы под него',
+      'Сделан рюкзак или подготовлены материалы',
       'Есть ресурсы под первые Create-механизмы',
     ],
   },
@@ -66,17 +50,16 @@ const stages = [
     number: '02',
     title: 'Create — первая технологическая эпоха',
     tags: ['Create', 'автоматизация', 'механизмы'],
-    goal:
-      'Построить первую механику: пресс, миксер, деплоер, crushing wheels и производственные линии.',
+    goal: 'Построить первую механику: пресс, миксер, деплоер, crushing wheels и производственные линии.',
     unlocks: [
       'Андезитовый сплав, Вал, Шестерня, Большая шестерня',
-      'Механический пресс, Механический миксер, Механический установщик, Механический резервуар',
-      'Грубый механизм, Ядро точного механизма, Андезитовая машинная рама',
+      'Механический пресс, Миксер, Установщик',
+      'Грубый механизм, Ядро точного механизма, Андезитовая рама',
     ],
     checks: [
       'Работает линия с Механический пресс',
-      'Есть Механический установщик и Механический миксер',
-      'Крафтятся Точный механизм / ядро точного механизма',
+      'Есть Механический установщик и Миксер',
+      'Крафтятся Точный механизм / ядро',
     ],
   },
   {
@@ -84,15 +67,14 @@ const stages = [
     number: '03',
     title: 'Ранняя магия и первые измерения',
     tags: ['Aether', 'Mahou Tsukai', 'магический мост'],
-    goal:
-      'Открыть магические компоненты, которые будут нужны для технологий. Магия здесь не опция, а ключ к средняя игра.',
+    goal: 'Открыть магические компоненты, которые нужны для технологий средней игры.',
     unlocks: [
       'Ресурсы Эфира для небесного ядра',
       'Компоненты Mahou Tsukai для магического механизма',
-      'Первые техно-магические связки для дальнейших машин',
+      'Первые техно-магические связки',
     ],
     checks: [
-      'Есть доступ к Aether и базовым ресурсам измерения',
+      'Есть доступ к Aether и базовым ресурсам',
       'Начат Mahou Tsukai',
       'Крафтятся Магический механизм и Небесное ядро',
     ],
@@ -102,34 +84,32 @@ const stages = [
     number: '04',
     title: 'Тяжёлая промышленность и сталь',
     tags: ['Immersive Engineering', 'сталь', 'TFMG'],
-    goal:
-      'Сделать сталь обязательным мостом между Create, магией и Mekanism. Этот этап открывает серьёзную индустрию.',
+    goal: 'Сделать сталь обязательным мостом между Create, магией и Mekanism.',
     unlocks: [
       'Обработанное дерево, Коксовый кирпич, Доменный кирпич',
       'Стальная машинная рама, Тяжёлое инженерное ядро',
-      'Металлический пресс, Промышленная дробилка, Сборщик, Конденсаторы',
+      'Металлический пресс, Промышленная дробилка, Конденсаторы',
     ],
     checks: [
       'Налажено производство стали',
       'Собраны Металлический пресс и Дробилка',
-      'Есть Тяжёлое инженерное ядро для дальнейших машин',
+      'Есть Тяжёлое инженерное ядро',
     ],
   },
   {
-    id: 'средняя игра',
+    id: 'midgame',
     number: '05',
     title: 'Twilight, DeeperDarker и старт Mekanism',
     tags: ['Twilight Forest', 'DeeperDarker', 'Mekanism'],
-    goal:
-      'Получить тёмные и лесные ключи прогрессии, затем открыть первые Mekanism-машины и схемы.',
+    goal: 'Получить тёмные и лесные ключи прогрессии, затем открыть первые Mekanism-машины.',
     unlocks: [
-      'Тёмное ядро, Сумеречная печать, Печать Катаклизма задел на будущее',
-      'Металлургический инфузер, Базовая управляющая схема, Камера обогащения',
+      'Тёмное ядро, Сумеречная печать',
+      'Металлургический инфузер, Базовая управляющая схема',
       'Дробилка, Энергетическая плавильня, Базовый энергетический куб',
     ],
     checks: [
       'Получены Twilight / DeeperDarker материалы',
-      'Крафтятся Тёмное ядро и промежуточные печати',
+      'Крафтятся Тёмное ядро и печати',
       'Работает стартовый Mekanism',
     ],
   },
@@ -138,35 +118,33 @@ const stages = [
     number: '06',
     title: 'AE2, хранение и автокрафт',
     tags: ['AE2', 'Хранение', 'автокрафт'],
-    goal:
-      'Перейти от временного склада к полноценной сети хранения, процессорам и автоматизации.',
+    goal: 'Перейти от временного склада к полноценной сети хранения и автоматизации.',
     unlocks: [
-      'Зарядник, Прессователь, Логический / вычислительный / инженерный процессоры',
+      'Зарядник, Прессователь, процессоры',
       'МЭ-накопитель, МЭ-контроллер, Ячейки хранения',
-      'Поставщик шаблонов, Молекулярный сборщик, Процессор автокрафта, Беспроводной доступ',
+      'Поставщик шаблонов, Молекулярный сборщик',
     ],
     checks: [
       'AE2-сеть включена и стабильно работает',
-      'Есть автокрафт через Поставщик шаблонов / Молекулярный сборщик',
-      'Основные цепочки ресурсов заведены в хранение',
+      'Есть автокрафт через Поставщик / Молекулярный сборщик',
+      'Основные ресурсы заведены в хранение',
     ],
   },
   {
     id: 'automation',
     number: '07',
-    title: 'Industrial Foregoing и большая автоматизация',
+    title: 'Industrial Foregoing и автоматизация',
     tags: ['Industrial Foregoing', 'ресурсы', 'автоматизация'],
-    goal:
-      'Автоматизировать фермы, мобов, ресурсы и подготовить базу к поздние потреблению.',
+    goal: 'Автоматизировать фермы, мобов, ресурсы и подготовить базу к позднему потреблению.',
     unlocks: [
-      'Жидкостный экстрактор, Установка переработки латекса, Камера растворения',
-      'Сеятель / сборщик растений, Дробилка мобов / дубликатор мобов',
-      'Лазерный бур, База рудного лазера и крупные ресурсные линии',
+      'Жидкостный экстрактор, Камера растворения',
+      'Сеятель / сборщик растений, Дробилка мобов',
+      'Лазерный бур и крупные ресурсные линии',
     ],
     checks: [
       'Есть пластиковая цепочка и Камера растворения',
       'Запущены фермы растений или мобов',
-      'Подготовлена ресурсная база под боссов и финал',
+      'Готова ресурсная база под боссов',
     ],
   },
   {
@@ -174,30 +152,28 @@ const stages = [
     number: '08',
     title: 'Боссы, Cataclysm и вход в финал',
     tags: ['Cataclysm', 'боссы', 'поздняя игра'],
-    goal:
-      'Собрать добыча с боссов, закрыть поздние печати и подготовить компоненты для Draconic Evolution.',
+    goal: 'Собрать добычу с боссов, закрыть поздние печати и подготовить компоненты для Draconic Evolution.',
     unlocks: [
       'Печать Катаклизма и компоненты с боссов',
       'Ядро измерительной сходимости и поздние ядра',
-      'Доступ к Draconic Evolution без перескока прогрессии',
+      'Доступ к Draconic Evolution без перескока',
     ],
     checks: [
-      'Есть нормальная броня, еда и расходники для боссов',
-      'Получен нужный добыча с боссов',
+      'Есть нормальная броня, еда и расходники',
+      'Получена нужная добыча с боссов',
       'Можно крафтить компоненты для Draconic Evolution',
     ],
   },
   {
-    id: 'финал',
+    id: 'endgame',
     number: '09',
     title: 'Draconic Evolution и Avaritia',
     tags: ['Draconic Evolution', 'Avaritia', 'финал'],
-    goal:
-      'Финальная цель сборки: сверхдорогие компоненты, огромная энергия, массовый автокрафт и завершение всех веток.',
+    goal: 'Финальная цель: сверхдорогие компоненты, огромная энергия, массовый автокрафт.',
     unlocks: [
-      'Ядро виверны, Пробуждённое ядро, Ядро драконьего крафта / инжекторы',
+      'Ядро виверны, Пробуждённое ядро, инжекторы',
       'Экстремальный верстак, Компрессор, Нейтронный коллектор',
-      'Катализатор бесконечности, Слиток бесконечности и финальные предметы',
+      'Катализатор бесконечности, Слиток бесконечности',
     ],
     checks: [
       'Есть Драконий крафт и стабильная энергия',
@@ -208,34 +184,22 @@ const stages = [
 ]
 
 const crossLinks = [
-  ['Farmer’s Delight', 'еда, кожа, ремесленная база', 'рюкзаки, комфортный старт и подготовка к Create'],
+  ['Farmer\'s Delight', 'еда, кожа, ремесленная база', 'рюкзаки, комфортный старт и подготовка к Create'],
   ['Create', 'механическая обработка и первые механизмы', 'рамки, схемы, IE и магические компоненты'],
   ['Aether + Mahou Tsukai', 'ранняя магия и sky/arcane-ядра', 'часть технологических рецептов'],
   ['Immersive Engineering', 'сталь, провода, тяжёлая промышленность', 'Mekanism и машины средней игры'],
-  ['Twilight + DeeperDarker', 'тёмные ядра, трофеи, progression печати', 'Mekanism, AE2 и финал-гейты'],
+  ['Twilight + DeeperDarker', 'тёмные ядра, трофеи, печати', 'Mekanism, AE2 и финал-гейты'],
   ['Mekanism', 'энергия, переработка, circuits', 'AE2, IF, Draconic-подготовка'],
   ['AE2', 'хранение, процессоры, автокрафт', 'массовую автоматизацию и Avaritia'],
   ['Cataclysm', 'добыча с боссов и поздние печати', 'Draconic Evolution'],
   ['Draconic Evolution', 'сверхпоздние ядра и энергия', 'Avaritia'],
 ]
 
-const milestones = [
-  {
-    title: 'Быстрый тест базы',
-    items: ['Книга', 'Компас', 'Рюкзак', 'Путевой камень', 'Компас природы'],
-  },
-  {
-    title: 'Create age',
-    items: ['Механический пресс', 'Механический установщик', 'Точный механизм', 'Андезитовая машинная рама'],
-  },
-  {
-    title: 'магический мост',
-    items: ['Магический механизм', 'Небесное ядро', 'Тёмное ядро', 'Сумеречная печать'],
-  },
-  {
-    title: 'Середина / поздняя игра',
-    items: ['Металлургический инфузер', 'МЭ-контроллер', 'Ядро виверны', 'Катализатор бесконечности'],
-  },
+const tips = [
+  { title: 'Не уходи в один мод', text: 'Держи несколько целей одновременно: еда, хранение, Create, магия, сталь и энергия.' },
+  { title: 'Сохраняй промежуточные компоненты', text: 'VoidRP-компоненты часто используются повторно — делай их партиями.' },
+  { title: 'Не откладывай магию', text: 'Aether, Mahou, Twilight и DeeperDarker нужны уже для средней игры.' },
+  { title: 'Автоматизируй рано', text: 'AE2 придёт позже, но первые Create-линии нужно строить как можно раньше.' },
 ]
 
 const totalChecks = computed(() => stages.reduce((sum, stage) => sum + stage.checks.length, 0))
@@ -245,143 +209,120 @@ const completionPercent = computed(() => {
   return Math.round((completedChecks.value / totalChecks.value) * 100)
 })
 
-function checkKey(stage, index) {
-  return `${stage.id}-${index}`
-}
-
-function resetProgress() {
-  checked.value = {}
-}
+function checkKey(stage, index) { return `${stage.id}-${index}` }
+function resetProgress() { checked.value = {} }
 
 onMounted(() => {
   try {
-    const raw = window.localХранение.getItem(CHECK_STORAGE_KEY)
+    const raw = window.localStorage.getItem(CHECK_STORAGE_KEY)
     checked.value = raw ? JSON.parse(raw) || {} : {}
   } catch {
     checked.value = {}
   }
 })
 
-watch(
-  checked,
-  (value) => {
-    try {
-      window.localХранение.setItem(CHECK_STORAGE_KEY, JSON.stringify(value))
-    } catch {
-      // localХранение может быть недоступен в приватном режиме — прогресс просто не сохранится.
-    }
-  },
-  { deep: true },
-)
+watch(checked, (value) => {
+  try { window.localStorage.setItem(CHECK_STORAGE_KEY, JSON.stringify(value)) }
+  catch { /* private mode — progress won't be saved */ }
+}, { deep: true })
 </script>
 
 <template>
-  <section class="guide-page py-4 md:py-5">
-    <div class="container-shell max-w-[1380px] space-y-4">
-      <section class="guide-hero gradient-panel overflow-hidden p-4 md:p-6 lg:p-7">
-        <div class="guide-hero__grid">
-          <div class="min-w-0">
-            <div class="section-kicker section-kicker--light !mb-2">Гайд по сборке</div>
-            <h1 class="text-2xl font-black leading-tight tracking-tight text-white md:text-4xl lg:text-5xl">
-              VoidRP Expert Progression Rebuild
-            </h1>
-            <p class="mt-3 max-w-4xl text-sm leading-7 text-white/78 md:text-[15px]">
-              Полное прохождение экспертной сборки {{ siteConfig.serverName }} для Minecraft {{ siteConfig.serverVersion }}:
-              от базового выживания и Create до магии, Mekanism, AE2, Draconic Evolution и Avaritia.
-            </p>
+  <section class="gp py-3 md:py-4">
+    <div class="container-shell max-w-[1380px] space-y-3">
 
-            <div class="mt-5 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-              <RouterLink to="/download-launcher" class="btn btn-light">Скачать лаунчер</RouterLink>
-              <RouterLink to="/links" class="btn btn-outline border-white/16 bg-black/10 text-white hover:border-white/30">
-                Полезные ссылки
-              </RouterLink>
-              <button type="button" class="btn btn-ghost border-white/10 bg-black/10 text-white" @click="resetProgress">
-                Сбросить прогресс гайда
-              </button>
-            </div>
+      <!-- ─── HEADER ─── -->
+      <header class="gp-header">
+        <div class="gp-header__left">
+          <p class="gp-eyebrow">Гайд · VoidRP Expert</p>
+          <h1 class="gp-h1">Progression Rebuild</h1>
+          <p class="gp-desc">
+            Полное прохождение экспертной сборки для Minecraft {{ siteConfig.serverVersion }}:
+            от базового выживания до Draconic Evolution и Avaritia.
+          </p>
+          <div class="gp-header__actions">
+            <RouterLink to="/download-launcher" class="btn btn-primary btn-sm">Скачать лаунчер</RouterLink>
+            <RouterLink to="/links" class="btn btn-outline btn-sm">Ссылки</RouterLink>
+            <button type="button" class="btn btn-ghost btn-sm" @click="resetProgress">Сбросить прогресс</button>
           </div>
-
-          <aside class="guide-progress-card">
-            <div class="text-[11px] font-black uppercase tracking-[0.22em] text-white/58">Прогресс гайда</div>
-            <div class="mt-2 flex items-end justify-between gap-3">
-              <div class="text-4xl font-black text-white">{{ completionPercent }}%</div>
-              <div class="text-right text-xs font-bold uppercase tracking-[0.18em] text-white/54">
-                {{ completedChecks }} / {{ totalChecks }}
-              </div>
-            </div>
-            <div class="mt-4 h-3 overflow-hidden rounded-full border border-white/10 bg-black/24">
-              <div class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-lime-300 transition-all" :style="{ width: `${completionPercent}%` }"></div>
-            </div>
-            <p class="mt-3 text-sm leading-6 text-white/68">
-              Отмечай этапы по мере прохождения. Прогресс сохраняется в браузере.
-            </p>
-          </aside>
         </div>
-      </section>
 
-      <section class="grid gap-3 md:grid-cols-3">
-        <article v-for="card in introCards" :key="card.title" class="surface-card guide-info-card p-4 md:p-5" :class="`guide-info-card--${card.tone}`">
-          <div class="section-kicker !mb-2">{{ card.label }}</div>
-          <h2 class="text-lg font-black text-slate-50">{{ card.title }}</h2>
-          <p class="mt-2 text-sm leading-6 text-slate-400">{{ card.text }}</p>
-        </article>
-      </section>
+        <div class="gp-progress">
+          <div class="gp-progress__top">
+            <span class="gp-progress__label">Прогресс гайда</span>
+            <span class="gp-progress__fraction">{{ completedChecks }}/{{ totalChecks }}</span>
+          </div>
+          <div class="gp-progress__num">{{ completionPercent }}%</div>
+          <div class="gp-progress__bar-track">
+            <div class="gp-progress__bar-fill" :style="{ width: `${completionPercent}%` }"></div>
+          </div>
+          <p class="gp-progress__hint">Отмечай этапы — прогресс сохраняется в браузере</p>
+        </div>
+      </header>
 
-      <section class="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside class="guide-sidebar surface-card p-3.5 md:p-4">
-          <div class="section-kicker !mb-2">Маршрут</div>
-          <nav class="grid gap-1.5">
-            <a v-for="stage in stages" :key="stage.id" :href="`#${stage.id}`" class="guide-side-link">
-              <span>{{ stage.number }}</span>
-              <strong>{{ stage.title }}</strong>
+      <!-- ─── INTRO CARDS ─── -->
+      <div class="gp-intro-grid">
+        <div v-for="card in introCards" :key="card.title" class="gp-intro-card">
+          <span class="gp-intro-icon">{{ card.icon }}</span>
+          <div>
+            <p class="gp-intro-label">{{ card.label }}</p>
+            <h3 class="gp-intro-title">{{ card.title }}</h3>
+            <p class="gp-intro-text">{{ card.text }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── MAIN: sidebar + stages ─── -->
+      <div class="gp-layout">
+
+        <!-- sticky nav -->
+        <aside class="gp-nav surface-card">
+          <p class="gp-nav__label">Маршрут</p>
+          <nav class="gp-nav__list">
+            <a v-for="stage in stages" :key="stage.id" :href="`#${stage.id}`" class="gp-nav-link">
+              <span class="gp-nav-link__num">{{ stage.number }}</span>
+              <span class="gp-nav-link__title">{{ stage.title }}</span>
             </a>
           </nav>
+
+          <div class="gp-nav__route">
+            <p class="gp-nav__label" style="margin-top:.75rem">Прогрессия</p>
+            <ol class="gp-route">
+              <li v-for="(step, i) in routeSteps" :key="step">
+                <span>{{ i + 1 }}</span>{{ step }}
+              </li>
+            </ol>
+          </div>
         </aside>
 
-        <div class="space-y-4">
-          <section class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-2">Линия прохождения</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Главная прогрессия</h2>
-            <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-              Игрок постепенно открывает моды через соседние ветки. Технологии требуют магию, магия требует обработанные материалы,
-              а финал требует почти всю сборку.
-            </p>
-
-            <div class="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-              <div v-for="(step, index) in routeSteps" :key="step" class="guide-route-step">
-                <div class="guide-route-step__num">{{ index + 1 }}</div>
-                <div class="text-sm font-bold text-slate-100">{{ step }}</div>
+        <!-- stages -->
+        <div class="gp-stages">
+          <article v-for="stage in stages" :id="stage.id" :key="stage.id" class="surface-card gp-stage">
+            <div class="gp-stage__header">
+              <div>
+                <div class="gp-stage__num">Этап {{ stage.number }}</div>
+                <h2 class="gp-stage__title">{{ stage.title }}</h2>
+                <p class="gp-stage__goal">{{ stage.goal }}</p>
               </div>
-            </div>
-          </section>
-
-          <article v-for="stage in stages" :id="stage.id" :key="stage.id" class="surface-card guide-stage-card p-4 md:p-5">
-            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div class="min-w-0">
-                <div class="section-kicker !mb-2">Этап {{ stage.number }}</div>
-                <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">{{ stage.title }}</h2>
-                <p class="mt-2 text-sm leading-6 text-slate-400">{{ stage.goal }}</p>
-              </div>
-              <div class="flex flex-wrap gap-2 md:justify-end">
-                <span v-for="tag in stage.tags" :key="tag" class="guide-tag">{{ tag }}</span>
+              <div class="gp-tags">
+                <span v-for="tag in stage.tags" :key="tag" class="gp-tag">{{ tag }}</span>
               </div>
             </div>
 
-            <div class="mt-4 grid gap-3 lg:grid-cols-2">
-              <div class="dark-list-card !p-4">
-                <p class="metric-label">Что открывает</p>
-                <ul class="mt-3 space-y-2 text-sm leading-6 text-slate-300">
-                  <li v-for="item in stage.unlocks" :key="item" class="flex gap-2">
-                    <span class="text-emerald-300">◆</span>
-                    <span>{{ item }}</span>
+            <div class="gp-stage__body">
+              <div class="gp-list-block">
+                <p class="gp-list-label">Что открывает</p>
+                <ul class="gp-unlocks">
+                  <li v-for="item in stage.unlocks" :key="item">
+                    <span class="gp-diamond">◆</span>{{ item }}
                   </li>
                 </ul>
               </div>
 
-              <div class="dark-list-card !p-4">
-                <p class="metric-label">Чеклист этапа</p>
-                <div class="mt-3 grid gap-2">
-                  <label v-for="(item, index) in stage.checks" :key="item" class="guide-check-row">
+              <div class="gp-list-block">
+                <p class="gp-list-label">Чеклист</p>
+                <div class="gp-checklist">
+                  <label v-for="(item, index) in stage.checks" :key="item" class="gp-check" :class="{ done: checked[checkKey(stage, index)] }">
                     <input v-model="checked[checkKey(stage, index)]" type="checkbox" />
                     <span>{{ item }}</span>
                   </label>
@@ -390,17 +331,13 @@ watch(
             </div>
           </article>
         </div>
-      </section>
+      </div>
 
-      <section class="surface-card p-4 md:p-5">
-        <div class="section-kicker !mb-2">Связи модов</div>
-        <h2 class="text-xl font-black text-slate-50 md:text-2xl">Почему нельзя пропускать ветки</h2>
-        <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
-          В этой версии сборки моды не живут отдельно. Каждый крупный мод даёт ключи для следующего этапа.
-        </p>
-
-        <div class="mt-4 overflow-hidden rounded-[22px] border border-white/8">
-          <table class="guide-table">
+      <!-- ─── CROSS-LINKS TABLE ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Связи модов — почему нельзя пропускать ветки</h2>
+        <div class="gp-table-wrap">
+          <table class="gp-table">
             <thead>
               <tr>
                 <th>Мод / этап</th>
@@ -410,282 +347,464 @@ watch(
             </thead>
             <tbody>
               <tr v-for="row in crossLinks" :key="row[0]">
-                <td class="font-black text-slate-100">{{ row[0] }}</td>
+                <td><strong>{{ row[0] }}</strong></td>
                 <td>{{ row[1] }}</td>
                 <td>{{ row[2] }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-      </section>
+      </div>
 
-      <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <article v-for="group in milestones" :key="group.title" class="surface-card p-4 md:p-5">
-          <div class="section-kicker !mb-2">Проверка</div>
-          <h2 class="text-lg font-black text-slate-50">{{ group.title }}</h2>
-          <ul class="mt-3 space-y-2 text-sm leading-6 text-slate-300">
-            <li v-for="item in group.items" :key="item" class="guide-milestone-item">{{ item }}</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="surface-card p-4 md:p-5">
-        <div class="grid gap-4 lg:grid-cols-[1fr_340px]">
-          <div>
-            <div class="section-kicker !mb-2">Советы</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Как проходить без лишней боли</h2>
-            <div class="mt-4 grid gap-3 md:grid-cols-2">
-              <div class="dark-list-card">
-                <p class="text-sm font-black text-slate-100">Не уходи в один мод</p>
-                <p class="mt-1.5 text-sm leading-6 text-slate-400">Держи несколько целей одновременно: еда, хранение, Create, магия, сталь и энергия.</p>
-              </div>
-              <div class="dark-list-card">
-                <p class="text-sm font-black text-slate-100">Сохраняй промежуточные компоненты</p>
-                <p class="mt-1.5 text-sm leading-6 text-slate-400">VoidRP-компоненты часто используются повторно, поэтому выгоднее делать их партиями.</p>
-              </div>
-              <div class="dark-list-card">
-                <p class="text-sm font-black text-slate-100">Не откладывай магию</p>
-                <p class="mt-1.5 text-sm leading-6 text-slate-400">Aether, Mahou, Twilight и DeeperDarker нужны не “когда-нибудь”, а уже для средняя игра.</p>
-              </div>
-              <div class="dark-list-card">
-                <p class="text-sm font-black text-slate-100">Автоматизируй рано</p>
-                <p class="mt-1.5 text-sm leading-6 text-slate-400">AE2 придёт позже, но первые Create-линии нужно строить как можно раньше.</p>
-              </div>
-            </div>
+      <!-- ─── TIPS ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Как проходить без лишней боли</h2>
+        <div class="gp-tips-grid">
+          <div v-for="tip in tips" :key="tip.title" class="gp-tip">
+            <strong>{{ tip.title }}</strong>
+            <small>{{ tip.text }}</small>
           </div>
-
-          <aside class="guide-faq-card">
-            <div class="section-kicker section-kicker--light !mb-2">FAQ</div>
-            <h2 class="text-lg font-black text-white">Почему Mekanism не стартует сразу?</h2>
-            <p class="mt-2 text-sm leading-6 text-white/72">
-              Потому что старт Mekanism завязан на Create, IE и магические компоненты. Это сделано специально,
-              чтобы игрок проходил сборку постепенно, а не перескакивал половину контента.
-            </p>
-          </aside>
         </div>
-      </section>
+      </div>
+
     </div>
   </section>
 </template>
 
 <style scoped>
-.guide-page {
-  position: relative;
-}
-
-.guide-page::before {
-  pointer-events: none;
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  content: '';
-  background:
-    radial-gradient(circle at 18% 10%, rgba(34, 197, 94, 0.08), transparent 28%),
-    radial-gradient(circle at 80% 18%, rgba(109, 93, 246, 0.12), transparent 30%),
-    linear-gradient(180deg, rgba(4, 7, 14, 0.0), rgba(9, 14, 26, 0.24));
-}
-
-.guide-hero {
-  position: relative;
-  isolation: isolate;
-}
-
-.guide-hero::before {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  content: '';
-  opacity: 0.2;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
-  background-size: 28px 28px;
-}
-
-.guide-hero__grid {
+/* ─── Header ─── */
+.gp-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
   gap: 1rem;
-  align-items: stretch;
+  align-items: start;
 }
 
-.guide-progress-card,
-.guide-faq-card {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.35rem;
-  background: linear-gradient(180deg, rgba(5, 8, 15, 0.62), rgba(5, 8, 15, 0.28));
+@media (min-width: 860px) {
+  .gp-header { grid-template-columns: 1fr 260px; }
+}
+
+.gp-eyebrow {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .3rem;
+}
+
+.gp-h1 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #f8fbff;
+  margin: 0 0 .4rem;
+  letter-spacing: -.03em;
+}
+
+.gp-desc {
+  font-size: .83rem;
+  line-height: 1.6;
+  color: rgb(100 116 139);
+  margin: 0 0 .75rem;
+  max-width: 520px;
+}
+
+.gp-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+/* ─── Progress ─── */
+.gp-progress {
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(20,26,50,.98), rgba(12,17,32,1));
   padding: 1rem;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
 }
 
-.guide-info-card {
-  position: relative;
-  overflow: hidden;
+.gp-progress__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .3rem;
 }
 
-.guide-info-card::after {
-  position: absolute;
-  right: -34px;
-  top: -34px;
-  width: 92px;
-  height: 92px;
+.gp-progress__label {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.4);
+}
+
+.gp-progress__fraction {
+  font-size: .72rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.4);
+}
+
+.gp-progress__num {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -.04em;
+  margin-bottom: .6rem;
+}
+
+.gp-progress__bar-track {
+  height: 6px;
   border-radius: 999px;
-  content: '';
-  opacity: .22;
+  background: rgba(255,255,255,.1);
+  overflow: hidden;
+  margin-bottom: .6rem;
 }
 
-.guide-info-card--green::after { background: #22c55e; }
-.guide-info-card--blue::after { background: #38bdf8; }
-.guide-info-card--gold::after { background: #facc15; }
+.gp-progress__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #34d399, #86efac);
+  transition: width .4s ease;
+}
 
-.guide-sidebar {
+.gp-progress__hint {
+  font-size: .72rem;
+  color: rgba(255,255,255,.35);
+  margin: 0;
+}
+
+/* ─── Intro cards ─── */
+.gp-intro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: .5rem;
+}
+
+.gp-intro-card {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  border: 1px solid rgba(148,163,184,.1);
+  border-radius: 16px;
+  background: rgba(255,255,255,.025);
+  padding: .85rem;
+}
+
+.gp-intro-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(139,92,246,.1);
+  border: 1px solid rgba(139,92,246,.15);
+}
+
+.gp-intro-label {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .15rem;
+}
+
+.gp-intro-title {
+  font-size: .92rem;
+  font-weight: 800;
+  color: rgb(226 232 240);
+  margin: 0 0 .25rem;
+}
+
+.gp-intro-text {
+  font-size: .78rem;
+  line-height: 1.55;
+  color: rgb(100 116 139);
+  margin: 0;
+}
+
+/* ─── Layout ─── */
+.gp-layout {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (min-width: 1024px) {
+  .gp-layout { grid-template-columns: 220px minmax(0, 1fr); }
+}
+
+/* ─── Sidebar nav ─── */
+.gp-nav {
+  padding: .85rem;
   position: sticky;
   top: 5rem;
   height: fit-content;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
 }
 
-.guide-side-link {
-  display: grid;
-  grid-template-columns: 2.15rem minmax(0, 1fr);
-  gap: .65rem;
+@media (max-width: 1023px) {
+  .gp-nav { position: relative; top: 0; max-height: none; }
+}
+
+.gp-nav__label {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .5rem;
+}
+
+.gp-nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+.gp-nav-link {
+  display: flex;
   align-items: center;
-  border: 1px solid transparent;
-  border-radius: 1rem;
-  padding: .6rem .65rem;
-  color: rgb(203 213 225);
-  text-decoration: none;
-  transition: .18s ease;
+  gap: .5rem;
+  border-radius: 10px;
+  padding: .4rem .5rem;
+  transition: background .12s, color .12s;
+  color: rgb(148 163 184);
 }
 
-.guide-side-link:hover {
-  border-color: rgba(255,255,255,.1);
-  background: rgba(255,255,255,.045);
-  color: white;
-}
+.gp-nav-link:hover { background: rgba(255,255,255,.05); color: #fff; }
 
-.guide-side-link span,
-.guide-route-step__num {
-  display: grid;
-  min-width: 2.15rem;
-  height: 2.15rem;
-  place-items: center;
-  border-radius: .85rem;
-  border: 1px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.055);
-  color: #86efac;
-  font-size: .78rem;
+.gp-nav-link__num {
+  font-size: .65rem;
   font-weight: 900;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(134,239,172,.2);
+  background: rgba(134,239,172,.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(134 239 172);
+  flex-shrink: 0;
 }
 
-.guide-side-link strong {
-  min-width: 0;
+.gp-nav-link__title {
+  font-size: .75rem;
+  font-weight: 600;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: .84rem;
 }
 
-.guide-route-step {
-  display: grid;
-  grid-template-columns: 2.3rem minmax(0, 1fr);
-  gap: .7rem;
+/* route list */
+.gp-route {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+}
+
+.gp-route li {
+  display: flex;
   align-items: center;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 1rem;
-  background: rgba(255,255,255,.035);
-  padding: .72rem;
+  gap: .4rem;
+  font-size: .72rem;
+  color: rgb(100 116 139);
 }
 
-.guide-stage-card {
+.gp-route li span {
+  font-size: .62rem;
+  font-weight: 800;
+  color: rgb(71 85 105);
+  width: 16px;
+  flex-shrink: 0;
+}
+
+/* ─── Stages ─── */
+.gp-stages { display: flex; flex-direction: column; gap: .65rem; }
+
+.gp-stage {
+  padding: 1rem;
   scroll-margin-top: 5.5rem;
 }
 
-.guide-tag {
+.gp-stage__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .75rem;
+  flex-wrap: wrap;
+}
+
+.gp-stage__num {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin-bottom: .2rem;
+}
+
+.gp-stage__title {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #f0f4ff;
+  margin: 0 0 .3rem;
+  letter-spacing: -.02em;
+}
+
+.gp-stage__goal {
+  font-size: .8rem;
+  line-height: 1.55;
+  color: rgb(100 116 139);
+  margin: 0;
+  max-width: 520px;
+}
+
+.gp-tags { display: flex; flex-wrap: wrap; gap: .3rem; flex-shrink: 0; }
+
+.gp-tag {
   border: 1px solid rgba(255,255,255,.1);
   border-radius: 999px;
-  background: rgba(255,255,255,.055);
-  padding: .42rem .65rem;
-  color: rgb(203 213 225);
-  font-size: .72rem;
-  font-weight: 900;
-  letter-spacing: .12em;
+  background: rgba(255,255,255,.04);
+  padding: .18rem .55rem;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .1em;
   text-transform: uppercase;
+  color: rgb(148 163 184);
 }
 
-.guide-check-row {
+.gp-stage__body {
   display: grid;
-  grid-template-columns: 1.1rem minmax(0, 1fr);
-  gap: .65rem;
+  gap: .5rem;
+}
+
+@media (min-width: 640px) {
+  .gp-stage__body { grid-template-columns: 1fr 1fr; }
+}
+
+.gp-list-block {
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,.02);
+  padding: .75rem;
+}
+
+.gp-list-label {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .5rem;
+}
+
+.gp-unlocks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+.gp-unlocks li {
+  display: flex;
   align-items: flex-start;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: .95rem;
-  background: rgba(255,255,255,.035);
-  padding: .7rem .75rem;
+  gap: .4rem;
+  font-size: .8rem;
+  line-height: 1.5;
   color: rgb(203 213 225);
-  font-size: .86rem;
-  line-height: 1.55;
+}
+
+.gp-diamond { color: rgb(110 231 183); flex-shrink: 0; font-size: .7rem; margin-top: .15rem; }
+
+.gp-checklist { display: flex; flex-direction: column; gap: .3rem; }
+
+.gp-check {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 8px;
+  background: rgba(255,255,255,.025);
+  padding: .45rem .55rem;
+  font-size: .8rem;
+  line-height: 1.45;
+  color: rgb(203 213 225);
   cursor: pointer;
+  transition: border-color .12s, background .12s;
 }
 
-.guide-check-row input {
-  margin-top: .22rem;
-  accent-color: #22c55e;
+.gp-check input { accent-color: #22c55e; margin-top: .08rem; flex-shrink: 0; }
+.gp-check.done { border-color: rgba(34,197,94,.2); background: rgba(34,197,94,.04); color: rgb(134 239 172); }
+
+/* ─── Cards ─── */
+.gp-card { padding: 1rem; }
+
+.gp-section-title {
+  font-size: .92rem;
+  font-weight: 800;
+  color: rgb(203 213 225);
+  margin: 0 0 .85rem;
 }
 
-.guide-table {
+/* ─── Cross-links table ─── */
+.gp-table-wrap { overflow-x: auto; border: 1px solid rgba(255,255,255,.07); border-radius: 12px; }
+
+.gp-table {
   width: 100%;
   border-collapse: collapse;
-  background: rgba(2, 6, 23, 0.28);
+  min-width: 560px;
 }
 
-.guide-table th,
-.guide-table td {
+.gp-table th {
+  background: rgba(255,255,255,.03);
   border-bottom: 1px solid rgba(255,255,255,.07);
-  padding: .85rem;
+  padding: .42rem .75rem;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
   text-align: left;
+}
+
+.gp-table td {
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  padding: .5rem .75rem;
+  font-size: .82rem;
+  color: rgb(148 163 184);
   vertical-align: top;
 }
 
-.guide-table th {
-  background: rgba(255,255,255,.055);
-  color: rgb(226 232 240);
-  font-size: .7rem;
-  font-weight: 900;
-  letter-spacing: .16em;
-  text-transform: uppercase;
+.gp-table td strong { color: rgb(226 232 240); font-weight: 700; }
+.gp-table tr:last-child td { border-bottom: none; }
+
+/* ─── Tips ─── */
+.gp-tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: .5rem;
 }
 
-.guide-table td {
-  color: rgb(148 163 184);
-  font-size: .88rem;
-  line-height: 1.55;
+.gp-tip {
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+  padding: .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
 }
 
-.guide-table tr:last-child td {
-  border-bottom: 0;
-}
-
-.guide-milestone-item {
-  border-radius: .85rem;
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.035);
-  padding: .55rem .65rem;
-}
-
-@media (max-width: 1024px) {
-  .guide-hero__grid {
-    grid-template-columns: 1fr;
-  }
-
-  .guide-sidebar {
-    position: relative;
-    top: 0;
-  }
-}
-
-@media (max-width: 760px) {
-  .guide-table {
-    min-width: 760px;
-  }
-}
+.gp-tip strong { font-size: .85rem; font-weight: 800; color: rgb(226 232 240); }
+.gp-tip small { font-size: .78rem; line-height: 1.55; color: rgb(100 116 139); }
 </style>

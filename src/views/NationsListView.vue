@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { getMyNation, getNationsList } from '../services/nationsApi'
-import { getNationRankings } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
 import { formatNumber } from '../utils/formatters'
 
@@ -15,19 +14,12 @@ const recruitmentFilter = ref('all')
 const sortMode = ref('recommended')
 const nations = ref({ total: 0, items: [] })
 const myNation = ref(null)
-const topThree = ref([])
 
-const emptyText = computed(() => {
-  if (!auth.isAuthenticated.value) {
-    return 'Войди в аккаунт, чтобы создать своё государство или отправить заявку.'
-  }
-
-  return 'Пока государств нет. Можно стать первым и создать своё.'
-})
+const allItems = computed(() => Array.isArray(nations.value?.items) ? nations.value.items : [])
 
 const filteredNations = computed(() => {
   const q = search.value.trim().toLowerCase()
-  let items = Array.isArray(nations.value?.items) ? [...nations.value.items] : []
+  let items = [...allItems.value]
 
   if (recruitmentFilter.value !== 'all') {
     items = items.filter((item) => item.recruitment_policy === recruitmentFilter.value)
@@ -36,62 +28,49 @@ const filteredNations = computed(() => {
   if (q) {
     items = items.filter((item) => {
       const haystack = [item.title, item.tag, item.slug, item.short_description]
-        .map((value) => String(value || '').toLowerCase())
-        .join(' ')
+        .map((v) => String(v || '').toLowerCase()).join(' ')
       return haystack.includes(q)
     })
   }
 
   items.sort((a, b) => {
-    if (sortMode.value === 'members') {
+    if (sortMode.value === 'members')
       return Number(b?.stats?.members_count || 0) - Number(a?.stats?.members_count || 0)
-    }
-
-    if (sortMode.value === 'newest') {
+    if (sortMode.value === 'newest')
       return new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime()
-    }
 
     const weight = (item) => {
-      let score = 0
-      if (item?.recruitment_policy === 'open') score += 40
-      if (item?.recruitment_policy === 'request') score += 20
-      if (item?.viewer_request_status === 'pending') score -= 10
-      score += Number(item?.stats?.members_count || 0) * 2
-      score += Number(item?.stats?.pending_requests_count || 0)
-      if (myNation.value?.slug === item?.slug) score += 1000
-      return score
+      let s = 0
+      if (item?.recruitment_policy === 'open') s += 40
+      if (item?.recruitment_policy === 'request') s += 20
+      if (item?.viewer_request_status === 'pending') s -= 10
+      s += Number(item?.stats?.members_count || 0) * 2
+      if (myNation.value?.slug === item?.slug) s += 1000
+      return s
     }
-
     return weight(b) - weight(a)
   })
 
   return items
 })
 
-const summaryCounters = computed(() => {
-  const items = Array.isArray(nations.value?.items) ? nations.value.items : []
-  return [
-    { label: 'Всего', value: items.length },
-    { label: 'Свободный вход', value: items.filter((item) => item.recruitment_policy === 'open').length },
-    { label: 'По заявке', value: items.filter((item) => item.recruitment_policy === 'request').length },
-    { label: 'По приглашению', value: items.filter((item) => item.recruitment_policy === 'invite_only').length },
-  ]
-})
+const counters = computed(() => [
+  { label: 'Всего', value: allItems.value.length },
+  { label: 'Открытый вход', value: allItems.value.filter((i) => i.recruitment_policy === 'open').length },
+  { label: 'По заявке', value: allItems.value.filter((i) => i.recruitment_policy === 'request').length },
+  { label: 'Только приглашение', value: allItems.value.filter((i) => i.recruitment_policy === 'invite_only').length },
+])
 
 async function loadPage() {
   loading.value = true
   error.value = ''
-
   try {
-    const [listPayload, myPayload, rankingPayload] = await Promise.all([
+    const [listPayload, myPayload] = await Promise.all([
       getNationsList(auth.accessToken || null),
       auth.isAuthenticated.value ? getMyNation(auth.accessToken) : Promise.resolve(null),
-      getNationRankings(auth.accessToken || null),
     ])
-
     nations.value = listPayload || { total: 0, items: [] }
     myNation.value = myPayload || null
-    topThree.value = (rankingPayload?.items || []).slice(0, 3)
   } catch (err) {
     error.value = err.message || 'Не удалось загрузить государства.'
   } finally {
@@ -99,571 +78,672 @@ async function loadPage() {
   }
 }
 
-function recruitmentLabel(value) {
-  if (value === 'open') return 'Свободное вступление'
+function policyLabel(value) {
+  if (value === 'open') return 'Открытый'
   if (value === 'request') return 'По заявке'
-  return 'Только по приглашению'
+  return 'Закрытый'
 }
 
-function accentStyle(value) {
-  return {
-    backgroundColor: value || '#8b5cf6',
-  }
+function policyClass(value) {
+  if (value === 'open') return 'badge-open'
+  if (value === 'request') return 'badge-req'
+  return 'badge-closed'
 }
 
-function nationActionMeta(nation) {
+function iconUrl(nation) {
+  return nation.assets?.icon_url || nation.assets?.icon_preview_url || ''
+}
+
+function bannerUrl(nation) {
+  return nation.assets?.banner_url || nation.assets?.banner_preview_url || ''
+}
+
+function cta(nation) {
   if (!auth.isAuthenticated.value) {
-    return {
-      title: 'Нужен вход',
-      description: 'Войди в аккаунт, чтобы вступить или отправить заявку.',
-      actionLabel: 'Войти',
-      actionTo: '/login',
-      showAction: true,
-    }
+    return { label: 'Войти', to: '/login', style: 'outline' }
   }
-
   if (myNation.value?.slug === nation.slug) {
     return {
-      title: 'Твоё государство',
-      description: 'Можно открыть страницу или сразу перейти в управление.',
-      actionLabel: myNation.value.viewer_can_manage ? 'Управлять' : 'Открыть',
-      actionTo: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${nation.slug}`,
-      showAction: true,
+      label: myNation.value.viewer_can_manage ? 'Управлять' : 'Открыть',
+      to: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${nation.slug}`,
+      style: 'mine',
     }
   }
-
   if (myNation.value?.slug && myNation.value.slug !== nation.slug) {
-    return {
-      title: 'Уже есть государство',
-      description: `Сейчас ты состоишь в «${myNation.value.title}».`,
-      actionLabel: 'Моё государство',
-      actionTo: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${myNation.value.slug}`,
-      showAction: true,
-    }
+    return { label: 'Моё государство', to: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${myNation.value.slug}`, style: 'outline' }
   }
-
   if (nation.viewer_request_status === 'pending') {
-    return {
-      title: 'Заявка отправлена',
-      description: 'Повторно отправлять ничего не нужно — осталось дождаться решения.',
-      actionLabel: 'Открыть',
-      actionTo: `/nation/${nation.slug}`,
-      showAction: true,
-    }
+    return { label: 'Заявка отправлена', to: `/nation/${nation.slug}`, style: 'muted' }
   }
-
   if (nation.recruitment_policy === 'invite_only') {
-    return {
-      title: 'Только по приглашению',
-      description: 'Вступление возможно только после приглашения от лидера или офицера.',
-      actionLabel: '',
-      actionTo: '',
-      showAction: false,
-    }
+    return { label: 'Только по приглашению', to: `/nation/${nation.slug}`, style: 'muted' }
   }
-
   if (nation.recruitment_policy === 'open') {
-    return {
-      title: 'Можно вступить сразу',
-      description: 'На странице государства доступна прямая кнопка вступления.',
-      actionLabel: 'Вступить',
-      actionTo: `/nation/${nation.slug}`,
-      showAction: true,
-    }
+    return { label: 'Вступить', to: `/nation/${nation.slug}`, style: 'accent' }
   }
-
-  return {
-    title: 'Можно подать заявку',
-    description: 'На странице государства можно отправить сообщение лидеру и дождаться ответа.',
-    actionLabel: 'Подать заявку',
-    actionTo: `/nation/${nation.slug}`,
-    showAction: true,
-  }
+  return { label: 'Подать заявку', to: `/nation/${nation.slug}`, style: 'accent' }
 }
 
 onMounted(loadPage)
 </script>
 
 <template>
-  <section class="py-5 md:py-6">
-    <div class="container-shell max-w-[1380px] space-y-4">
-      <section class="surface-card p-4 md:p-5">
-        <div class="grid gap-5 xl:grid-cols-[1.06fr_0.94fr] xl:items-end">
-          <div>
-            <div class="section-kicker !mb-2">Государства</div>
-            <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
-              Каталог сообществ
-            </h1>
-            <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-400 md:text-[14px]">
-              Здесь легко понять, куда можно вступить сразу, куда нужна заявка и где набор идёт только по приглашению.
-            </p>
-          </div>
+  <section class="nl py-3 md:py-4">
+    <div class="container-shell max-w-[1380px] space-y-3">
 
-          <div class="grid gap-3 md:grid-cols-2">
-            <RouterLink to="/nations/rankings" class="btn btn-outline">
-              Смотреть рейтинг
-            </RouterLink>
-
-            <RouterLink
-              v-if="auth.isAuthenticated.value"
-              to="/nation/studio"
-              class="btn btn-primary"
-            >
-              {{ myNation ? 'Моё государство' : 'Создать государство' }}
-            </RouterLink>
-
-            <RouterLink v-else to="/login" class="btn btn-primary md:col-span-2">
-              Войти, чтобы вступить
-            </RouterLink>
-          </div>
+      <!-- header + controls -->
+      <header class="nl-header">
+        <div class="nl-header__title">
+          <p class="nl-eyebrow">Государства · VoidRP</p>
+          <h1 class="nl-h1">Каталог сообществ</h1>
         </div>
-      </section>
-
-      <div v-if="error" class="alert alert-error">
-        {{ error }}
-      </div>
-
-      <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div v-for="item in summaryCounters" :key="item.label" class="metric-card text-center">
-          <p class="metric-value !text-[1.3rem]">{{ item.value }}</p>
-          <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">{{ item.label }}</p>
-        </div>
-      </section>
-
-      <section v-if="myNation" class="surface-card p-4 md:p-5">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div class="min-w-0">
-            <div class="section-kicker !mb-2">Твоё государство</div>
-            <h2 class="truncate text-2xl font-black tracking-tight text-slate-50">
-              {{ myNation.title }}
-            </h2>
-            <p class="mt-3 text-sm leading-7 text-slate-400">
-              [{{ myNation.tag }}] · {{ myNation.short_description || 'Короткое описание пока не заполнено.' }}
-            </p>
+        <div class="nl-controls">
+          <div class="nl-search">
+            <svg class="nl-search__icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+            </svg>
+            <input v-model="search" class="nl-search__input" placeholder="Поиск..." />
+            <span v-if="search" class="nl-search__count">{{ filteredNations.length }}</span>
           </div>
-
-          <div class="grid gap-3 md:grid-cols-2">
-            <RouterLink :to="myNation.viewer_can_manage ? '/nation/studio' : `/nation/${myNation.slug}`" class="btn btn-primary">
-              {{ myNation.viewer_can_manage ? 'Открыть управление' : 'Открыть страницу' }}
-            </RouterLink>
-            <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-outline">Публичная страница</RouterLink>
-          </div>
-        </div>
-      </section>
-
-      <section v-if="topThree.length" class="grid gap-4 lg:grid-cols-3">
-        <article
-          v-for="(item, index) in topThree"
-          :key="item.nation_id || item.slug || item.title"
-          class="surface-card p-5 md:p-6"
-        >
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="section-kicker !mb-2">Топ {{ index + 1 }}</div>
-              <h2 class="text-xl font-black tracking-tight text-slate-50">{{ item.title }}</h2>
-              <p class="mt-2 text-sm leading-6 text-slate-400">
-                [{{ item.tag }}] · score {{ formatNumber(item.score ?? 0) }}
-              </p>
-            </div>
-
-            <span class="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-black text-slate-100">
-              #{{ index + 1 }}
-            </span>
-          </div>
-
-          <div class="metric-grid metric-grid-2 mt-5">
-            <div class="metric-card text-center">
-              <p class="metric-value !text-[1.15rem]">{{ formatNumber(item.members_count ?? 0) }}</p>
-              <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                Участники
-              </p>
-            </div>
-            <div class="metric-card text-center">
-              <p class="metric-value !text-[1.15rem]">{{ formatNumber(item.treasury_balance ?? 0) }}</p>
-              <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                Баланс
-              </p>
-            </div>
-          </div>
-
-          <RouterLink :to="`/nation/${item.slug}`" class="btn btn-outline mt-5 w-full">
-            Открыть страницу
+          <select v-model="recruitmentFilter" class="nl-select">
+            <option value="all">Все типы</option>
+            <option value="open">Открытый</option>
+            <option value="request">По заявке</option>
+            <option value="invite_only">Закрытый</option>
+          </select>
+          <select v-model="sortMode" class="nl-select">
+            <option value="recommended">По релевантности</option>
+            <option value="members">По участникам</option>
+            <option value="newest">Сначала новые</option>
+          </select>
+          <RouterLink to="/nations/rankings" class="nl-btn-link">Рейтинг</RouterLink>
+          <RouterLink v-if="auth.isAuthenticated.value" to="/nation/studio" class="nl-btn-accent">
+            {{ myNation ? 'Моё государство' : 'Создать' }}
           </RouterLink>
-        </article>
-      </section>
-
-      <section class="surface-card p-5 md:p-6">
-        <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
-          <label>
-            <span class="field-label">Поиск</span>
-            <input v-model="search" class="input" placeholder="Название, тег или описание" />
-          </label>
-
-          <label>
-            <span class="field-label">Набор</span>
-            <select v-model="recruitmentFilter" class="input">
-              <option value="all">Все</option>
-              <option value="open">Свободный вход</option>
-              <option value="request">По заявке</option>
-              <option value="invite_only">Только по приглашению</option>
-            </select>
-          </label>
-
-          <label>
-            <span class="field-label">Сортировка</span>
-            <select v-model="sortMode" class="input">
-              <option value="recommended">Сначала удобные</option>
-              <option value="members">По числу участников</option>
-              <option value="newest">Сначала новые</option>
-            </select>
-          </label>
+          <RouterLink v-else to="/login" class="nl-btn-accent">Войти</RouterLink>
         </div>
-      </section>
+      </header>
 
-      <div v-if="loading" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        <div class="skeleton h-[390px] rounded-[24px]"></div>
-        <div class="skeleton h-[390px] rounded-[24px]"></div>
-        <div class="skeleton h-[390px] rounded-[24px]"></div>
-        <div class="skeleton h-[390px] rounded-[24px]"></div>
+      <div v-if="error" class="alert alert-error">{{ error }}</div>
+
+      <!-- stats strip -->
+      <div class="nl-stats">
+        <div v-for="c in counters" :key="c.label" class="nl-stat">
+          <span>{{ c.label }}</span>
+          <strong>{{ c.value }}</strong>
+        </div>
       </div>
 
-      <section v-else-if="!nations.items.length" class="surface-card p-6 md:p-7">
-        <div class="max-w-2xl">
-          <div class="section-kicker">Пока пусто</div>
-          <h2 class="text-2xl font-black tracking-tight text-slate-50">
-            Каталог государств пока пуст
-          </h2>
-          <p class="mt-3 text-sm leading-6 text-slate-400">
-            {{ emptyText }}
-          </p>
+      <!-- my nation banner -->
+      <div v-if="myNation" class="nl-mine" :style="{ borderColor: myNation.accent_color || 'rgba(139,92,246,.3)' }">
+        <div class="nl-mine__icon" :style="{ background: (myNation.accent_color || '#6d5df6') + '22' }">
+          <img v-if="iconUrl(myNation)" :src="iconUrl(myNation)" :alt="myNation.tag" />
+          <span v-else>{{ myNation.tag?.slice(0,2).toUpperCase() }}</span>
         </div>
-      </section>
-
-      <section v-else-if="!filteredNations.length" class="surface-card p-6 md:p-7">
-        <div class="max-w-2xl">
-          <div class="section-kicker">Ничего не найдено</div>
-          <h2 class="text-2xl font-black tracking-tight text-slate-50">
-            Фильтр слишком строгий
-          </h2>
-          <p class="mt-3 text-sm leading-6 text-slate-400">
-            Попробуй очистить поиск или сменить тип набора.
-          </p>
+        <div class="nl-mine__info">
+          <strong>{{ myNation.title }}</strong>
+          <small>[{{ myNation.tag }}] · {{ myNation.short_description || 'Описание не заполнено' }}</small>
         </div>
-      </section>
+        <div class="nl-mine__actions">
+          <RouterLink v-if="myNation.viewer_can_manage" to="/nation/studio" class="btn btn-sm btn-outline" style="min-height:2.2rem">Управлять</RouterLink>
+          <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-sm btn-outline" style="min-height:2.2rem">Страница</RouterLink>
+        </div>
+      </div>
 
-      <section v-else class="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <!-- loading -->
+      <div v-if="loading" class="nl-grid">
+        <div v-for="i in 8" :key="i" class="skeleton nl-card-skeleton"></div>
+      </div>
+
+      <!-- empty -->
+      <div v-else-if="!allItems.length" class="surface-card nl-empty">
+        <h2>Государств пока нет</h2>
+        <p>{{ auth.isAuthenticated.value ? 'Будь первым — создай своё государство.' : 'Войди, чтобы создать или вступить.' }}</p>
+      </div>
+
+      <!-- no results -->
+      <div v-else-if="!filteredNations.length" class="surface-card nl-empty">
+        <h2>Ничего не найдено</h2>
+        <p>Попробуй другой поиск или убери фильтр по типу набора.</p>
+      </div>
+
+      <!-- grid -->
+      <div v-else class="nl-grid">
         <article
           v-for="nation in filteredNations"
           :key="nation.id || nation.slug"
-          class="surface-card nation-card"
-          :style="`border-left: 3px solid ${nation.accent_color || '#6d5df6'}`"
+          class="nl-card"
         >
-          <div class="nation-card__banner">
-            <img
-              v-if="nation.assets?.banner_url || nation.assets?.banner_preview_url"
-              :src="nation.assets?.banner_url || nation.assets?.banner_preview_url"
-              :alt="nation.title"
-              class="h-full w-full object-cover"
-            />
-            <div
-              v-else
-              class="h-full w-full bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.45),transparent_36%),linear-gradient(135deg,rgba(15,23,42,0.92),rgba(9,14,27,1))]"
-            ></div>
-
-            <div class="nation-card__overlay"></div>
-
-            <div class="nation-card__badges">
-              <span class="nation-card__badge">
-                {{ recruitmentLabel(nation.recruitment_policy) }}
+          <!-- banner/accent strip -->
+          <div class="nl-card__banner" :style="{ background: bannerUrl(nation) ? undefined : (nation.accent_color || '#6d5df6') + '18' }">
+            <img v-if="bannerUrl(nation)" :src="bannerUrl(nation)" :alt="nation.title" class="nl-card__banner-img" />
+            <div v-if="bannerUrl(nation)" class="nl-card__banner-overlay"></div>
+            <div class="nl-card__banner-top">
+              <span class="nl-policy-badge" :class="policyClass(nation.recruitment_policy)">
+                {{ policyLabel(nation.recruitment_policy) }}
               </span>
-              <span
-                v-if="nation.viewer_request_status === 'pending'"
-                class="nation-card__badge nation-card__badge--warning"
-              >
-                Заявка отправлена
+              <span v-if="nation.viewer_request_status === 'pending'" class="nl-policy-badge nl-policy-badge--amber">
+                Заявка ожидает
+              </span>
+              <span v-if="myNation?.slug === nation.slug" class="nl-policy-badge nl-policy-badge--mine">
+                Моё
               </span>
             </div>
+            <div class="nl-card__accent-bar" :style="{ background: nation.accent_color || '#6d5df6' }"></div>
           </div>
 
-          <div class="nation-card__body">
-            <div class="nation-card__head">
-              <div class="preview-avatar nation-card__avatar">
-                <img
-                  v-if="nation.assets?.icon_url || nation.assets?.icon_preview_url"
-                  :src="nation.assets?.icon_url || nation.assets?.icon_preview_url"
-                  :alt="nation.title"
-                  class="h-full w-full object-cover"
-                />
-                <span v-else>{{ nation.tag?.slice(0, 2).toUpperCase() }}</span>
+          <div class="nl-card__body">
+            <!-- identity row -->
+            <div class="nl-card__identity">
+              <div class="nl-card__icon" :style="{ borderColor: (nation.accent_color || '#6d5df6') + '55' }">
+                <img v-if="iconUrl(nation)" :src="iconUrl(nation)" :alt="nation.tag" />
+                <span v-else :style="{ color: nation.accent_color || '#8b5cf6' }">{{ nation.tag?.slice(0,2).toUpperCase() }}</span>
               </div>
-
-              <div class="min-w-0 flex-1">
-                <div class="flex min-w-0 items-center gap-2">
-                  <span class="nation-card__accent" :style="accentStyle(nation.accent_color)"></span>
-                  <span
-                    class="nation-card__tag-badge truncate"
-                    :style="`background: ${nation.accent_color || '#6d5df6'}22; color: ${nation.accent_color || '#6d5df6'}; border: 1px solid ${nation.accent_color || '#6d5df6'}44`"
-                  >
-                    [{{ nation.tag }}]
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-2 mt-[5px]">
-                  <img
-                    v-if="nation.assets?.icon_preview_url"
-                    :src="nation.assets.icon_preview_url"
-                    :alt="nation.title"
-                    class="nation-card__title-icon"
-                  />
-                  <h2 class="nation-card__title !mt-0">
-                    {{ nation.title }}
-                  </h2>
-                </div>
+              <div class="nl-card__name-block">
+                <h2 class="nl-card__name">{{ nation.title }}</h2>
+                <span class="nl-card__tag" :style="{ color: nation.accent_color || '#8b5cf6', borderColor: (nation.accent_color || '#8b5cf6') + '44', background: (nation.accent_color || '#8b5cf6') + '14' }">[{{ nation.tag }}]</span>
               </div>
             </div>
 
-            <p class="nation-card__description">
-              {{ nation.short_description || 'Короткое описание пока не добавлено.' }}
-            </p>
+            <!-- description -->
+            <p class="nl-card__desc">{{ nation.short_description || 'Описание пока не добавлено.' }}</p>
 
-            <div class="nation-card__stats">
-              <div class="nation-card__stat metric-card text-center">
-                <p class="metric-value !text-[1rem]">{{ formatNumber(nation.stats?.members_count ?? 0) }}</p>
-                <p class="nation-card__stat-label">Участники</p>
-              </div>
-
-              <div class="nation-card__stat metric-card text-center">
-                <p class="metric-value !text-[1rem]">{{ formatNumber(nation.stats?.pending_requests_count ?? 0) }}</p>
-                <p class="nation-card__stat-label">Заявки</p>
-              </div>
-
-              <div class="nation-card__stat metric-card text-center">
-                <p class="metric-value !text-[1rem]">{{ formatNumber(nation.stats?.territory_points ?? 0) }}</p>
-                <p class="nation-card__stat-label">Территории</p>
-              </div>
+            <!-- stats row -->
+            <div class="nl-card__stats">
+              <span>
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+                {{ formatNumber(nation.stats?.members_count ?? 0) }}
+              </span>
+              <span v-if="nation.stats?.pending_requests_count > 0">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+                {{ nation.stats.pending_requests_count }}
+              </span>
+              <span v-if="nation.stats?.territory_points > 0">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                {{ formatNumber(nation.stats.territory_points) }}
+              </span>
             </div>
 
-            <div class="nation-card__info action-card">
-              <p class="metric-label">{{ nationActionMeta(nation).title }}</p>
-              <p class="nation-card__info-text">
-                {{ nationActionMeta(nation).description }}
-              </p>
-            </div>
-
-            <div class="nation-card__actions">
-              <RouterLink :to="`/nation/${nation.slug}`" class="btn btn-primary nation-card__button">
-                Страница государства
-              </RouterLink>
-
-              <RouterLink
-                v-if="nationActionMeta(nation).showAction"
-                :to="nationActionMeta(nation).actionTo"
-                class="btn btn-outline nation-card__button"
-              >
-                {{ nationActionMeta(nation).actionLabel }}
-              </RouterLink>
-            </div>
+            <!-- cta -->
+            <RouterLink :to="`/nation/${nation.slug}`" class="nl-card__view">Открыть страницу</RouterLink>
+            <RouterLink
+              :to="cta(nation).to"
+              class="nl-card__cta"
+              :class="`nl-cta--${cta(nation).style}`"
+            >{{ cta(nation).label }}</RouterLink>
           </div>
         </article>
-      </section>
+      </div>
+
     </div>
   </section>
 </template>
 
 <style scoped>
-.nation-card {
+/* ─── Header ─── */
+.nl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nl-eyebrow {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .15rem;
+}
+
+.nl-h1 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #f8fbff;
+  margin: 0;
+  letter-spacing: -.03em;
+}
+
+.nl-controls {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+/* ─── Search ─── */
+.nl-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nl-search__icon {
+  position: absolute;
+  left: .65rem;
+  width: 1rem;
+  height: 1rem;
+  color: rgb(100 116 139);
+  pointer-events: none;
+}
+
+.nl-search__input {
+  width: 200px;
+  min-height: 2.35rem;
+  padding: 0 2rem 0 2.2rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(6,10,19,.7);
+  color: #f8fbff;
+  font: inherit;
+  font-size: .875rem;
+}
+
+.nl-search__input:focus {
+  outline: none;
+  border-color: rgba(139,92,246,.34);
+  box-shadow: 0 0 0 3px rgba(139,92,246,.1);
+}
+
+.nl-search__input::placeholder { color: rgb(100 116 139); }
+
+.nl-search__count {
+  position: absolute;
+  right: .55rem;
+  font-size: .72rem;
+  font-weight: 700;
+  color: rgb(139 92 246);
+}
+
+.nl-select {
+  min-height: 2.35rem;
+  padding: 0 .7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(6,10,19,.7);
+  color: #f8fbff;
+  font: inherit;
+  font-size: .875rem;
+  cursor: pointer;
+}
+
+.nl-btn-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  padding: 0 .85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.14);
+  background: rgba(6,10,19,.7);
+  color: rgb(148 163 184);
+  font-size: .875rem;
+  font-weight: 700;
+  transition: border-color .15s, color .15s;
+}
+
+.nl-btn-link:hover { border-color: rgba(139,92,246,.3); color: #fff; }
+
+.nl-btn-accent {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  padding: 0 .9rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: #fff;
+  font-size: .875rem;
+  font-weight: 800;
+  transition: filter .15s;
+}
+
+.nl-btn-accent:hover { filter: brightness(1.06); }
+
+/* ─── Stats strip ─── */
+.nl-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .5rem;
+}
+
+.nl-stat {
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  background: rgba(5,10,20,.6);
+  padding: .6rem .85rem;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  min-height: 100%;
-  overflow: hidden;
-  padding: 0 !important;
+  gap: .2rem;
 }
 
-.nation-card__banner {
+.nl-stat span {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.nl-stat strong {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #f8fbff;
+  letter-spacing: -.03em;
+}
+
+/* ─── My nation banner ─── */
+.nl-mine {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  border: 1px solid rgba(139,92,246,.22);
+  border-left-width: 3px;
+  border-radius: 14px;
+  background: rgba(139,92,246,.06);
+  padding: .75rem .9rem;
+  flex-wrap: wrap;
+}
+
+.nl-mine__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .85rem;
+  font-weight: 900;
+  color: #fff;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.nl-mine__icon img { width: 100%; height: 100%; object-fit: cover; }
+
+.nl-mine__info { min-width: 0; flex: 1; }
+.nl-mine__info strong { display: block; font-size: .92rem; font-weight: 800; color: #f0f4ff; }
+.nl-mine__info small { display: block; font-size: .78rem; color: rgb(100 116 139); margin-top: .1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.nl-mine__actions { display: flex; gap: .4rem; flex-shrink: 0; }
+
+/* ─── Grid ─── */
+.nl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: .65rem;
+}
+
+.nl-card-skeleton { height: 280px; border-radius: 18px; }
+
+/* ─── Empty ─── */
+.nl-empty {
+  padding: 2rem;
+  text-align: center;
+}
+
+.nl-empty h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: rgb(203 213 225);
+  margin: 0 0 .5rem;
+}
+
+.nl-empty p {
+  font-size: .88rem;
+  color: rgb(100 116 139);
+  margin: 0;
+}
+
+/* ─── Nation Card ─── */
+.nl-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(148,163,184,.1);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.012), rgba(255,255,255,.004)), rgba(13,19,36,.84);
+  overflow: hidden;
+  transition: border-color .15s, transform .15s;
+}
+
+.nl-card:hover {
+  border-color: rgba(148,163,184,.18);
+  transform: translateY(-1px);
+}
+
+/* banner */
+.nl-card__banner {
   position: relative;
-  height: 96px;
+  height: 72px;
   overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: #020817;
+  flex-shrink: 0;
 }
 
-.nation-card__overlay {
+.nl-card__banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.nl-card__banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.5));
+  background: linear-gradient(180deg, rgba(0,0,0,.1), rgba(0,0,0,.5));
 }
 
-.nation-card__badges {
+.nl-card__banner-top {
   position: absolute;
-  inset: 12px 12px auto 12px;
+  top: 8px;
+  left: 8px;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 
-.nation-card__badge {
+.nl-card__accent-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  opacity: .7;
+}
+
+/* policy badges */
+.nl-policy-badge {
+  display: inline-flex;
+  align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.34);
-  padding: 0.34rem 0.65rem;
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.12em;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.4);
+  backdrop-filter: blur(8px);
+  padding: .18rem .55rem;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  color: rgb(226 232 240);
+  color: rgba(255,255,255,.75);
 }
 
-.nation-card__badge--warning {
-  border-color: rgba(251, 191, 36, 0.2);
-  background: rgba(251, 191, 36, 0.1);
+.nl-policy-badge.badge-open {
+  border-color: rgba(52,211,153,.24);
+  background: rgba(52,211,153,.14);
+  color: rgb(110 231 183);
+}
+
+.nl-policy-badge.badge-req {
+  border-color: rgba(139,92,246,.24);
+  background: rgba(139,92,246,.14);
+  color: rgb(196 181 253);
+}
+
+.nl-policy-badge.nl-policy-badge--amber {
+  border-color: rgba(251,191,36,.22);
+  background: rgba(251,191,36,.12);
   color: rgb(253 230 138);
 }
 
-.nation-card__body {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 0.9rem;
-  padding: 16px;
+.nl-policy-badge.nl-policy-badge--mine {
+  border-color: rgba(99,102,241,.24);
+  background: rgba(99,102,241,.14);
+  color: rgb(165 180 252);
 }
 
-.nation-card__head {
+/* body */
+.nl-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: .85rem;
+}
+
+/* identity */
+.nl-card__identity {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.nation-card__avatar {
-  height: 52px;
-  width: 52px;
-  flex-shrink: 0;
-  border: 2px solid #09101d;
-  background: #0f172a;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-}
-
-.nation-card__accent {
-  height: 9px;
-  width: 9px;
-  flex-shrink: 0;
-  border-radius: 999px;
-}
-
-.nation-card__tag-badge {
-  border-radius: 999px;
-  padding: 0.18rem 0.55rem;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  line-height: 1.4;
-  flex-shrink: 0;
-}
-
-.nation-card__title-icon {
-  height: 36px;
-  width: 36px;
-  border-radius: 10px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.nation-card__title {
-  margin-top: 5px;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  font-size: 1.08rem;
-  font-weight: 900;
-  line-height: 1.22;
-  letter-spacing: -0.02em;
-  color: rgb(248 250 252);
-}
-
-.nation-card__description {
-  min-height: 46px;
-  color: rgb(148 163 184);
-  font-size: 0.91rem;
-  line-height: 1.55;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.nation-card__stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.nation-card__stat {
+  gap: .6rem;
   min-width: 0;
-  border-radius: 1rem !important;
-  padding: 0.7rem 0.45rem !important;
 }
 
-.nation-card__stat-label {
-  margin-top: 6px;
-  min-height: 22px;
-  font-size: 9px;
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: rgb(100 116 139);
-  white-space: normal;
-}
-
-.nation-card__info {
-  min-height: 92px;
-  border-radius: 1.1rem !important;
-  padding: 0.85rem !important;
-}
-
-.nation-card__info-text {
-  margin-top: 8px;
-  color: rgb(148 163 184);
-  font-size: 0.88rem;
-  line-height: 1.55;
-}
-
-.nation-card__actions {
-  margin-top: auto;
-  display: grid;
-  gap: 8px;
-}
-
-.nation-card__button {
-  width: 100%;
+.nl-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(10,15,30,.8);
+  display: flex;
+  align-items: center;
   justify-content: center;
+  font-size: .9rem;
+  font-weight: 900;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
-@media (max-width: 460px) {
-  .nation-card__stats {
-    grid-template-columns: 1fr;
-  }
+.nl-card__icon img { width: 100%; height: 100%; object-fit: cover; }
 
-  .nation-card__info {
-    min-height: 0;
-  }
+.nl-card__name-block { min-width: 0; }
+
+.nl-card__name {
+  font-size: .97rem;
+  font-weight: 900;
+  color: #f0f4ff;
+  margin: 0 0 .25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -.02em;
 }
 
-@media (min-width: 1536px) {
-  .nation-card__body {
-    padding: 15px;
-  }
+.nl-card__tag {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid;
+  padding: .1rem .45rem;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
 
-  .nation-card__title {
-    font-size: 1.02rem;
-  }
+/* desc */
+.nl-card__desc {
+  font-size: .82rem;
+  color: rgb(100 116 139);
+  line-height: 1.55;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5em;
+}
 
-  .nation-card__description,
-  .nation-card__info-text {
-    font-size: 0.86rem;
-  }
+/* stats row */
+.nl-card__stats {
+  display: flex;
+  gap: .85rem;
+  flex-wrap: wrap;
+}
+
+.nl-card__stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .78rem;
+  font-weight: 600;
+  color: rgb(100 116 139);
+}
+
+.nl-card__stats svg {
+  width: .85rem;
+  height: .85rem;
+  flex-shrink: 0;
+}
+
+/* buttons */
+.nl-card__view {
+  display: block;
+  text-align: center;
+  padding: .45rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,.12);
+  background: rgba(255,255,255,.03);
+  font-size: .82rem;
+  font-weight: 700;
+  color: rgb(148 163 184);
+  transition: background .12s, color .12s;
+  margin-top: auto;
+}
+
+.nl-card__view:hover { background: rgba(255,255,255,.06); color: #fff; }
+
+.nl-card__cta {
+  display: block;
+  text-align: center;
+  padding: .5rem;
+  border-radius: 10px;
+  font-size: .82rem;
+  font-weight: 800;
+  transition: filter .12s, opacity .12s;
+}
+
+.nl-cta--accent {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: #fff;
+}
+
+.nl-cta--accent:hover { filter: brightness(1.07); }
+
+.nl-cta--outline {
+  border: 1px solid rgba(148,163,184,.16);
+  background: rgba(255,255,255,.04);
+  color: rgb(203 213 225);
+}
+
+.nl-cta--outline:hover { border-color: rgba(148,163,184,.28); }
+
+.nl-cta--mine {
+  border: 1px solid rgba(99,102,241,.24);
+  background: rgba(99,102,241,.1);
+  color: rgb(165 180 252);
+}
+
+.nl-cta--muted {
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.03);
+  color: rgb(71 85 105);
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 700px) {
+  .nl-stats { grid-template-columns: repeat(2, 1fr); }
+  .nl-header { flex-direction: column; align-items: flex-start; }
+  .nl-search__input { width: 150px; }
 }
 </style>
