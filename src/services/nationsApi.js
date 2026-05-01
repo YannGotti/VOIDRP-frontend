@@ -44,6 +44,13 @@ export async function leaveMyNation(accessToken) {
   })
 }
 
+export async function disbandMyNation(accessToken) {
+  return await apiRequest('/nations/me', {
+    method: 'DELETE',
+    headers: buildAuthHeaders(accessToken),
+  })
+}
+
 export async function joinNation(accessToken, slug, payload = {}) {
   return await apiRequest(`/nations/${encodeURIComponent(slug)}/join`, {
     method: 'POST',

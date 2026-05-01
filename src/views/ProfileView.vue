@@ -1,69 +1,56 @@
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import AccountTabs from '../components/AccountTabs.vue'
 import { resendVerification } from '../services/authApi'
 import { getMyNation } from '../services/nationsApi'
-import { toastError, toastSuccess, toastInfo } from '../services/toast'
 import { getMyPublicProfile } from '../services/profileApi'
+import { getPlayerProgression } from '../services/progressionApi'
+import { toastError, toastSuccess } from '../services/toast'
 import { reloadMe, useAuthStore } from '../stores/authStore'
 
 const auth = useAuthStore()
 
 const loading = ref(true)
-const refreshing = ref(false)
 const sendingVerification = ref(false)
-const errorMessage = ref('')
-const actionMessage = ref('')
 const publicProfile = ref(null)
 const myNation = ref(null)
+const progression = ref(null)
+
+const TIERS = [
+  { key: 'create_age',   label: 'Механизмы',   icon: '⚙️' },
+  { key: 'mekanism_age', label: 'Сталь',        icon: '🔩' },
+  { key: 'ae2_age',      label: 'Автоматизация',icon: '💾' },
+  { key: 'reactor_age',  label: 'Реакторы',     icon: '⚛️' },
+  { key: 'draconic_age', label: 'Дракон',        icon: '🐉' },
+  { key: 'quantum_age',  label: 'Квантум',       icon: '🌌' },
+  { key: 'endgame',      label: 'Эндгейм',       icon: '♾️' },
+]
 
 const displayName = computed(() => auth.displayName.value || 'Игрок')
-
-const avatarText = computed(() => {
-  const source =
-    publicProfile.value?.display_name ||
-    auth.state.playerAccount?.minecraft_nickname ||
-    auth.state.user?.site_login ||
-    'V'
-
-  return source.slice(0, 1).toUpperCase()
-})
 
 const avatarUrl = computed(
   () => publicProfile.value?.assets?.avatar_url || publicProfile.value?.assets?.avatar_preview_url || '',
 )
+const avatarText = computed(() => {
+  const src = publicProfile.value?.display_name || auth.state.playerAccount?.minecraft_nickname || 'V'
+  return src.slice(0, 1).toUpperCase()
+})
 
 const publicProfileUrl = computed(() => (publicProfile.value?.slug ? `/u/${publicProfile.value.slug}` : ''))
-const publicProfileAbsoluteUrl = computed(() => {
-  if (!publicProfile.value?.slug || typeof window === 'undefined') return ''
-  return `${window.location.origin}/u/${publicProfile.value.slug}`
-})
 
 const createdAtText = computed(() => {
   const raw = auth.state.user?.created_at
   if (!raw) return '—'
-
-  const date = new Date(raw)
-  if (Number.isNaN(date.getTime())) return raw
-
-  return new Intl.DateTimeFormat('ru-RU', { dateStyle: 'medium' }).format(date)
-})
-
-const bioText = computed(() => {
-  return publicProfile.value?.bio?.trim() || 'Добавь короткое описание о себе, чтобы профиль выглядел живым и законченным.'
+  return new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short' }).format(new Date(raw))
 })
 
 const nationRoleText = computed(() => {
   switch (String(myNation.value?.viewer_role || '').toLowerCase()) {
-    case 'leader':
-      return 'Лидер государства'
-    case 'officer':
-      return 'Офицер государства'
-    case 'member':
-      return 'Участник государства'
-    default:
-      return 'Без государства'
+    case 'leader': return 'Лидер'
+    case 'officer': return 'Офицер'
+    case 'member': return 'Участник'
+    default: return null
   }
 })
 
@@ -72,399 +59,340 @@ const canManageNation = computed(() => Boolean(myNation.value?.viewer_can_manage
 const checkpoints = computed(() => [
   {
     label: 'Почта',
-    value: auth.emailVerified.value ? 'Подтверждена' : 'Нужно подтвердить',
     done: auth.emailVerified.value,
+    value: auth.emailVerified.value ? 'Подтверждена' : 'Не подтверждена',
   },
   {
-    label: 'Игровой ник',
-    value: auth.state.playerAccount?.minecraft_nickname || 'Пока не указан',
+    label: 'Ник',
     done: Boolean(auth.state.playerAccount?.minecraft_nickname),
+    value: auth.state.playerAccount?.minecraft_nickname || 'Не указан',
   },
   {
-    label: 'Публичный профиль',
-    value: publicProfile.value?.slug ? `@${publicProfile.value.slug}` : 'Пока не заполнен',
+    label: 'Профиль',
     done: Boolean(publicProfile.value?.slug),
+    value: publicProfile.value?.slug ? `@${publicProfile.value.slug}` : 'Не заполнен',
   },
   {
     label: 'Государство',
-    value: myNation.value?.title || 'Пока не выбрано',
     done: Boolean(myNation.value?.slug),
+    value: myNation.value?.title || 'Не выбрано',
   },
 ])
 
 const readinessPercent = computed(() => {
-  const done = checkpoints.value.filter((item) => item.done).length
+  const done = checkpoints.value.filter((c) => c.done).length
   return Math.round((done / checkpoints.value.length) * 100)
 })
 
-const primaryActions = computed(() => {
-  const items = []
-
-  if (!auth.emailVerified.value) {
-    items.push({
-      title: 'Подтвердить почту',
-      description: 'Это откроет полный и понятный путь для входа и восстановления доступа.',
-      to: '/verify-email',
-      tone: 'primary',
-    })
-  }
-
-  if (!publicProfile.value?.slug) {
-    items.push({
-      title: 'Заполнить публичный профиль',
-      description: 'Добавь описание и оформление, чтобы тебя было проще узнать другим игрокам.',
-      to: '/profile/public',
-      tone: items.length ? 'outline' : 'primary',
-    })
-  }
-
-  if (!myNation.value?.slug) {
-    items.push({
-      title: 'Выбрать государство',
-      description: 'Открой каталог и вступи в подходящее сообщество или создай своё.',
-      to: '/nations',
-      tone: items.length ? 'outline' : 'primary',
-    })
-  }
-
-  if (!items.length) {
-    items.push({
-      title: 'Открыть публичный профиль',
-      description: 'Профиль уже готов — можно показать его другим игрокам.',
-      to: publicProfileUrl.value || '/profile/public',
-      tone: 'primary',
-    })
-  }
-
-  return items.slice(0, 3)
+const unlockedKeys = computed(() => {
+  if (!progression.value) return new Set()
+  return new Set(progression.value.tiers.map((t) => t.tier_name))
 })
 
-const quickLinks = computed(() => [
-  {
-    title: 'Оформление профиля',
-    description: 'Измени описание, фон, аватар и внешний вид страницы игрока.',
-    to: '/profile/public',
-  },
-  {
-    title: 'Реферальный центр',
-    description: 'Смотреть код приглашения, прогресс и недавние регистрации.',
-    to: '/profile/referrals',
-  },
-  {
-    title: 'Социальный хаб',
-    description: 'Подписчики, подписки и друзья в одном компактном месте.',
-    to: '/profile/social',
-  },
-  {
-    title: !myNation.value
-      ? 'Каталог государств'
-      : canManageNation.value
-        ? 'Управление государством'
-        : 'Страница твоего государства',
-    description: !myNation.value
-      ? 'Посмотри открытые сообщества, заявки и условия вступления.'
-      : canManageNation.value
-        ? `У тебя есть доступ к управлению «${myNation.value.title}».`
-        : `Ты состоишь в «${myNation.value.title}». Открой страницу сообщества.`,
-    to: !myNation.value ? '/nations' : canManageNation.value ? '/nation/studio' : `/nation/${myNation.value.slug}`,
-  },
-])
+const currentTierLabel = computed(() => progression.value?.current_tier_label || null)
+
+const enrichedTiers = computed(() => {
+  const tierMap = {}
+  if (progression.value) {
+    for (const t of progression.value.tiers) tierMap[t.tier_name] = t
+  }
+  return TIERS.map((tier) => ({
+    ...tier,
+    unlocked: unlockedKeys.value.has(tier.key),
+    unlocked_at: tierMap[tier.key]?.unlocked_at ?? null,
+  }))
+})
+
+function fmtDate(iso) {
+  if (!iso) return ''
+  return new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short' }).format(new Date(iso))
+}
 
 async function loadData() {
-  errorMessage.value = ''
-  actionMessage.value = ''
   loading.value = true
-
   try {
     await reloadMe()
-
-    const [profilePayload, nationPayload] = await Promise.all([
-      auth.accessToken ? getMyPublicProfile(auth.accessToken) : Promise.resolve(null),
-      auth.accessToken ? getMyNation(auth.accessToken) : Promise.resolve(null),
+    const nick = auth.state.playerAccount?.minecraft_nickname
+    const [profilePayload, nationPayload, progressionPayload] = await Promise.all([
+      auth.accessToken ? getMyPublicProfile(auth.accessToken) : null,
+      auth.accessToken ? getMyNation(auth.accessToken) : null,
+      nick ? getPlayerProgression(nick).catch(() => null) : null,
     ])
-
     publicProfile.value = profilePayload || null
     myNation.value = nationPayload || null
-  } catch (error) {
-    errorMessage.value = error.message || 'Не удалось загрузить кабинет.'
+    progression.value = progressionPayload || null
+  } catch (e) {
+    toastError(e.message || 'Не удалось загрузить кабинет.')
   } finally {
     loading.value = false
   }
 }
 
-async function refreshAccount() {
-  refreshing.value = true
-  await loadData()
-  refreshing.value = false
-}
-
 async function sendVerificationAgain() {
   if (!auth.state.user?.email) return
-
   sendingVerification.value = true
-  errorMessage.value = ''
-  actionMessage.value = ''
-
   try {
-    const response = await resendVerification({ email: auth.state.user.email })
-    actionMessage.value = response?.message || 'Письмо для подтверждения отправлено повторно.'
-  } catch (error) {
-    errorMessage.value = error?.message || 'Не удалось отправить письмо повторно.'
+    await resendVerification({ email: auth.state.user.email })
+    toastSuccess('Письмо отправлено.')
+  } catch (e) {
+    toastError(e?.message || 'Не удалось отправить письмо.')
   } finally {
     sendingVerification.value = false
   }
 }
 
-async function copyPublicProfileUrl() {
-  if (!publicProfileAbsoluteUrl.value) return
-
+async function copyLink() {
+  if (!publicProfileUrl.value || typeof window === 'undefined') return
   try {
-    await navigator.clipboard.writeText(publicProfileAbsoluteUrl.value)
-    actionMessage.value = 'Ссылка на публичный профиль скопирована.'
-    errorMessage.value = ''
+    await navigator.clipboard.writeText(`${window.location.origin}${publicProfileUrl.value}`)
+    toastSuccess('Ссылка скопирована.')
   } catch {
-    errorMessage.value = 'Не удалось скопировать ссылку.'
+    toastError('Не удалось скопировать ссылку.')
   }
 }
 
 onMounted(loadData)
-watch(errorMessage, (value) => { if (value) toastError(value) })
-watch(actionMessage, (value) => { if (value) toastSuccess(value) })
 </script>
 
 <template>
-  <section class="py-8 md:py-10">
-    <div class="container-shell space-y-5">
+  <section class="py-6 md:py-8">
+    <div class="container-shell space-y-4">
 
-      <section class="surface-card p-5 md:p-7 lg:p-8">
-        <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
-          <div class="flex min-w-0 gap-4 md:gap-5">
-            <div class="preview-avatar h-20 w-20 shrink-0 text-2xl md:h-24 md:w-24 md:text-3xl">
-              <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
-              <span v-else>{{ avatarText }}</span>
-            </div>
-
-            <div class="min-w-0">
-              <div class="section-kicker !mb-2">Кабинет игрока</div>
-              <h1 class="truncate text-3xl font-black tracking-tight text-slate-50 md:text-4xl">
-                {{ displayName }}
-              </h1>
-              <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-400 md:text-[15px]">
-                Понятный личный кабинет без перегруза: только статус аккаунта, готовность к старту и быстрые переходы.
-              </p>
-
-              <div class="mt-4 flex flex-wrap gap-2.5">
-                <span class="footer-chip">{{ auth.accountModeText.value }}</span>
-                <span class="footer-chip">{{ nationRoleText }}</span>
-                <span class="footer-chip">Аккаунт создан: {{ createdAtText }}</span>
-              </div>
-            </div>
+      <!-- Compact hero -->
+      <section class="surface-card p-4 md:p-5">
+        <div class="flex items-center gap-4">
+          <div class="preview-avatar h-14 w-14 shrink-0 text-xl">
+            <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="h-full w-full object-cover" />
+            <span v-else>{{ avatarText }}</span>
           </div>
 
-          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <div class="metric-card">
-              <p class="metric-label">Профиль заполнен</p>
-              <div class="mt-3" style="background: rgba(255,255,255,0.07); height: 8px; border-radius: 999px; overflow: hidden;">
-                <div :style="{
-                  width: readinessPercent + '%',
-                  background: 'linear-gradient(90deg, #8b5cf6, #22c55e)',
-                  height: '100%',
-                  borderRadius: '999px',
-                  transition: 'width 0.5s ease',
-                }"></div>
-              </div>
-              <p class="mt-2 text-xs text-slate-400">
-                {{ checkpoints.filter(c => c.done).length }} из {{ checkpoints.length }} шагов
-              </p>
-            </div>
-
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-              <button type="button" class="btn btn-outline" :disabled="refreshing" @click="refreshAccount">
-                <span v-if="refreshing" class="spinner"></span>
-                <span>{{ refreshing ? 'Обновляем...' : 'Обновить данные' }}</span>
-              </button>
-
-              <button
-                v-if="publicProfileAbsoluteUrl"
-                type="button"
-                class="btn btn-primary"
-                @click="copyPublicProfileUrl"
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 class="truncate text-xl font-black tracking-tight text-slate-50">{{ displayName }}</h1>
+              <span
+                v-if="currentTierLabel"
+                class="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs font-semibold text-violet-300"
               >
-                Скопировать ссылку профиля
-              </button>
-              <RouterLink v-else to="/profile/public" class="btn btn-primary">
-                Заполнить профиль
-              </RouterLink>
+                {{ currentTierLabel }}
+              </span>
+              <span
+                v-if="myNation && nationRoleText"
+                class="rounded-full bg-slate-700/60 px-2 py-0.5 text-xs text-slate-400"
+              >
+                {{ nationRoleText }} · {{ myNation.tag }}
+              </span>
             </div>
+            <p class="mt-1 text-xs text-slate-500">{{ auth.accountModeText.value }} · с {{ createdAtText }}</p>
+          </div>
+
+          <div class="hidden shrink-0 gap-2 sm:flex">
+            <button v-if="publicProfileUrl" type="button" class="btn btn-outline !py-1.5 !text-xs" @click="copyLink">
+              Скопировать ссылку
+            </button>
+            <RouterLink to="/profile/public" class="btn btn-primary !py-1.5 !text-xs">
+              Оформление
+            </RouterLink>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <div class="mb-1 flex items-center justify-between">
+            <span class="text-xs text-slate-500">Готовность профиля</span>
+            <span class="text-xs font-semibold text-slate-400">{{ readinessPercent }}%</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.07); height: 5px; border-radius: 999px; overflow: hidden;">
+            <div
+              :style="{
+                width: readinessPercent + '%',
+                background: 'linear-gradient(90deg, #8b5cf6, #22c55e)',
+                height: '100%',
+                borderRadius: '999px',
+                transition: 'width 0.5s ease',
+              }"
+            ></div>
           </div>
         </div>
       </section>
 
       <AccountTabs />
 
-      <div v-if="loading" class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <div class="space-y-4">
-          <div class="skeleton h-44 rounded-[28px]"></div>
-          <div class="skeleton h-52 rounded-[28px]"></div>
-        </div>
-        <div class="space-y-4">
-          <div class="skeleton h-52 rounded-[28px]"></div>
-          <div class="skeleton h-44 rounded-[28px]"></div>
-        </div>
+      <div v-if="loading" class="grid gap-4 lg:grid-cols-2">
+        <div class="skeleton h-72 rounded-[28px]"></div>
+        <div class="skeleton h-72 rounded-[28px]"></div>
       </div>
 
-      <div v-else class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+      <div v-else class="grid gap-4 lg:grid-cols-2">
+
+        <!-- Left: Progression + Checklist -->
         <div class="space-y-4">
-          <section class="surface-card p-5 md:p-6">
-            <div>
-              <div class="section-kicker !mb-2">Старт</div>
-              <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-                Что сделать дальше
-              </h2>
+
+          <section class="surface-card p-4 md:p-5">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="section-kicker !mb-1">Прогрессия</div>
+                <h2 class="text-base font-black tracking-tight text-slate-50">Эпохи</h2>
+              </div>
+              <RouterLink to="/leaderboard" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                Рейтинг →
+              </RouterLink>
             </div>
 
-            <div class="mt-5 grid gap-3">
-              <RouterLink
-                v-for="item in primaryActions"
-                :key="item.to"
-                :to="item.to"
-                :class="item.tone === 'primary' ? 'btn btn-primary justify-start' : 'btn btn-outline justify-start'"
+            <div class="mt-3 space-y-1.5">
+              <div
+                v-for="tier in enrichedTiers"
+                :key="tier.key"
+                class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition"
+                :class="tier.unlocked ? 'bg-violet-500/10' : 'bg-slate-800/40'"
               >
-                {{ item.title }}
-              </RouterLink>
+                <span class="w-5 text-center text-sm leading-none select-none">{{ tier.icon }}</span>
+                <span
+                  class="flex-1 text-sm font-medium"
+                  :class="tier.unlocked ? 'text-slate-100' : 'text-slate-500'"
+                >
+                  {{ tier.label }}
+                </span>
+                <span v-if="tier.unlocked" class="text-xs text-slate-400">{{ fmtDate(tier.unlocked_at) }}</span>
+                <span v-else class="h-2 w-2 shrink-0 rounded-full bg-slate-700"></span>
+              </div>
+            </div>
+
+            <p v-if="!progression" class="mt-3 text-center text-xs text-slate-500">
+              Появится после первого захода на сервер
+            </p>
+          </section>
+
+          <section class="surface-card p-4 md:p-5">
+            <div class="section-kicker !mb-1">Аккаунт</div>
+            <h2 class="text-base font-black tracking-tight text-slate-50">Чеклист</h2>
+
+            <div class="mt-3 grid grid-cols-2 gap-2">
+              <div
+                v-for="cp in checkpoints"
+                :key="cp.label"
+                class="rounded-xl p-3"
+                :class="cp.done ? 'bg-emerald-500/10' : 'bg-amber-500/10'"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs text-slate-400">{{ cp.label }}</span>
+                  <span
+                    class="h-2 w-2 shrink-0 rounded-full"
+                    :class="cp.done ? 'bg-emerald-400' : 'bg-amber-400'"
+                  ></span>
+                </div>
+                <p class="mt-1.5 truncate text-xs font-semibold text-slate-200">{{ cp.value }}</p>
+              </div>
             </div>
 
             <button
               v-if="!auth.emailVerified.value"
               type="button"
-              class="btn btn-ghost mt-3 w-full"
+              class="btn btn-ghost mt-3 w-full !py-1.5 !text-xs"
               :disabled="sendingVerification"
               @click="sendVerificationAgain"
             >
               <span v-if="sendingVerification" class="spinner"></span>
-              <span>{{ sendingVerification ? 'Отправляем...' : 'Отправить письмо ещё раз' }}</span>
+              {{ sendingVerification ? 'Отправляем...' : 'Отправить письмо повторно' }}
             </button>
           </section>
+        </div>
 
-          <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Профиль</div>
-            <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              О тебе
-            </h2>
-            <p class="mt-4 whitespace-pre-line text-sm leading-7 text-slate-300">
-              {{ bioText }}
-            </p>
+        <!-- Right: Account info + Nation + Links -->
+        <div class="space-y-4">
 
-            <div class="mt-5 grid gap-3 sm:grid-cols-2">
-              <div
-                v-for="item in checkpoints"
-                :key="item.label"
-                class="metric-card"
-              >
-                <div class="flex items-center justify-between gap-3">
-                  <p class="metric-label">{{ item.label }}</p>
-                  <span class="h-2.5 w-2.5 rounded-full" :class="item.done ? 'bg-emerald-400' : 'bg-amber-400'"></span>
-                </div>
-                <p class="mt-3 text-sm font-semibold text-slate-100">
-                  {{ item.value }}
-                </p>
+          <section class="surface-card p-4 md:p-5">
+            <div class="section-kicker !mb-1">Данные</div>
+            <h2 class="text-base font-black tracking-tight text-slate-50">Основная информация</h2>
+
+            <div class="mt-3 space-y-1.5">
+              <div class="flex items-center justify-between rounded-xl bg-slate-800/40 px-3 py-2.5">
+                <span class="text-xs text-slate-400">Логин</span>
+                <span class="text-xs font-semibold text-slate-100">{{ auth.state.user?.site_login || '—' }}</span>
+              </div>
+              <div class="flex items-center justify-between rounded-xl bg-slate-800/40 px-3 py-2.5">
+                <span class="shrink-0 text-xs text-slate-400">Email</span>
+                <span
+                  class="ml-4 max-w-[180px] truncate text-right text-xs font-semibold text-slate-100"
+                  :title="auth.state.user?.email"
+                >
+                  {{ auth.state.user?.email || '—' }}
+                </span>
+              </div>
+              <div class="flex items-center justify-between rounded-xl bg-slate-800/40 px-3 py-2.5">
+                <span class="text-xs text-slate-400">Ник в игре</span>
+                <span class="text-xs font-semibold text-slate-100">
+                  {{ auth.state.playerAccount?.minecraft_nickname || 'Не указан' }}
+                </span>
               </div>
             </div>
           </section>
 
-          <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Переходы</div>
-            <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              Быстрые разделы
+          <section class="surface-card p-4 md:p-5">
+            <div class="section-kicker !mb-1">Государство</div>
+            <h2 class="text-base font-black tracking-tight text-slate-50">
+              {{ myNation ? myNation.title : 'Не выбрано' }}
             </h2>
 
-            <div class="mt-5 grid gap-3">
+            <div v-if="myNation" class="mt-3">
+              <p class="text-xs text-slate-400">
+                [{{ myNation.tag }}] · {{ myNation.short_description || 'Описание не добавлено' }}
+              </p>
+              <div class="mt-3 flex gap-2">
+                <RouterLink
+                  :to="canManageNation ? '/nation/studio' : `/nation/${myNation.slug}`"
+                  class="btn btn-primary flex-1 !py-1.5 !text-xs"
+                >
+                  {{ canManageNation ? 'Управление' : 'Страница' }}
+                </RouterLink>
+                <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-outline flex-1 !py-1.5 !text-xs">
+                  Открыть
+                </RouterLink>
+              </div>
+            </div>
+            <div v-else class="mt-3">
+              <p class="text-xs text-slate-400">
+                Вступи в существующее государство или создай своё сообщество.
+              </p>
+              <div class="mt-3 flex gap-2">
+                <RouterLink to="/nations" class="btn btn-outline flex-1 !py-1.5 !text-xs">Список</RouterLink>
+                <RouterLink to="/nation/studio" class="btn btn-primary flex-1 !py-1.5 !text-xs">Создать</RouterLink>
+              </div>
+            </div>
+          </section>
+
+          <section class="surface-card p-4 md:p-5">
+            <div class="section-kicker !mb-1">Разделы</div>
+            <h2 class="text-base font-black tracking-tight text-slate-50">Быстрые переходы</h2>
+
+            <div class="mt-3 grid grid-cols-2 gap-2">
               <RouterLink
-                v-for="item in quickLinks"
-                :key="item.to"
-                :to="item.to"
-                class="action-card transition hover:-translate-y-[1px]"
+                to="/profile/public"
+                class="action-card !p-3 text-center transition hover:-translate-y-[1px]"
               >
-                <p class="font-semibold text-slate-100">{{ item.title }}</p>
-                <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.description }}</p>
+                <p class="text-xs font-semibold text-slate-100">Оформление</p>
+              </RouterLink>
+              <RouterLink
+                to="/profile/referrals"
+                class="action-card !p-3 text-center transition hover:-translate-y-[1px]"
+              >
+                <p class="text-xs font-semibold text-slate-100">Рефералы</p>
+              </RouterLink>
+              <RouterLink
+                to="/profile/social"
+                class="action-card !p-3 text-center transition hover:-translate-y-[1px]"
+              >
+                <p class="text-xs font-semibold text-slate-100">Друзья</p>
+              </RouterLink>
+              <RouterLink
+                to="/leaderboard"
+                class="action-card !p-3 text-center transition hover:-translate-y-[1px]"
+              >
+                <p class="text-xs font-semibold text-slate-100">Рейтинг</p>
               </RouterLink>
             </div>
           </section>
         </div>
-
-        <div class="space-y-4">
-          <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Аккаунт</div>
-            <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              Основная информация
-            </h2>
-
-            <div class="mt-5 grid gap-3">
-              <div class="action-card">
-                <p class="metric-label">Логин</p>
-                <p class="mt-2 text-sm font-semibold text-slate-100">{{ auth.state.user?.site_login || '—' }}</p>
-              </div>
-
-              <div class="action-card">
-                <p class="metric-label">Email</p>
-                <p class="mt-2 break-all text-sm font-semibold text-slate-100">{{ auth.state.user?.email || '—' }}</p>
-                <p class="mt-2 text-sm text-slate-400">
-                  {{ auth.emailVerified.value ? 'Почта подтверждена.' : 'Почта пока не подтверждена.' }}
-                </p>
-              </div>
-
-              <div class="action-card">
-                <p class="metric-label">Игровой ник</p>
-                <p class="mt-2 text-sm font-semibold text-slate-100">
-                  {{ auth.state.playerAccount?.minecraft_nickname || 'Пока не указан' }}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Государство</div>
-            <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              Твоё место в мире
-            </h2>
-
-            <div v-if="myNation" class="mt-5 space-y-3">
-              <div class="action-card">
-                <p class="metric-label">Название</p>
-                <p class="mt-2 text-sm font-semibold text-slate-100">{{ myNation.title }}</p>
-                <p class="mt-2 text-sm leading-6 text-slate-400">
-                  [{{ myNation.tag }}] · {{ myNation.short_description || 'Описание пока не добавлено.' }}
-                </p>
-              </div>
-
-              <div class="grid gap-3 sm:grid-cols-2">
-                <RouterLink
-                  :to="canManageNation ? '/nation/studio' : `/nation/${myNation.slug}`"
-                  class="btn btn-primary"
-                >
-                  {{ canManageNation ? 'Открыть управление' : 'Открыть страницу' }}
-                </RouterLink>
-                <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-outline">Публичная страница</RouterLink>
-              </div>
-            </div>
-
-            <div v-else class="mt-5">
-              <div class="action-card">
-                <p class="text-sm leading-7 text-slate-300">
-                  Ты пока не состоишь в государстве. Можно вступить в существующее или создать своё сообщество со страницей, рейтингом и оформлением.
-                </p>
-              </div>
-
-              <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                <RouterLink to="/nations" class="btn btn-outline">Открыть список</RouterLink>
-                <RouterLink to="/nation/studio" class="btn btn-primary">Создать своё</RouterLink>
-              </div>
-            </div>
-          </section>
-        </div>
       </div>
+
     </div>
   </section>
 </template>
-
-

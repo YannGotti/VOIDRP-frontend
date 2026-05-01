@@ -30,6 +30,7 @@ import MarketView from '../views/MarketView.vue'
 import MarketItemView from '../views/MarketItemView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import OfferAgreementView from '../views/OfferAgreementView.vue'
+import LeaderboardView from '../views/LeaderboardView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
@@ -55,6 +56,7 @@ const routes = [
   { path: '/nation/studio', name: 'nation-studio', component: NationStudioView, meta: { title: 'Студия государства', requiresAuth: true } },
   { path: '/nations/rankings', name: 'nation-rankings', component: NationRankingsView, meta: { title: 'Рейтинг государств' } },
   { path: '/alliances', name: 'alliances', component: AllianceHubView, meta: { title: 'Альянсы' } },
+  { path: '/leaderboard', name: 'leaderboard', component: LeaderboardView, meta: { title: 'Рейтинг прогрессии' } },
   { path: '/internal-admin', name: 'admin-legacy', component: AdminLegacyView, meta: { title: 'Legacy Admin', hidePublicShell: true } },
   { path: '/internal-admin/market', name: 'admin-market', component: AdminMarketView, meta: { title: 'Market Admin', hidePublicShell: true } },
 ]

@@ -13,6 +13,7 @@ const props = defineProps({
 const EVENT_ICONS = {
   nation_created: '🏛',
   nation_updated: '✏️',
+  nation_disbanded: '💀',
   join_requested: '📩',
   join_approved: '✅',
   join_rejected: '✖',
@@ -44,6 +45,7 @@ function buildMessage(entry) {
   switch (entry?.event_type) {
     case 'nation_created': return `${actor} основал государство`
     case 'nation_updated': return `${actor} обновил настройки`
+    case 'nation_disbanded': return `${actor} расформировал государство`
     case 'join_requested': return `${actor} подал заявку`
     case 'join_approved': return `${actor} принял ${target}`
     case 'join_rejected': return `${actor} отклонил заявку ${target}`

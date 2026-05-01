@@ -10,6 +10,7 @@ import {
   deleteNationBackground,
   deleteNationBanner,
   deleteNationIcon,
+  disbandMyNation,
   getMyNation,
   leaveMyNation,
   rejectNationRequest,
@@ -499,6 +500,29 @@ async function handleLeaveNation() {
   }
 }
 
+async function handleDisbandNation() {
+  const name = nation.value?.title || 'государство'
+  const confirmed = window.confirm(`Расформировать государство «${name}»? Это действие необратимо — все участники будут исключены, история и казна удалены.`)
+  if (!confirmed) return
+
+  actionLoading.value = true
+  error.value = ''
+  success.value = ''
+
+  try {
+    await disbandMyNation(auth.accessToken)
+    nation.value = null
+    success.value = 'Государство расформировано.'
+    activity.value = []
+    transactions.value = []
+    donors.value = []
+  } catch (err) {
+    error.value = err.message || 'Не удалось расформировать государство.'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
 onMounted(async () => {
   await loadNation()
   await Promise.all([loadActivity(), loadTreasury(), loadDonors()])
@@ -833,6 +857,21 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                   @click="handleLeaveNation"
                 >
                   Покинуть государство
+                </button>
+              </div>
+
+              <div v-if="viewerRole === 'leader'" class="mt-6 rounded-[18px] border border-red-500/20 bg-red-500/5 p-4">
+                <p class="text-sm font-semibold text-red-300">Опасная зона</p>
+                <p class="mt-1 text-sm leading-6 text-slate-400">
+                  Расформирование государства необратимо. Все участники будут исключены, история и казна удалены.
+                </p>
+                <button
+                  type="button"
+                  class="btn btn-outline mt-3 border-red-500/40 text-red-400 hover:border-red-500 hover:bg-red-500/10"
+                  :disabled="actionLoading"
+                  @click="handleDisbandNation"
+                >
+                  Расформировать государство
                 </button>
               </div>
             </div>
