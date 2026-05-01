@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { siteConfig } from '../config.site'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import {
   approveNationRequest,
@@ -523,6 +524,29 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
                     <button type="button" class="btn btn-outline btn-sm" @click="handleReject(item.id)">Отклонить</button>
                     <button type="button" class="btn btn-sm" :style="accentBtnStyle" @click="handleApprove(item.id)">Принять</button>
                   </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Map card -->
+            <section class="surface-card np-card np-map-card" :style="cardStyle">
+              <div class="np-card__header" style="margin-bottom:.5rem">
+                <h2 class="np-card__title" style="margin-bottom:0">Карта мира</h2>
+                <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="np-map-link">↗ открыть</a>
+              </div>
+              <div class="np-map-wrap">
+                <iframe
+                  :src="`${siteConfig.dynmapUrl}/`"
+                  class="np-map-iframe"
+                  title="Dynmap"
+                  allowfullscreen
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                ></iframe>
+                <div class="np-map-overlay">
+                  <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="np-map-open-btn" :style="{ background: accent }">
+                    Открыть карту
+                  </a>
                 </div>
               </div>
             </section>
@@ -1063,6 +1087,57 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
   color: rgb(100 116 139);
   margin-right: .3rem;
 }
+
+/* ─── Map ─── */
+.np-map-card { padding: .85rem !important; }
+
+.np-map-link {
+  font-size: .72rem;
+  font-weight: 700;
+  color: rgb(100 116 139);
+  text-decoration: none;
+  transition: color .12s;
+}
+.np-map-link:hover { color: rgb(226 232 240); }
+
+.np-map-wrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 220px;
+  background: rgba(5,10,20,.8);
+}
+
+.np-map-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+  pointer-events: none;
+}
+
+.np-map-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: .85rem;
+  background: linear-gradient(to top, rgba(5,10,20,.7) 0%, transparent 60%);
+}
+
+.np-map-open-btn {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 10px;
+  padding: .45rem 1rem;
+  font-size: .78rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  transition: filter .15s;
+}
+.np-map-open-btn:hover { filter: brightness(1.15); }
 
 /* ─── Misc ─── */
 .np-empty {
