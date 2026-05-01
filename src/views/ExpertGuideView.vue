@@ -202,6 +202,82 @@ const tips = [
   { title: 'Автоматизируй рано', text: 'AE2 придёт позже, но первые Create-линии нужно строить как можно раньше.' },
 ]
 
+const regionLimits = [
+  { label: 'Макс. объём привата', value: '20 000 000 блоков', hint: '≈ 200 × 200 × 500' },
+  { label: 'Приватов на игрока', value: '16', hint: 'по умолчанию' },
+  { label: 'Домов (/sethome)', value: '2', hint: 'на аккаунт' },
+]
+
+const regionCommands = [
+  { cmd: '//wand', desc: 'Получить палочку выделения (деревянный топор)' },
+  { cmd: 'ЛКМ по блоку', desc: 'Первый угол выделения (поз. 1)' },
+  { cmd: 'ПКМ по блоку', desc: 'Второй угол выделения (поз. 2)' },
+  { cmd: '/rg claim <название>', desc: 'Создать привата в выделённой области' },
+  { cmd: '/rg info', desc: 'Информация о привате под ногами' },
+  { cmd: '/rg list', desc: 'Список своих приватов' },
+  { cmd: '/rg addmember <привата> <игрок>', desc: 'Добавить участника' },
+  { cmd: '/rg removemember <привата> <игрок>', desc: 'Убрать участника' },
+  { cmd: '/rg flag <привата> <флаг> <значение>', desc: 'Настроить флаг региона (allow / deny / none)' },
+  { cmd: '/rg remove <название>', desc: 'Удалить привата' },
+]
+
+const serverCommands = [
+  { cmd: '/sethome <название>', desc: 'Поставить точку дома (лимит: 2)' },
+  { cmd: '/home <название>', desc: 'Телепортироваться домой' },
+  { cmd: '/homes', desc: 'Список всех своих домов' },
+  { cmd: '/delhome <название>', desc: 'Удалить точку дома' },
+  { cmd: '/spawn', desc: 'Телепортироваться на спавн сервера' },
+  { cmd: '/tpa <игрок>', desc: 'Запросить телепортацию к игроку' },
+  { cmd: '/tpahere <игрок>', desc: 'Позвать игрока к себе' },
+  { cmd: '/tpaccept', desc: 'Принять запрос телепортации' },
+  { cmd: '/tpdeny', desc: 'Отклонить запрос телепортации' },
+]
+
+const modCategories = [
+  {
+    name: 'Технологии',
+    color: 'blue',
+    mods: [
+      { name: 'Create', key: 'Шестерни, пресс, миксер, deployer, конвейер, каретки', note: 'Старт техно-прогрессии' },
+      { name: 'Immersive Engineering', key: 'Коксовая печь, доменная печь, сталь, металлический пресс', note: 'Единственный источник стали' },
+      { name: 'Mekanism', key: '4–5× обогащение руды, цифровой шахтёр, телепортер, генераторы', note: 'Главная энергосеть' },
+      { name: 'Applied Energistics 2', key: 'ME-сеть, ячейки хранения, процессоры, молекулярный сборщик', note: 'Автокрафт и хранение' },
+      { name: 'Industrial Foregoing', key: 'Фермы растений и мобов, лазерный бур, пластик, жидкостные машины', note: 'Автоматизация ресурсов' },
+      { name: 'Extreme Reactors 2', key: 'Многоблочный ядерный реактор, турбина, гиганская выработка энергии', note: 'Энергия для финала' },
+    ],
+  },
+  {
+    name: 'Магия',
+    color: 'purple',
+    mods: [
+      { name: 'Mahou Tsukai', key: 'Знаки (махоудзин), бабочка-фамильяр, телепортация, щит', note: 'Нужна для рецептов техники' },
+      { name: 'Aether', key: 'Небесное измерение, данжи, небесный янтарь, нефрит, небесное ядро', note: 'Ключевые компоненты средней игры' },
+    ],
+  },
+  {
+    name: 'Боссы и измерения',
+    color: 'red',
+    mods: [
+      { name: "L_Ender's Cataclysm", key: 'Игнис, Левиафан, Сцилла, Харбингер, Тёмная Звезда — боссы с уникальным дропом', note: 'Обязательно для финала' },
+      { name: 'Twilight Forest', key: 'Параллельное измерение, боссы: Нага, Личик, Пинтас, Дракон Ур', note: 'Тёмное ядро и поздние ворота' },
+      { name: 'Deeper Darker', key: 'Расширение Древних Городов, новые боссы, блоки Sculk', note: 'Поздние печати' },
+      { name: 'Draconic Evolution', key: 'Драконьи ядра, хаотические компоненты, реактор, мегабтарея', note: 'Предпоследний уровень' },
+      { name: 'Avaritia', key: 'Экстремальный верстак, нейтронный коллектор, слиток бесконечности', note: 'Финал игры' },
+    ],
+  },
+  {
+    name: 'Комфорт и хранение',
+    color: 'green',
+    mods: [
+      { name: "Sophisticated Backpacks", key: 'Рюкзаки с апгрейдами: авто-подбор, сортировка, компактное хранение', note: 'Нужен с первых минут' },
+      { name: "Tom's Simple Storage", key: 'Сеть хранения без сложной настройки — простая альтернатива AE2 до середины игры', note: 'Для раннего хранения' },
+      { name: 'Supplementaries', key: 'Верёвки, флаги, пушки, фонари, доски объявлений, декор', note: 'Защита от пушек внутри приватов включена' },
+      { name: 'Waystones', key: 'Камни путешественника — телепортация между точками, бесплатная на спавн', note: 'Основной транспорт' },
+      { name: 'Carry On', key: 'Поднять блок-сущность (сундук, хопер) пустой рукой + Shift', note: 'Заблокировано в приватах' },
+    ],
+  },
+]
+
 const totalChecks = computed(() => stages.reduce((sum, stage) => sum + stage.checks.length, 0))
 const completedChecks = computed(() => Object.values(checked.value).filter(Boolean).length)
 const completionPercent = computed(() => {
@@ -363,6 +439,71 @@ watch(checked, (value) => {
           <div v-for="tip in tips" :key="tip.title" class="gp-tip">
             <strong>{{ tip.title }}</strong>
             <small>{{ tip.text }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── SERVER COMMANDS ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Команды сервера</h2>
+
+        <!-- Limits row -->
+        <div class="gp-limits-row">
+          <div v-for="lim in regionLimits" :key="lim.label" class="gp-limit-chip">
+            <span class="gp-limit-label">{{ lim.label }}</span>
+            <span class="gp-limit-value">{{ lim.value }}</span>
+            <span class="gp-limit-hint">{{ lim.hint }}</span>
+          </div>
+        </div>
+
+        <div class="gp-cmds-grid">
+          <!-- Privat -->
+          <div class="gp-cmd-block">
+            <p class="gp-cmd-block__title">
+              <span class="gp-cmd-block__dot" style="background:#8b5cf6"></span>
+              Приваты (WorldGuard)
+            </p>
+            <p class="gp-cmd-block__note">Сначала выдели область деревянным топором — потом создай привата.</p>
+            <div class="gp-cmd-list">
+              <div v-for="row in regionCommands" :key="row.cmd" class="gp-cmd-row">
+                <code class="gp-cmd">{{ row.cmd }}</code>
+                <span class="gp-cmd-desc">{{ row.desc }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Homes & Spawn -->
+          <div class="gp-cmd-block">
+            <p class="gp-cmd-block__title">
+              <span class="gp-cmd-block__dot" style="background:#22c55e"></span>
+              Дома и телепортация
+            </p>
+            <p class="gp-cmd-block__note">Лимит домов — 2. Команда /back на сервере отключена.</p>
+            <div class="gp-cmd-list">
+              <div v-for="row in serverCommands" :key="row.cmd" class="gp-cmd-row">
+                <code class="gp-cmd">{{ row.cmd }}</code>
+                <span class="gp-cmd-desc">{{ row.desc }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── MODS REFERENCE ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Справочник по модам</h2>
+        <div class="gp-mods-grid">
+          <div v-for="cat in modCategories" :key="cat.name" class="gp-mod-cat">
+            <p class="gp-mod-cat__name">{{ cat.name }}</p>
+            <div class="gp-mod-list">
+              <div v-for="mod in cat.mods" :key="mod.name" class="gp-mod-row">
+                <div class="gp-mod-row__left">
+                  <strong class="gp-mod-name">{{ mod.name }}</strong>
+                  <span class="gp-mod-key">{{ mod.key }}</span>
+                </div>
+                <span class="gp-mod-note">{{ mod.note }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -807,4 +948,196 @@ watch(checked, (value) => {
 
 .gp-tip strong { font-size: .85rem; font-weight: 800; color: rgb(226 232 240); }
 .gp-tip small { font-size: .78rem; line-height: 1.55; color: rgb(100 116 139); }
+
+/* ─── Limits row ─── */
+.gp-limits-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+.gp-limit-chip {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  background: rgba(255,255,255,.03);
+  padding: .55rem .85rem;
+  min-width: 140px;
+}
+
+.gp-limit-label {
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+}
+
+.gp-limit-value {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #f8fbff;
+  letter-spacing: -.02em;
+}
+
+.gp-limit-hint {
+  font-size: .7rem;
+  color: rgb(71 85 105);
+}
+
+/* ─── Commands grid ─── */
+.gp-cmds-grid {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (min-width: 860px) {
+  .gp-cmds-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.gp-cmd-block {
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+  padding: .85rem;
+}
+
+.gp-cmd-block__title {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .78rem;
+  font-weight: 800;
+  color: rgb(226 232 240);
+  margin: 0 0 .3rem;
+}
+
+.gp-cmd-block__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.gp-cmd-block__note {
+  font-size: .73rem;
+  color: rgb(100 116 139);
+  margin: 0 0 .65rem;
+  line-height: 1.5;
+}
+
+.gp-cmd-list {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.gp-cmd-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  padding: .35rem .4rem;
+  border-radius: 8px;
+  background: rgba(255,255,255,.02);
+  flex-wrap: wrap;
+}
+
+.gp-cmd {
+  font-family: 'Courier New', monospace;
+  font-size: .72rem;
+  font-weight: 700;
+  color: rgb(110 231 183);
+  background: rgba(110,231,183,.07);
+  border: 1px solid rgba(110,231,183,.12);
+  border-radius: 5px;
+  padding: .15rem .4rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gp-cmd-desc {
+  font-size: .77rem;
+  color: rgb(148 163 184);
+  line-height: 1.45;
+  padding-top: .1rem;
+}
+
+/* ─── Mods reference ─── */
+.gp-mods-grid {
+  display: grid;
+  gap: .75rem;
+}
+
+@media (min-width: 860px) {
+  .gp-mods-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.gp-mod-cat {
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+  padding: .85rem;
+}
+
+.gp-mod-cat__name {
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin: 0 0 .6rem;
+}
+
+.gp-mod-list {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.gp-mod-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .45rem .5rem;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,.05);
+  background: rgba(255,255,255,.025);
+  flex-wrap: wrap;
+}
+
+.gp-mod-row__left {
+  display: flex;
+  flex-direction: column;
+  gap: .12rem;
+  flex: 1;
+  min-width: 140px;
+}
+
+.gp-mod-name {
+  font-size: .82rem;
+  font-weight: 800;
+  color: rgb(226 232 240);
+}
+
+.gp-mod-key {
+  font-size: .72rem;
+  color: rgb(100 116 139);
+  line-height: 1.4;
+}
+
+.gp-mod-note {
+  font-size: .68rem;
+  font-weight: 700;
+  color: rgb(71 85 105);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 6px;
+  padding: .15rem .4rem;
+  white-space: nowrap;
+  align-self: flex-start;
+  flex-shrink: 0;
+}
 </style>
