@@ -8,11 +8,6 @@ import { siteConfig } from '../config.site'
       <div class="bi-grid">
         <div class="bi-strip">
           <div class="bi-item">
-            <span>Сборка</span>
-            <strong>Better MC 5</strong>
-          </div>
-          <div class="bi-sep"></div>
-          <div class="bi-item">
             <span>Версия</span>
             <strong>{{ siteConfig.serverVersion }}</strong>
           </div>

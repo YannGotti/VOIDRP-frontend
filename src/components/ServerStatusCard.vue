@@ -32,7 +32,7 @@ function copyIp() {
           <div class="sc-meta">
             <div class="sc-online-chip">
               <span class="sc-online-dot"></span>
-              1.21.1 · Better MC 5
+              1.21.1
             </div>
             <p class="sc-peak">Пик активности: вечером 18–23 МСК</p>
           </div>

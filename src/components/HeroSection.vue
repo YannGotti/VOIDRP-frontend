@@ -24,7 +24,7 @@ import { siteConfig } from '../config.site'
           <div class="hs-chips">
             <span class="hs-chip">{{ siteConfig.serverIp }}</span>
             <span class="hs-chip">{{ siteConfig.serverVersion }}</span>
-            <span class="hs-chip">Better MC 5</span>
+
           </div>
         </div>
 

@@ -51,7 +51,7 @@ async function handleLogout() {
           </div>
           <div class="site-navbar__brand-text">
             <div class="site-navbar__title">{{ siteConfig.serverName }}</div>
-            <div class="site-navbar__meta">MC {{ siteConfig.serverVersion }} · Better MC 5 · {{ siteConfig.serverIp }}</div>
+            <div class="site-navbar__meta">MC {{ siteConfig.serverVersion }} · {{ siteConfig.serverIp }}</div>
           </div>
         </RouterLink>
 
