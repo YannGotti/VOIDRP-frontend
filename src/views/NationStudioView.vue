@@ -29,7 +29,7 @@ import { useAuthStore } from '../stores/authStore'
 import { formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
 
 const auth = useAuthStore()
-const MIN_CREATE_NATION_BALANCE = 2_500_000
+const MIN_CREATE_NATION_BALANCE = 300_000
 
 const loading = ref(true)
 const saving = ref(false)
