@@ -37,6 +37,26 @@ const activity = ref([])
 const transactions = ref([])
 const donors = ref([])
 
+const dynmapIframeUrl = computed(() => {
+  const base = siteConfig.dynmapUrl
+  const n = nation.value
+  if (n?.capital_x != null && n?.capital_z != null) {
+    const world = n.capital_world || 'world'
+    return `${base}/?worldname=${encodeURIComponent(world)}&mapname=flat&x=${n.capital_x}&y=64&z=${n.capital_z}&zoom=4`
+  }
+  return `${base}/`
+})
+
+const dynmapOpenUrl = computed(() => {
+  const base = siteConfig.dynmapUrl
+  const n = nation.value
+  if (n?.capital_x != null && n?.capital_z != null) {
+    const world = n.capital_world || 'world'
+    return `${base}/?worldname=${encodeURIComponent(world)}&mapname=flat&x=${n.capital_x}&y=64&z=${n.capital_z}&zoom=4`
+  }
+  return base
+})
+
 function hexToRgba(hex, alpha) {
   if (!hex || typeof hex !== 'string') return `rgba(109, 93, 246, ${alpha})`
   const value = hex.replace('#', '')
@@ -532,11 +552,11 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
             <section class="surface-card np-card np-map-card" :style="cardStyle">
               <div class="np-card__header" style="margin-bottom:.5rem">
                 <h2 class="np-card__title" style="margin-bottom:0">Карта мира</h2>
-                <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="np-map-link">↗ открыть</a>
+                <a :href="dynmapOpenUrl" target="_blank" rel="noreferrer" class="np-map-link">↗ открыть</a>
               </div>
               <div class="np-map-wrap">
                 <iframe
-                  :src="`${siteConfig.dynmapUrl}/`"
+                  :src="dynmapIframeUrl"
                   class="np-map-iframe"
                   title="Dynmap"
                   allowfullscreen
@@ -544,7 +564,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
                   referrerpolicy="no-referrer"
                 ></iframe>
                 <div class="np-map-overlay">
-                  <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="np-map-open-btn" :style="{ background: accent }">
+                  <a :href="dynmapOpenUrl" target="_blank" rel="noreferrer" class="np-map-open-btn" :style="{ background: accent }">
                     Открыть карту
                   </a>
                 </div>
