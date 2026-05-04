@@ -27,6 +27,7 @@ html {
   background: #05070d;
   color-scheme: dark;
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 html,
@@ -535,8 +536,15 @@ footer,
 
 .account-tabs {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.6rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.account-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tab-link {
@@ -550,6 +558,8 @@ footer,
   font-size: 0.88rem;
   font-weight: 800;
   color: #b9c8e4;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tab-link:hover,

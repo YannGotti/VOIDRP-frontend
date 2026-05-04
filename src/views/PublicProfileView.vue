@@ -300,7 +300,7 @@ onBeforeUnmount(() => {
                     </p>
                   </div>
 
-                  <div class="grid min-w-0 gap-3 sm:grid-cols-3 md:w-[360px]">
+                  <div class="grid min-w-0 grid-cols-3 gap-3 md:w-[360px]">
                     <div v-for="item in stats" :key="item.label" class="metric-card profile-stat-card text-center" :style="cardStyle">
                       <p class="text-[1.7rem] font-black leading-none text-slate-50">{{ item.value }}</p>
                       <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">

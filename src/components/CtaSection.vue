@@ -62,7 +62,12 @@ import { siteConfig } from '../config.site'
   display: flex;
   gap: .5rem;
   flex-wrap: wrap;
-  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .cta-card__actions {
+    width: 100%;
+  }
 }
 
 .cta-discord {

@@ -153,7 +153,12 @@ function copyIp() {
   display: flex;
   flex-direction: column;
   gap: .5rem;
-  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .sc-right {
+    width: 100%;
+  }
 }
 
 .sc-section-label {

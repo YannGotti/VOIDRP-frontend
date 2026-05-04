@@ -18,6 +18,7 @@ const summary = ref(null)
 const allItems = ref([])
 const listings = ref([])
 const transactions = ref([])
+const demandFilter = ref('all')
 
 const filters = reactive({
   q: '',
@@ -36,6 +37,9 @@ const filteredItems = computed(() => {
         (getRussianMaterialName(item.material) || '').toLowerCase().includes(q),
     )
   }
+  if (demandFilter.value !== 'all') {
+    result = result.filter((item) => item.demand_state === demandFilter.value)
+  }
   const dir = filters.direction === 'desc' ? -1 : 1
   return [...result].sort((a, b) => {
     switch (filters.sort) {
@@ -43,6 +47,8 @@ const filteredItems = computed(() => {
         return dir * (Number(a.current_buy_price || 0) - Number(b.current_buy_price || 0))
       case 'sell':
         return dir * (Number(a.current_sell_price || 0) - Number(b.current_sell_price || 0))
+      case 'trend':
+        return dir * (Number(a.trend_percent || 0) - Number(b.trend_percent || 0))
       case 'demand':
         return dir * (a.demand_state || '').localeCompare(b.demand_state || '')
       case 'updated':
@@ -78,7 +84,7 @@ function openItem(item) {
 function stateLabel(value) {
   if (value === 'high_demand') return 'Спрос'
   if (value === 'oversupply') return 'Избыток'
-  return '—'
+  return null
 }
 
 function trendClass(value) {
@@ -93,8 +99,42 @@ function trendSign(value) {
   return (n > 0 ? '+' : '') + money(value) + '%'
 }
 
-function toggleDir() {
-  filters.direction = filters.direction === 'asc' ? 'desc' : 'asc'
+function txTypeLabel(type) {
+  const t = String(type || '').toLowerCase()
+  if (t.includes('buy')) return 'Покупка'
+  if (t.includes('sell')) return 'Продажа'
+  return type
+}
+
+function txIsBuy(type) {
+  return String(type || '').toLowerCase().includes('buy')
+}
+
+function formatTxTime(value) {
+  if (!value) return '—'
+  const d = new Date(value)
+  if (isNaN(d)) return '—'
+  const now = new Date()
+  const isToday = d.toDateString() === now.toDateString()
+  const isThisYear = d.getFullYear() === now.getFullYear()
+  const hm = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+  if (isToday) return hm
+  if (isThisYear) return `${d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })} ${hm}`
+  return `${d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${hm}`
+}
+
+function setSort(key) {
+  if (filters.sort === key) {
+    filters.direction = filters.direction === 'asc' ? 'desc' : 'asc'
+  } else {
+    filters.sort = key
+    filters.direction = 'asc'
+  }
+}
+
+function sortIcon(key) {
+  if (filters.sort !== key) return ''
+  return filters.direction === 'asc' ? ' ↑' : ' ↓'
 }
 
 async function loadMarket() {
@@ -105,7 +145,7 @@ async function loadMarket() {
       getMarketSummary(),
       getMarketItems({ limit: 500 }),
       getNationMarketListings({ limit: 100 }),
-      getMarketTransactions({ limit: 18 }),
+      getMarketTransactions({ limit: 20 }),
     ])
     summary.value = summaryPayload
     allItems.value = itemPayload?.items || []
@@ -125,7 +165,7 @@ onMounted(loadMarket)
   <section class="mp py-3 md:py-4">
     <div class="container-shell max-w-[1380px] space-y-3">
 
-      <!-- compact header -->
+      <!-- header -->
       <header class="mp-header">
         <div class="mp-header__title">
           <p class="mp-eyebrow">Экономика · VoidRP</p>
@@ -139,18 +179,6 @@ onMounted(loadMarket)
             <input v-model="filters.q" class="mp-search__input" placeholder="Поиск..." />
             <span v-if="filters.q" class="mp-search__count">{{ filteredItems.length }}</span>
           </div>
-          <select v-model="filters.sort" class="mp-select">
-            <option value="material">По названию</option>
-            <option value="buy">По покупке</option>
-            <option value="sell">По скупке</option>
-            <option value="demand">По спросу</option>
-            <option value="updated">По дате</option>
-          </select>
-          <button class="mp-dir-btn" :title="filters.direction === 'asc' ? 'По возрастанию' : 'По убыванию'" @click="toggleDir">
-            <svg viewBox="0 0 20 20" fill="currentColor" :style="filters.direction === 'desc' ? 'transform:scaleY(-1)' : ''">
-              <path fill-rule="evenodd" d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zm0 4a1 1 0 000 2h7a1 1 0 100-2H3zm0 4a1 1 0 100 2h4a1 1 0 100-2H3z" clip-rule="evenodd"/>
-            </svg>
-          </button>
         </div>
       </header>
 
@@ -180,8 +208,17 @@ onMounted(loadMarket)
       <div class="mp-grid">
         <!-- items table -->
         <div class="surface-card mp-table-card">
-          <div class="mp-table-header">
-            <h2 class="mp-section-title">Товары EconomyShopGUI</h2>
+          <!-- table toolbar -->
+          <div class="mp-toolbar">
+            <div class="mp-demand-tabs">
+              <button :class="{ active: demandFilter === 'all' }" @click="demandFilter = 'all'">Все</button>
+              <button :class="{ active: demandFilter === 'high_demand' }" @click="demandFilter = 'high_demand'">
+                <span class="dot demand"></span>Спрос
+              </button>
+              <button :class="{ active: demandFilter === 'oversupply' }" @click="demandFilter = 'oversupply'">
+                <span class="dot supply"></span>Избыток
+              </button>
+            </div>
             <span class="mp-count">{{ filteredItems.length }} / {{ allItems.length }}</span>
           </div>
 
@@ -199,11 +236,11 @@ onMounted(loadMarket)
               <table class="mp-tbl">
                 <thead>
                   <tr>
-                    <th>Предмет</th>
-                    <th class="num">Покупка</th>
-                    <th class="num">Скупка</th>
-                    <th class="num">Изм.</th>
-                    <th>Спрос</th>
+                    <th class="sortable" @click="setSort('material')">Предмет<span class="sort-arrow">{{ sortIcon('material') }}</span></th>
+                    <th class="num sortable" @click="setSort('buy')">Покупка<span class="sort-arrow">{{ sortIcon('buy') }}</span></th>
+                    <th class="num sortable" @click="setSort('sell')">Скупка<span class="sort-arrow">{{ sortIcon('sell') }}</span></th>
+                    <th class="num sortable" @click="setSort('trend')">Изм.<span class="sort-arrow">{{ sortIcon('trend') }}</span></th>
+                    <th class="sortable" @click="setSort('demand')">Статус<span class="sort-arrow">{{ sortIcon('demand') }}</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -212,10 +249,14 @@ onMounted(loadMarket)
                       <span class="mp-name">{{ materialLabel(item) }}</span>
                       <span class="mp-material-id">{{ item.material }}</span>
                     </td>
-                    <td class="num">{{ money(item.current_buy_price) }}</td>
-                    <td class="num">{{ money(item.current_sell_price) }}</td>
+                    <td class="num mp-price-buy">{{ money(item.current_buy_price) }}</td>
+                    <td class="num mp-price-sell">{{ money(item.current_sell_price) }}</td>
                     <td class="num" :class="['trend', trendClass(item.trend_percent)]">{{ trendSign(item.trend_percent) }}</td>
-                    <td class="mp-demand">{{ stateLabel(item.demand_state) }}</td>
+                    <td>
+                      <span v-if="stateLabel(item.demand_state)" class="mp-state-badge" :class="item.demand_state">
+                        {{ stateLabel(item.demand_state) }}
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -225,11 +266,16 @@ onMounted(loadMarket)
             <div class="mp-mobile">
               <div v-for="item in filteredItems" :key="item.material" class="mp-mcard" @click="openItem(item)">
                 <div class="mp-mcard__top">
-                  <div>
+                  <div class="mp-mcard__left">
                     <strong>{{ materialLabel(item) }}</strong>
                     <small>{{ item.material }}</small>
                   </div>
-                  <span :class="['mp-mcard__trend', trendClass(item.trend_percent)]">{{ trendSign(item.trend_percent) }}</span>
+                  <div class="mp-mcard__right">
+                    <span :class="['mp-mcard__trend', trendClass(item.trend_percent)]">{{ trendSign(item.trend_percent) }}</span>
+                    <span v-if="stateLabel(item.demand_state)" class="mp-state-badge" :class="item.demand_state">
+                      {{ stateLabel(item.demand_state) }}
+                    </span>
+                  </div>
                 </div>
                 <div class="mp-mcard__prices">
                   <div class="mp-mcard__price buy">
@@ -256,8 +302,8 @@ onMounted(loadMarket)
             </div>
             <div v-else-if="topMovers.length === 0" class="mp-empty">Нет изменений</div>
             <ul v-else class="mp-mover-list">
-              <li v-for="item in topMovers" :key="item.material">
-                <span>{{ materialLabel(item) }}</span>
+              <li v-for="item in topMovers" :key="item.material" class="mp-mover-item" @click="openItem(item)">
+                <span class="mp-mover-name">{{ materialLabel(item) }}</span>
                 <strong :class="['trend', trendClass(item.trend_percent)]">{{ trendSign(item.trend_percent) }}</strong>
               </li>
             </ul>
@@ -267,15 +313,23 @@ onMounted(loadMarket)
           <div class="surface-card mp-side-card">
             <h3 class="mp-section-title">Последние сделки</h3>
             <div v-if="loading" class="mp-skeletons mt-2">
-              <div v-for="i in 5" :key="i" class="skeleton" style="height:28px;border-radius:6px"></div>
+              <div v-for="i in 5" :key="i" class="skeleton" style="height:44px;border-radius:6px"></div>
             </div>
             <ul v-else class="mp-tx-list">
-              <li v-for="tx in transactions" :key="tx.id">
-                <div class="mp-tx-left">
-                  <span>{{ tx.material }}</span>
-                  <small>{{ tx.transaction_type }} · {{ tx.player_name }} · ×{{ tx.amount }}</small>
+              <li v-for="tx in transactions" :key="tx.id" class="mp-tx-item">
+                <div class="mp-tx-row1">
+                  <span :class="['mp-tx-badge', txIsBuy(tx.transaction_type) ? 'buy' : 'sell']">
+                    {{ txTypeLabel(tx.transaction_type) }}
+                  </span>
+                  <span class="mp-tx-material">
+                    {{ getRussianMaterialName(tx.material) || tx.material }}
+                  </span>
+                  <strong class="mp-tx-price">{{ money(tx.final_total_price) }}</strong>
                 </div>
-                <strong>{{ money(tx.final_total_price) }}</strong>
+                <div class="mp-tx-row2">
+                  <span>{{ tx.player_name }} · ×{{ tx.amount }}</span>
+                  <span class="mp-tx-time">{{ formatTxTime(tx.created_at) }}</span>
+                </div>
               </li>
             </ul>
           </div>
@@ -376,9 +430,7 @@ onMounted(loadMarket)
   box-shadow: 0 0 0 3px rgba(139,92,246,.1);
 }
 
-.mp-search__input::placeholder {
-  color: rgb(100 116 139);
-}
+.mp-search__input::placeholder { color: rgb(100 116 139); }
 
 .mp-search__count {
   position: absolute;
@@ -386,43 +438,6 @@ onMounted(loadMarket)
   font-size: .72rem;
   font-weight: 700;
   color: rgb(139 92 246);
-}
-
-.mp-select {
-  min-height: 2.35rem;
-  padding: 0 .7rem;
-  border-radius: 10px !important;
-  border: 1px solid rgba(148,163,184,.14) !important;
-  background: rgba(6,10,19,.7) !important;
-  color: #f8fbff !important;
-  font-size: .875rem;
-  cursor: pointer;
-}
-
-.mp-dir-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 10px;
-  border: 1px solid rgba(148,163,184,.14);
-  background: rgba(6,10,19,.7);
-  color: rgb(148 163 184);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: border-color .15s, color .15s;
-}
-
-.mp-dir-btn:hover {
-  border-color: rgba(139,92,246,.3);
-  color: #fff;
-}
-
-.mp-dir-btn svg {
-  width: 1rem;
-  height: 1rem;
-  transition: transform .2s;
 }
 
 /* stats strip */
@@ -472,7 +487,17 @@ onMounted(loadMarket)
 
 /* table card */
 .mp-table-card {
-  padding: 1rem 1rem .75rem;
+  padding: .75rem .75rem .75rem;
+}
+
+/* toolbar (demand tabs + count) */
+.mp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .65rem;
+  flex-wrap: wrap;
 }
 
 .mp-table-header {
@@ -494,7 +519,50 @@ onMounted(loadMarket)
   font-weight: 700;
   letter-spacing: .1em;
   color: rgb(100 116 139);
+  white-space: nowrap;
 }
+
+/* demand filter tabs */
+.mp-demand-tabs {
+  display: flex;
+  gap: .2rem;
+  padding: .18rem;
+  border-radius: 9px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.mp-demand-tabs button {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  border: none;
+  background: transparent;
+  color: rgb(100 116 139);
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .26rem .6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+}
+
+.mp-demand-tabs button:hover { color: rgb(203 213 225); }
+
+.mp-demand-tabs button.active {
+  background: rgba(139,92,246,.15);
+  color: rgb(196 181 253);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot.demand { background: rgb(110 231 183); }
+.dot.supply { background: rgb(252 165 165); }
 
 .mp-empty {
   text-align: center;
@@ -518,7 +586,7 @@ onMounted(loadMarket)
 .mp-tbl {
   width: 100%;
   border-collapse: collapse;
-  min-width: 580px;
+  min-width: 560px;
 }
 
 .mp-tbl th {
@@ -532,6 +600,21 @@ onMounted(loadMarket)
   text-transform: uppercase;
   color: rgb(100 116 139);
   white-space: nowrap;
+  user-select: none;
+}
+
+.mp-tbl th.sortable {
+  cursor: pointer;
+  transition: color .12s;
+}
+
+.mp-tbl th.sortable:hover { color: rgb(203 213 225); }
+
+.sort-arrow {
+  font-size: .7rem;
+  letter-spacing: 0;
+  color: rgb(139 92 246);
+  text-transform: none;
 }
 
 .mp-tbl td {
@@ -542,22 +625,16 @@ onMounted(loadMarket)
 }
 
 .mp-tbl th.num,
-.mp-tbl td.num {
-  text-align: right;
-}
+.mp-tbl td.num { text-align: right; }
 
 .mp-row {
   cursor: pointer;
   transition: background .1s;
 }
 
-.mp-row:last-child td {
-  border-bottom: none;
-}
+.mp-row:last-child td { border-bottom: none; }
 
-.mp-row:hover td {
-  background: rgba(255,255,255,.03);
-}
+.mp-row:hover td { background: rgba(255,255,255,.03); }
 
 .mp-name {
   display: block;
@@ -573,10 +650,23 @@ onMounted(loadMarket)
   margin-top: .05rem;
 }
 
-.mp-demand {
-  font-size: .78rem;
-  color: rgb(148 163 184);
+.mp-price-buy { color: rgb(167 243 208) !important; }
+.mp-price-sell { color: rgb(254 202 202) !important; }
+
+/* state badge in table */
+.mp-state-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: .15rem .5rem;
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
+
+.mp-state-badge.high_demand { background: rgba(34,197,94,.1); color: rgb(110 231 183); }
+.mp-state-badge.oversupply  { background: rgba(252,165,165,.1); color: rgb(252 165 165); }
 
 /* trend colors */
 .trend.up   { color: rgb(110 231 183); }
@@ -611,19 +701,49 @@ onMounted(loadMarket)
   margin-bottom: .45rem;
 }
 
-.mp-mcard__top strong {
+
+.mp-mcard__left {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.mp-mcard__left strong {
   display: block;
   font-size: .9rem;
   font-weight: 700;
   color: rgb(226 232 240);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.mp-mcard__top small {
+.mp-mcard__left small {
   display: block;
   font-size: .7rem;
   color: rgb(71 85 105);
   font-family: monospace;
   margin-top: .05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-mcard__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .25rem;
+  min-width: 0;
+  max-width: 52%;
+}
+
+.mp-mcard__right .mp-state-badge {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: .06em;
+  font-size: .6rem;
 }
 
 .mp-mcard__trend {
@@ -633,7 +753,6 @@ onMounted(loadMarket)
   background: rgba(255,255,255,.05);
   padding: .18rem .45rem;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .mp-mcard__trend.up   { color: rgb(110 231 183); }
@@ -670,14 +789,14 @@ onMounted(loadMarket)
   background: rgba(34,197,94,.06);
   border: 1px solid rgba(34,197,94,.12);
 }
-.mp-mcard__price.buy small { color: rgb(134 239 172); }
+.mp-mcard__price.buy small  { color: rgb(134 239 172); }
 .mp-mcard__price.buy strong { color: rgb(167 243 208); }
 
 .mp-mcard__price.sell {
   background: rgba(244,63,94,.06);
   border: 1px solid rgba(244,63,94,.12);
 }
-.mp-mcard__price.sell small { color: rgb(253 164 175); }
+.mp-mcard__price.sell small  { color: rgb(253 164 175); }
 .mp-mcard__price.sell strong { color: rgb(254 202 202); }
 
 /* sidebar */
@@ -695,7 +814,42 @@ onMounted(loadMarket)
   margin-bottom: .6rem;
 }
 
-.mp-mover-list,
+/* top movers */
+.mp-mover-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+.mp-mover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  padding: .4rem .35rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  font-size: .85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .1s;
+}
+
+.mp-mover-item:last-child { border-bottom: none; }
+.mp-mover-item:hover { background: rgba(255,255,255,.04); }
+
+.mp-mover-name {
+  color: rgb(203 213 225);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mp-mover-item strong { font-size: .8rem; font-weight: 700; flex-shrink: 0; }
+
+/* sidebar transactions */
 .mp-tx-list {
   list-style: none;
   margin: 0;
@@ -704,55 +858,64 @@ onMounted(loadMarket)
   gap: 0;
 }
 
-.mp-mover-list li {
+.mp-tx-item {
+  padding: .42rem .25rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.mp-tx-item:last-child { border-bottom: none; }
+
+.mp-tx-row1 {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  min-width: 0;
+}
+
+.mp-tx-badge {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: .1rem .45rem;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.mp-tx-badge.buy  { background: rgba(34,197,94,.12);  color: rgb(110 231 183); }
+.mp-tx-badge.sell { background: rgba(252,165,165,.1); color: rgb(252 165 165); }
+
+.mp-tx-material {
+  font-size: .82rem;
+  font-weight: 600;
+  color: rgb(203 213 225);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+.mp-tx-price {
+  font-size: .82rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mp-tx-row2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: .5rem;
-  padding: .4rem 0;
-  border-bottom: 1px solid rgba(255,255,255,.05);
-  font-size: .85rem;
+  margin-top: .18rem;
+  font-size: .69rem;
+  color: rgb(71 85 105);
 }
 
-.mp-mover-list li:last-child { border-bottom: none; }
-
-.mp-mover-list li span { color: rgb(203 213 225); }
-.mp-mover-list li strong { font-size: .8rem; font-weight: 700; }
-
-.mp-tx-list li {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: .5rem;
-  padding: .4rem 0;
-  border-bottom: 1px solid rgba(255,255,255,.05);
-}
-
-.mp-tx-list li:last-child { border-bottom: none; }
-
-.mp-tx-left { min-width: 0; }
-
-.mp-tx-left span {
-  display: block;
-  font-size: .83rem;
-  color: rgb(203 213 225);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mp-tx-left small {
-  display: block;
-  font-size: .7rem;
-  color: rgb(100 116 139);
-  margin-top: .05rem;
-}
-
-.mp-tx-list li > strong {
-  font-size: .82rem;
-  font-weight: 700;
-  color: rgb(226 232 240);
+.mp-tx-time {
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -834,19 +997,14 @@ onMounted(loadMarket)
 
 /* responsive */
 @media (max-width: 640px) {
-  .mp-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .mp-search__input {
-    width: 160px;
-  }
+  .mp-stats { grid-template-columns: repeat(2, 1fr); }
+  .mp-search__input { width: 160px; }
 }
 
 @media (max-width: 400px) {
-  .mp-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .mp-header { flex-direction: column; align-items: flex-start; }
+  .mp-controls { width: 100%; }
+  .mp-search { width: 100%; }
+  .mp-search__input { width: 100%; }
 }
 </style>

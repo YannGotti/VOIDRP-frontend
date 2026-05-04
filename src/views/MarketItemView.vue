@@ -15,6 +15,13 @@ const transactions = ref([])
 const listings = ref([])
 const history = ref([])
 const historyDays = ref(30)
+const txFilter = ref('all')
+
+const filteredTransactions = computed(() => {
+  if (txFilter.value === 'buy') return transactions.value.filter(tx => String(tx.transaction_type || '').toLowerCase().includes('buy'))
+  if (txFilter.value === 'sell') return transactions.value.filter(tx => !String(tx.transaction_type || '').toLowerCase().includes('buy'))
+  return transactions.value
+})
 
 // SVG chart constants
 const CW = 700
@@ -52,6 +59,19 @@ function txTypeLabel(type) {
   if (t.includes('buy')) return 'Покупка'
   if (t.includes('sell')) return 'Продажа'
   return type
+}
+
+function formatTxTime(value) {
+  if (!value) return '—'
+  const d = new Date(value)
+  if (isNaN(d)) return '—'
+  const now = new Date()
+  const isToday = d.toDateString() === now.toDateString()
+  const isThisYear = d.getFullYear() === now.getFullYear()
+  const hm = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+  if (isToday) return hm
+  if (isThisYear) return `${d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })} ${hm}`
+  return `${d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${hm}`
 }
 
 // ─── chart ────────────────────────────────────────────────────────────────────
@@ -330,14 +350,20 @@ watch(material, load)
             </svg>
           </div>
 
-          <div class="mt-3 flex items-center gap-5 text-xs text-slate-400">
+          <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400">
             <span v-if="buyPath" class="flex items-center gap-1.5">
               <span class="legend-dot" style="background: rgb(52 211 153)"></span>Покупка
             </span>
             <span v-if="sellPath" class="flex items-center gap-1.5">
               <span class="legend-dot" style="background: rgb(251 113 133)"></span>Скупка
             </span>
-            <span v-if="chartSource === 'transactions'" class="ml-auto opacity-50">
+            <span v-if="chartData" class="chart-range-hint">
+              {{ money(chartData.minVal) }} — {{ money(chartData.maxVal) }}
+            </span>
+            <span v-if="item?.updated_at" class="ml-auto text-slate-600">
+              обновлено {{ formatTxTime(item.updated_at) }}
+            </span>
+            <span v-else-if="chartSource === 'transactions'" class="ml-auto opacity-40">
               на основе сделок
             </span>
           </div>
@@ -348,47 +374,74 @@ watch(material, load)
       </div>
 
       <!-- Transactions + Listings -->
-      <div v-if="!loading && !error" class="grid gap-4 xl:grid-cols-2">
+      <div v-if="!loading && !error" class="grid gap-4 xl:grid-cols-[1fr_320px]">
         <!-- Transactions -->
         <section class="surface-card p-5">
-          <div class="section-kicker !mb-2">Сделки</div>
-          <h2 class="text-lg font-black text-slate-50">Последние транзакции</h2>
-          <div v-if="transactions.length" class="mt-4 space-y-2">
-            <div v-for="tx in transactions.slice(0, 24)" :key="tx.id" class="tx-row">
-              <div class="flex items-center justify-between gap-2">
-                <span class="tx-badge" :class="String(tx.transaction_type || '').toLowerCase().includes('buy') ? 'buy' : 'sell'">
-                  {{ txTypeLabel(tx.transaction_type) }}
-                </span>
-                <strong class="text-slate-100">{{ money(tx.final_total_price) }}</strong>
-              </div>
-              <div class="mt-1 flex items-center justify-between gap-2 text-xs text-slate-500">
-                <span>{{ tx.player_name }} · x{{ tx.amount }} · {{ money(tx.unit_price) }}/шт</span>
-                <span>{{ new Date(tx.created_at).toLocaleDateString('ru-RU') }}</span>
-              </div>
+          <div class="tx-header">
+            <div>
+              <div class="section-kicker !mb-1">Сделки</div>
+              <h2 class="text-lg font-black text-slate-50">
+                Транзакции
+                <span class="tx-count-badge">{{ filteredTransactions.length }}</span>
+              </h2>
             </div>
+            <div class="tx-filter-tabs">
+              <button :class="{ active: txFilter === 'all' }" @click="txFilter = 'all'">Все</button>
+              <button :class="{ active: txFilter === 'buy' }" @click="txFilter = 'buy'">Покупки</button>
+              <button :class="{ active: txFilter === 'sell' }" @click="txFilter = 'sell'">Продажи</button>
+            </div>
+          </div>
+
+          <div v-if="filteredTransactions.length" class="tx-table-wrap mt-3">
+            <table class="tx-table">
+              <thead>
+                <tr>
+                  <th>Тип</th>
+                  <th>Игрок</th>
+                  <th class="num">Кол-во</th>
+                  <th class="num">Цена/шт</th>
+                  <th class="num">Итого</th>
+                  <th class="num">Время</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="tx in filteredTransactions.slice(0, 50)" :key="tx.id">
+                  <td>
+                    <span class="tx-badge" :class="String(tx.transaction_type || '').toLowerCase().includes('buy') ? 'buy' : 'sell'">
+                      {{ txTypeLabel(tx.transaction_type) }}
+                    </span>
+                  </td>
+                  <td class="tx-player">{{ tx.player_name }}</td>
+                  <td class="num tx-muted">×{{ tx.amount }}</td>
+                  <td class="num tx-muted">{{ money(tx.unit_price) }}</td>
+                  <td class="num tx-total">{{ money(tx.final_total_price) }}</td>
+                  <td class="num tx-time">{{ formatTxTime(tx.created_at) }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <p v-else class="mt-4 text-sm text-slate-500">Нет транзакций по этому товару.</p>
         </section>
 
         <!-- Nation listings -->
         <section class="surface-card p-5">
-          <div class="section-kicker !mb-2">Государственный рынок</div>
-          <h2 class="text-lg font-black text-slate-50">Активные лоты</h2>
-          <div v-if="listings.length" class="mt-4 space-y-2">
+          <div class="section-kicker !mb-1">Государственный рынок</div>
+          <h2 class="text-lg font-black text-slate-50 mb-3">Активные лоты</h2>
+          <div v-if="listings.length" class="space-y-2">
             <div v-for="lot in listings" :key="lot.id" class="listing-row">
               <div class="flex items-start justify-between gap-2">
-                <div>
-                  <p class="font-bold text-slate-100">[{{ lot.nation_tag }}] {{ lot.nation_title }}</p>
+                <div class="min-w-0">
+                  <p class="font-bold text-slate-100 truncate">[{{ lot.nation_tag }}] {{ lot.nation_title }}</p>
                   <p class="mt-0.5 text-xs text-slate-500">{{ lot.seller_player_name }}</p>
                 </div>
                 <div class="text-right shrink-0">
-                  <strong class="text-emerald-300">{{ money(lot.current_unit_price) }}</strong>
+                  <strong class="text-emerald-300 text-base">{{ money(lot.current_unit_price) }}</strong>
                   <p class="mt-0.5 text-xs text-slate-500">{{ lot.remaining_amount }} / {{ lot.total_amount }} шт</p>
                 </div>
               </div>
             </div>
           </div>
-          <p v-else class="mt-4 text-sm text-slate-500">Нет активных лотов по этому товару.</p>
+          <p v-else class="text-sm text-slate-500">Нет активных лотов по этому товару.</p>
         </section>
       </div>
 
@@ -430,6 +483,16 @@ watch(material, load)
   font-size: 1rem;
   font-weight: 900;
   color: rgb(226 232 240);
+  word-break: break-all;
+}
+
+@media (max-width: 640px) {
+  .stat-cell {
+    padding: .5rem .6rem;
+  }
+  .stat-cell strong {
+    font-size: 0.875rem;
+  }
 }
 
 .state-badge {
@@ -491,7 +554,117 @@ watch(material, load)
   color: rgb(134 239 172);
 }
 
-.tx-row,
+/* transactions */
+.tx-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+.tx-count-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: .4rem;
+  padding: .08rem .45rem;
+  border-radius: 999px;
+  background: rgba(148,163,184,.1);
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: rgb(100 116 139);
+  vertical-align: middle;
+}
+
+.tx-filter-tabs {
+  display: flex;
+  gap: .25rem;
+  padding: .2rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.tx-filter-tabs button {
+  border: none;
+  background: transparent;
+  color: rgb(100 116 139);
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .28rem .65rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+}
+
+.tx-filter-tabs button:hover { color: rgb(203 213 225); }
+
+.tx-filter-tabs button.active {
+  background: rgba(139,92,246,.15);
+  color: rgb(196 181 253);
+}
+
+.tx-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+}
+
+.tx-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+.tx-table th {
+  background: rgba(255,255,255,.03);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  padding: .4rem .7rem;
+  text-align: left;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  white-space: nowrap;
+}
+
+.tx-table th.num,
+.tx-table td.num { text-align: right; }
+
+.tx-table td {
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  padding: .45rem .7rem;
+  font-size: .82rem;
+  color: rgb(148 163 184);
+}
+
+.tx-table tbody tr:last-child td { border-bottom: none; }
+
+.tx-table tbody tr:hover td { background: rgba(255,255,255,.025); }
+
+.tx-player { color: rgb(203 213 225) !important; font-weight: 600; }
+.tx-total  { color: rgb(226 232 240) !important; font-weight: 700; }
+.tx-muted  { color: rgb(71 85 105) !important; }
+.tx-time   { color: rgb(71 85 105) !important; font-size: .75rem !important; white-space: nowrap; }
+
+.tx-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: .16rem .55rem;
+  font-size: .65rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tx-badge.buy  { background: rgba(34,197,94,.12); color: rgb(134 239 172); }
+.tx-badge.sell { background: rgba(251,113,133,.12); color: rgb(253 164 175); }
+
+/* listings */
 .listing-row {
   border: 1px solid rgba(255,255,255,.07);
   border-radius: .875rem;
@@ -499,15 +672,14 @@ watch(material, load)
   background: rgba(255,255,255,.025);
 }
 
-.tx-badge {
-  border-radius: 999px;
-  padding: .18rem .6rem;
-  font-size: .68rem;
-  font-weight: 900;
-  letter-spacing: .1em;
-  text-transform: uppercase;
+/* chart range hint */
+.chart-range-hint {
+  font-family: monospace;
+  font-size: .72rem;
+  color: rgb(71 85 105);
+  padding: .1rem .45rem;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 6px;
 }
-
-.tx-badge.buy  { background: rgba(34,197,94,.12); color: rgb(134 239 172); }
-.tx-badge.sell { background: rgba(251,113,133,.12); color: rgb(253 164 175); }
 </style>

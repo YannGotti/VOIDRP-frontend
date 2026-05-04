@@ -195,6 +195,15 @@ onMounted(loadData)
           </div>
         </div>
 
+        <div class="mt-3 flex gap-2 sm:hidden">
+          <button v-if="publicProfileUrl" type="button" class="btn btn-outline flex-1 !py-1.5 !text-xs" @click="copyLink">
+            Скопировать ссылку
+          </button>
+          <RouterLink to="/profile/public" class="btn btn-primary !py-1.5 !text-xs" :class="publicProfileUrl ? 'flex-1' : 'w-full'">
+            Оформление
+          </RouterLink>
+        </div>
+
         <div class="mt-3">
           <div class="mb-1 flex items-center justify-between">
             <span class="text-xs text-slate-500">Готовность профиля</span>
@@ -311,7 +320,7 @@ onMounted(loadData)
               <div class="flex items-center justify-between rounded-xl bg-slate-800/40 px-3 py-2.5">
                 <span class="shrink-0 text-xs text-slate-400">Email</span>
                 <span
-                  class="ml-4 max-w-[180px] truncate text-right text-xs font-semibold text-slate-100"
+                  class="ml-4 max-w-[120px] truncate text-right text-xs font-semibold text-slate-100 sm:max-w-[180px]"
                   :title="auth.state.user?.email"
                 >
                   {{ auth.state.user?.email || '—' }}

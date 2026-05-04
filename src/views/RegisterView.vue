@@ -18,6 +18,7 @@ const form = reactive({
 })
 
 const isSubmitting = ref(false)
+const agreedToTerms = ref(false)
 const isCheckingReferral = ref(false)
 const showPassword = ref(false)
 const showPasswordRepeat = ref(false)
@@ -219,8 +220,34 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
               </p>
             </div>
 
-            <div class="md:col-span-2 flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-              <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+            <label class="md:col-span-2 flex cursor-pointer items-start gap-3 rounded-[1.1rem] border border-white/10 bg-slate-950/45 px-4 py-3">
+              <input
+                v-model="agreedToTerms"
+                type="checkbox"
+                class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-violet-500"
+              />
+              <span class="text-xs leading-5 text-slate-400">
+                Я прочитал(а) и соглашаюсь с
+                <RouterLink
+                  to="/privacy"
+                  target="_blank"
+                  class="font-bold text-violet-300 transition hover:text-violet-200"
+                >
+                  Политикой конфиденциальности
+                </RouterLink>
+                и
+                <RouterLink
+                  to="/offer"
+                  target="_blank"
+                  class="font-bold text-violet-300 transition hover:text-violet-200"
+                >
+                  Договором оферты
+                </RouterLink>.
+              </span>
+            </label>
+
+            <div class="md:col-span-2 flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
+              <button type="submit" class="btn btn-primary" :disabled="isSubmitting || !agreedToTerms">
                 <span v-if="isSubmitting" class="spinner"></span>
                 <span>{{ isSubmitting ? 'Создаём аккаунт...' : 'Создать аккаунт' }}</span>
               </button>
@@ -228,25 +255,6 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
                 Уже зарегистрирован? Войти
               </RouterLink>
             </div>
-
-            <p class="md:col-span-2 -mt-1 rounded-[1.1rem] border border-white/10 bg-slate-950/45 px-4 py-3 text-xs leading-5 text-slate-400">
-              Регистрируясь и играя на сервере, вы соглашаетесь с
-              <RouterLink
-                to="/privacy"
-                target="_blank"
-                class="font-bold text-violet-300 transition hover:text-violet-200"
-              >
-                Политикой конфиденциальности
-              </RouterLink>
-              и
-              <RouterLink
-                to="/offer"
-                target="_blank"
-                class="font-bold text-violet-300 transition hover:text-violet-200"
-              >
-                Договором оферты
-              </RouterLink>.
-            </p>
           </form>
         </div>
 

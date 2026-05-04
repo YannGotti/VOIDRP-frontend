@@ -27,7 +27,11 @@ import { siteConfig } from '../config.site'
       </div>
 
       <div class="px-1 text-center text-[11px] text-slate-500">
-        © 2026 VoidRP · Компактный интерфейс для обычного игрока.
+        © 2026 VoidRP
+        <span class="mx-1">·</span>
+        <RouterLink to="/privacy" class="transition hover:text-slate-300">Политика конфиденциальности</RouterLink>
+        <span class="mx-1">·</span>
+        <RouterLink to="/offer" class="transition hover:text-slate-300">Договор оферты</RouterLink>
       </div>
     </div>
   </footer>

@@ -744,6 +744,8 @@ onMounted(loadPage)
 @media (max-width: 700px) {
   .nl-stats { grid-template-columns: repeat(2, 1fr); }
   .nl-header { flex-direction: column; align-items: flex-start; }
-  .nl-search__input { width: 150px; }
+  .nl-controls { width: 100%; }
+  .nl-search { flex: 1; }
+  .nl-search__input { width: 100%; }
 }
 </style>
