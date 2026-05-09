@@ -12,6 +12,7 @@ const mobileOpen = ref(false)
 const isAuthenticated = computed(() => auth.isAuthenticated.value)
 const displayName = computed(() => auth.displayName.value || 'Профиль')
 const minecraftNick = computed(() => auth.state.playerAccount?.minecraft_nickname || null)
+const avatarUrl = computed(() => auth.avatarUrl.value)
 const userInitial = computed(() => {
   const name = auth.displayName.value || ''
   return name.charAt(0).toUpperCase() || '?'
@@ -89,7 +90,10 @@ async function handleLogout() {
           <!-- Auth -->
           <template v-if="isAuthenticated">
             <RouterLink to="/profile" class="site-navbar__avatar-btn">
-              <span class="site-navbar__avatar">{{ userInitial }}</span>
+              <span class="site-navbar__avatar">
+                <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="site-navbar__avatar-img" />
+                <template v-else>{{ userInitial }}</template>
+              </span>
               <span class="site-navbar__avatar-name">{{ minecraftNick || displayName }}</span>
             </RouterLink>
             <button type="button" class="btn btn-ghost btn-sm" @click="handleLogout">
@@ -154,7 +158,10 @@ async function handleLogout() {
           <div class="site-navbar__mobile-actions">
             <template v-if="isAuthenticated">
               <RouterLink to="/profile" class="btn btn-outline">
-                <span class="site-navbar__avatar site-navbar__avatar--sm">{{ userInitial }}</span>
+                <span class="site-navbar__avatar site-navbar__avatar--sm">
+                  <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="site-navbar__avatar-img" />
+                  <template v-else>{{ userInitial }}</template>
+                </span>
                 {{ minecraftNick || displayName }}
               </RouterLink>
               <button type="button" class="btn btn-ghost" @click="handleLogout">Выйти</button>
@@ -254,6 +261,13 @@ async function handleLogout() {
   width: 1.6rem;
   height: 1.6rem;
   font-size: 0.72rem;
+}
+
+.site-navbar__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
 }
 
 .site-navbar__avatar-name {

@@ -8,6 +8,7 @@ import {
   registerAccount,
   revokeOtherSessions,
 } from '../services/authApi'
+import { getMyPublicProfile } from '../services/profileApi'
 import { toastInfo, toastSuccess } from '../services/toast'
 
 const STORAGE_KEY = 'voidrp_auth_v1'
@@ -18,6 +19,7 @@ export const authState = reactive({
   user: null,
   playerAccount: null,
   security: null,
+  avatarUrl: null,
   ready: false,
 })
 
@@ -36,6 +38,7 @@ function loadStoredAuth() {
     authState.user = parsed.user || null
     authState.playerAccount = parsed.playerAccount || null
     authState.security = parsed.security || null
+    authState.avatarUrl = parsed.avatarUrl || null
   } catch {
     clearAuthState()
   }
@@ -50,6 +53,7 @@ function persistAuth() {
       user: authState.user,
       playerAccount: authState.playerAccount,
       security: authState.security,
+      avatarUrl: authState.avatarUrl,
     }),
   )
 }
@@ -60,6 +64,7 @@ export function clearAuthState() {
   authState.user = null
   authState.playerAccount = null
   authState.security = null
+  authState.avatarUrl = null
   localStorage.removeItem(STORAGE_KEY)
 }
 
@@ -165,6 +170,20 @@ export async function loginWithPassword(payload) {
   return response
 }
 
+async function _refreshAvatarUrl() {
+  if (!authState.accessToken) return
+  try {
+    const profile = await getMyPublicProfile(authState.accessToken)
+    const url = profile?.assets?.avatar_preview_url || profile?.assets?.avatar_url || null
+    if (authState.avatarUrl !== url) {
+      authState.avatarUrl = url
+      persistAuth()
+    }
+  } catch {
+    // non-critical, avatar stays as-is
+  }
+}
+
 export async function reloadMe() {
   if (!authState.accessToken) {
     clearAuthState()
@@ -177,6 +196,7 @@ export async function reloadMe() {
     authState.playerAccount = response.player_account
     authState.security = response.security || null
     persistAuth()
+    _refreshAvatarUrl()
     return response
   } catch (error) {
     if (error?.status === 401) {
@@ -187,6 +207,7 @@ export async function reloadMe() {
         authState.playerAccount = response.player_account
         authState.security = response.security || null
         persistAuth()
+        _refreshAvatarUrl()
         return response
       }
     }
@@ -240,6 +261,7 @@ export function useAuthStore() {
       () => authState.playerAccount?.minecraft_nickname || authState.user?.site_login || 'Игрок',
     ),
 
+    avatarUrl: computed(() => authState.avatarUrl),
     emailVerified: computed(() => Boolean(authState.user?.email_verified)),
     nicknameLocked: computed(() => Boolean(authState.playerAccount?.nickname_locked)),
     legacyAuthEnabled: computed(() => Boolean(authState.playerAccount?.legacy_auth_enabled)),

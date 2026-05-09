@@ -53,6 +53,19 @@ a {
   text-decoration: none;
 }
 
+.prose-link {
+  color: #a78bfa;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(167, 139, 250, 0.4);
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+
+.prose-link:hover {
+  color: #c4b5fd;
+  text-decoration-color: rgba(196, 181, 253, 0.7);
+}
+
 img {
   max-width: 100%;
   display: block;
@@ -452,12 +465,16 @@ footer,
 
 .site-navbar__brand-text {
   min-width: 0;
+  overflow: hidden;
 }
 
 .site-navbar__title {
   font-size: 1rem;
   font-weight: 900;
   color: #f8fbff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .site-navbar__meta {
@@ -481,8 +498,8 @@ footer,
 }
 
 .site-navbar__link {
-  padding: 0.7rem 0.95rem;
-  font-size: 0.88rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: #afbdd7;
 }
