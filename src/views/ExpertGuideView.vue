@@ -258,6 +258,7 @@ const nationOfficerCommands = [
   { cmd: '/nmarket cancel <id>', desc: 'Снять лот с рынка и вернуть предметы' },
   { cmd: '/nmarket confirm', desc: 'Подтвердить выставление лота с нестандартной ценой' },
   { cmd: '/nsetcapital', desc: 'Установить столицу в текущей позиции — только для главы государства' },
+  { cmd: 'Сайт → Студия → Участники', desc: 'Выдать звание (титул) участнику: офицер — рядовым, глава — всем. Отображается в чате.', web: true },
 ]
 
 const modCategories = [
@@ -554,7 +555,7 @@ watch(checked, (value) => {
             <p class="gp-cmd-block__note">Снятие из казны и управление лотами. /nsetcapital — только для главы.</p>
             <div class="gp-cmd-list">
               <div v-for="row in nationOfficerCommands" :key="row.cmd" class="gp-cmd-row">
-                <code class="gp-cmd">{{ row.cmd }}</code>
+                <code class="gp-cmd" :class="row.web ? 'gp-cmd--web' : ''">{{ row.cmd }}</code>
                 <span class="gp-cmd-desc">{{ row.desc }}</span>
               </div>
             </div>
@@ -1136,6 +1137,12 @@ watch(checked, (value) => {
   color: rgb(148 163 184);
   line-height: 1.45;
   padding-top: .1rem;
+}
+
+.gp-cmd--web {
+  color: rgb(167 139 250);
+  background: rgba(139,92,246,.07);
+  border-color: rgba(139,92,246,.18);
 }
 
 /* ─── Mods reference ─── */
