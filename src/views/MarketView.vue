@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { toastSuccess } from '../services/toast'
 import { useRouter } from 'vue-router'
 import {
   getMarketItems,
@@ -65,6 +66,15 @@ const topMovers = computed(() =>
     .sort((a, b) => Math.abs(Number(b.trend_percent || 0)) - Math.abs(Number(a.trend_percent || 0)))
     .slice(0, 6),
 )
+
+async function copyLotId(id) {
+  try {
+    await navigator.clipboard.writeText(id)
+    toastSuccess('ID скопирован')
+  } catch {
+    toastSuccess(id)
+  }
+}
 
 function money(value) {
   const numeric = Number(value ?? 0)
@@ -345,16 +355,19 @@ onMounted(loadMarket)
         <div class="mp-listings-grid">
           <article v-for="lot in listings" :key="lot.id" class="mp-lot">
             <div class="mp-lot__top">
-              <div>
-                <strong>{{ getRussianMaterialName(lot.material) || lot.display_name || lot.material }}</strong>
-                <small>[{{ lot.nation_tag }}] {{ lot.nation_title }}</small>
+              <div class="mp-lot__names">
+                <strong class="mp-lot__item-name" :title="getRussianMaterialName(lot.material) || lot.display_name || lot.material">{{ getRussianMaterialName(lot.material) || lot.display_name || lot.material }}</strong>
+                <small class="mp-lot__nation" :title="`[${lot.nation_tag}] ${lot.nation_title}`">[{{ lot.nation_tag }}] {{ lot.nation_title }}</small>
               </div>
               <span class="mp-lot__qty">{{ lot.remaining_amount }}/{{ lot.total_amount }}</span>
             </div>
             <div class="mp-lot__meta">
               <div><small>Цена</small><strong>{{ money(lot.current_unit_price) }}</strong></div>
-              <div><small>Продавец</small><strong>{{ lot.seller_player_name }}</strong></div>
+              <div><small>Продавец</small><strong class="mp-lot__seller" :title="lot.seller_player_name">{{ lot.seller_player_name }}</strong></div>
             </div>
+            <button class="mp-lot__copy" :title="lot.id" @click.stop="copyLotId(lot.id)">
+              ID лота
+            </button>
           </article>
         </div>
       </div>
@@ -947,18 +960,36 @@ onMounted(loadMarket)
   margin-bottom: .5rem;
 }
 
-.mp-lot__top strong {
+.mp-lot__names {
+  min-width: 0;
+  flex: 1;
+}
+
+.mp-lot__item-name {
   display: block;
   font-size: .88rem;
   font-weight: 700;
   color: rgb(226 232 240);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.mp-lot__top small {
+.mp-lot__nation {
   display: block;
   font-size: .72rem;
   color: rgb(100 116 139);
   margin-top: .1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-lot__seller {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .mp-lot__qty {
@@ -993,6 +1024,28 @@ onMounted(loadMarket)
   font-size: .83rem;
   font-weight: 700;
   color: rgb(203 213 225);
+}
+
+.mp-lot__copy {
+  margin-top: .5rem;
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 7px;
+  background: rgba(255,255,255,.03);
+  color: rgb(100 116 139);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .25rem .5rem;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+
+.mp-lot__copy:hover {
+  background: rgba(110,231,183,.08);
+  border-color: rgba(110,231,183,.2);
+  color: rgb(110 231 183);
 }
 
 /* responsive */

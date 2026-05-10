@@ -31,6 +31,7 @@ import MarketItemView from '../views/MarketItemView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import OfferAgreementView from '../views/OfferAgreementView.vue'
 import LeaderboardView from '../views/LeaderboardView.vue'
+import PlayersTopView from '../views/PlayersTopView.vue'
 import ShopView from '../views/ShopView.vue'
 
 const routes = [
@@ -59,6 +60,7 @@ const routes = [
   { path: '/nations/rankings', name: 'nation-rankings', component: NationRankingsView, meta: { title: 'Рейтинг государств' } },
   { path: '/alliances', name: 'alliances', component: AllianceHubView, meta: { title: 'Альянсы' } },
   { path: '/leaderboard', name: 'leaderboard', component: LeaderboardView, meta: { title: 'Рейтинг прогрессии' } },
+  { path: '/players/top', name: 'players-top', component: PlayersTopView, meta: { title: 'Топ игроков' } },
   { path: '/internal-admin', name: 'admin-legacy', component: AdminLegacyView, meta: { title: 'Legacy Admin', hidePublicShell: true } },
   { path: '/internal-admin/market', name: 'admin-market', component: AdminMarketView, meta: { title: 'Market Admin', hidePublicShell: true } },
 ]

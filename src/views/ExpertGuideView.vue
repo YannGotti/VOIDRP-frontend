@@ -202,6 +202,16 @@ const tips = [
   { title: 'Автоматизируй рано', text: 'AE2 придёт позже, но первые Create-линии нужно строить как можно раньше.' },
 ]
 
+const tierGates = [
+  { epoch: 'Эпоха механизмов', item: 'Андезитовая машинная рама', id: 'kubejs:andesite_machine_frame', mod: 'Create', color: '#f59e0b' },
+  { epoch: 'Эпоха стали',      item: 'Стальной корпус',           id: 'mekanism:steel_casing',        mod: 'Mekanism', color: '#38bdf8' },
+  { epoch: 'Эпоха автоматизации', item: 'МЭ-контроллер',          id: 'ae2:controller',               mod: 'AE2', color: '#a78bfa' },
+  { epoch: 'Квантовая эпоха',  item: 'Квантовая схема',           id: 'kubejs:quantum_circuit',       mod: 'AE2 + Mekanism', color: '#22d3ee' },
+  { epoch: 'Эпоха реакторов',  item: 'Ядро реактора',             id: 'kubejs:reactor_heart',         mod: 'Extreme Reactors 2', color: '#fb923c' },
+  { epoch: 'Эпоха дракона',    item: 'Дракониевое ядро',          id: 'draconicevolution:draconium_core', mod: 'Draconic Evolution', color: '#f472b6' },
+  { epoch: 'Эндгейм',          item: 'Катализатор бесконечности', id: 'avaritia:infinity_catalyst',   mod: 'Avaritia', color: '#4ade80' },
+]
+
 const regionLimits = [
   { label: 'Макс. объём привата', value: '20 000 000 блоков', hint: '≈ 200 × 200 × 500' },
   { label: 'Приватов на игрока', value: '16', hint: 'по умолчанию' },
@@ -231,6 +241,23 @@ const serverCommands = [
   { cmd: '/tpahere <игрок>', desc: 'Позвать игрока к себе' },
   { cmd: '/tpaccept', desc: 'Принять запрос телепортации' },
   { cmd: '/tpdeny', desc: 'Отклонить запрос телепортации' },
+]
+
+const nationMemberCommands = [
+  { cmd: '/nationtreasury', desc: 'Баланс казны, территория и престиж государства (алиас: /ntreasury)' },
+  { cmd: '/nationtreasuryhistory', desc: 'Последние 5 операций с казной (алиас: /ntreasuryhistory)' },
+  { cmd: '/nationdonate <сумма> [комментарий]', desc: 'Задонатить деньги в казну своего государства (алиас: /ndonate)' },
+  { cmd: '/marketprice [предмет]', desc: 'Рыночная цена предмета в руке или по названию (алиас: /mprice, /price)' },
+  { cmd: '/nmarket', desc: 'Открыть рынок государств в GUI (алиас: /nm, /nationmarket)' },
+]
+
+const nationOfficerCommands = [
+  { cmd: '/nationwithdraw <сумма> [комментарий]', desc: 'Снять деньги из казны на свой баланс (алиас: /nwithdraw)' },
+  { cmd: '/nmarket sell <кол-во|all> <цена>', desc: 'Выставить предмет из руки на рынок своего государства' },
+  { cmd: '/nmarket listings', desc: 'Список активных лотов своего государства' },
+  { cmd: '/nmarket cancel <id>', desc: 'Снять лот с рынка и вернуть предметы' },
+  { cmd: '/nmarket confirm', desc: 'Подтвердить выставление лота с нестандартной ценой' },
+  { cmd: '/nsetcapital', desc: 'Установить столицу в текущей позиции — только для главы государства' },
 ]
 
 const modCategories = [
@@ -443,6 +470,22 @@ watch(checked, (value) => {
         </div>
       </div>
 
+      <!-- ─── TIER GATES ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Эпохи прогрессии — что нужно скрафтить</h2>
+        <p class="gp-tier-hint">При первом крафте каждого предмета сервер фиксирует твою эпоху и сообщает об этом всем. Каждая эпоха открывается один раз.</p>
+        <div class="gp-tier-grid">
+          <div v-for="gate in tierGates" :key="gate.id" class="gp-tier-card">
+            <div class="gp-tier-card__dot" :style="{ background: gate.color }"></div>
+            <div class="gp-tier-card__body">
+              <p class="gp-tier-epoch" :style="{ color: gate.color }">{{ gate.epoch }}</p>
+              <p class="gp-tier-item">{{ gate.item }}</p>
+              <span class="gp-tier-mod">{{ gate.mod }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ─── SERVER COMMANDS ─── -->
       <div class="surface-card gp-card">
         <h2 class="gp-section-title">Команды сервера</h2>
@@ -481,6 +524,36 @@ watch(checked, (value) => {
             <p class="gp-cmd-block__note">Лимит домов — 2. Команда /back на сервере отключена.</p>
             <div class="gp-cmd-list">
               <div v-for="row in serverCommands" :key="row.cmd" class="gp-cmd-row">
+                <code class="gp-cmd">{{ row.cmd }}</code>
+                <span class="gp-cmd-desc">{{ row.desc }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nation member commands -->
+          <div class="gp-cmd-block">
+            <p class="gp-cmd-block__title">
+              <span class="gp-cmd-block__dot" style="background:#f59e0b"></span>
+              Государство — казна и рынок (все участники)
+            </p>
+            <p class="gp-cmd-block__note">Доступны всем игрокам, состоящим в государстве.</p>
+            <div class="gp-cmd-list">
+              <div v-for="row in nationMemberCommands" :key="row.cmd" class="gp-cmd-row">
+                <code class="gp-cmd">{{ row.cmd }}</code>
+                <span class="gp-cmd-desc">{{ row.desc }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nation officer/leader commands -->
+          <div class="gp-cmd-block">
+            <p class="gp-cmd-block__title">
+              <span class="gp-cmd-block__dot" style="background:#ef4444"></span>
+              Государство — управление (офицеры и глава)
+            </p>
+            <p class="gp-cmd-block__note">Снятие из казны и управление лотами. /nsetcapital — только для главы.</p>
+            <div class="gp-cmd-list">
+              <div v-for="row in nationOfficerCommands" :key="row.cmd" class="gp-cmd-row">
                 <code class="gp-cmd">{{ row.cmd }}</code>
                 <span class="gp-cmd-desc">{{ row.desc }}</span>
               </div>
@@ -1139,5 +1212,66 @@ watch(checked, (value) => {
   white-space: nowrap;
   align-self: flex-start;
   flex-shrink: 0;
+}
+
+/* ─── Tier Gates ─── */
+.gp-tier-hint {
+  font-size: .78rem;
+  color: rgb(100 116 139);
+  margin: -.3rem 0 .85rem;
+  line-height: 1.55;
+}
+
+.gp-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: .4rem;
+}
+
+.gp-tier-card {
+  display: flex;
+  gap: .5rem;
+  align-items: flex-start;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  background: rgba(255,255,255,.02);
+  padding: .6rem .7rem;
+}
+
+.gp-tier-card__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  margin-top: .3rem;
+}
+
+.gp-tier-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  min-width: 0;
+}
+
+.gp-tier-epoch {
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.gp-tier-item {
+  font-size: .82rem;
+  font-weight: 700;
+  color: rgb(226 232 240);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.gp-tier-mod {
+  font-size: .65rem;
+  font-weight: 600;
+  color: rgb(71 85 105);
 }
 </style>
