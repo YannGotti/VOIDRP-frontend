@@ -90,6 +90,17 @@ export async function updateNationMemberRole(accessToken, slug, userId, role) {
   )
 }
 
+export async function updateNationMemberPrefix(accessToken, slug, userId, customPrefix) {
+  return await apiRequest(
+    `/nations/${encodeURIComponent(slug)}/members/${encodeURIComponent(userId)}/prefix`,
+    {
+      method: 'PATCH',
+      headers: buildAuthHeaders(accessToken, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ custom_prefix: customPrefix }),
+    },
+  )
+}
+
 export async function removeNationMember(accessToken, slug, userId) {
   return await apiRequest(`/nations/${encodeURIComponent(slug)}/members/${encodeURIComponent(userId)}`, {
     method: 'DELETE',

@@ -17,6 +17,7 @@ import {
   removeNationMember,
   transferNationLeadership,
   updateMyNation,
+  updateNationMemberPrefix,
   updateNationMemberRole,
   uploadNationBackground,
   uploadNationBanner,
@@ -419,6 +420,44 @@ async function kickMember(userId) {
     await loadActivity()
   } catch (err) {
     error.value = err.message || 'Не удалось исключить участника.'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const editingPrefixUserId = ref(null)
+const editingPrefixValue = ref('')
+
+function startEditPrefix(member) {
+  editingPrefixUserId.value = member.user_id
+  editingPrefixValue.value = member.custom_prefix || ''
+}
+
+function cancelEditPrefix() {
+  editingPrefixUserId.value = null
+  editingPrefixValue.value = ''
+}
+
+function canSetPrefix(member) {
+  if (!canManage.value) return false
+  if (member.user_id === auth.state.user?.id) return false
+  if (viewerRole.value === 'leader') return true
+  return member.role === 'member'
+}
+
+async function savePrefix(userId) {
+  actionLoading.value = true
+  error.value = ''
+  success.value = ''
+  try {
+    const value = editingPrefixValue.value.trim() || null
+    const payload = await updateNationMemberPrefix(auth.accessToken, nation.value.slug, userId, value)
+    hydrateForms(payload)
+    success.value = 'Звание обновлено.'
+    editingPrefixUserId.value = null
+    editingPrefixValue.value = ''
+  } catch (err) {
+    error.value = err.message || 'Не удалось обновить звание.'
   } finally {
     actionLoading.value = false
   }
@@ -972,6 +1011,9 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                     <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
                       {{ formatRoleLabel(member.role) }}
                     </p>
+                    <p v-if="member.custom_prefix" class="mt-1 text-xs text-violet-400">
+                      Звание: {{ member.custom_prefix }}
+                    </p>
                   </div>
 
                   <div
@@ -999,6 +1041,16 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                     </button>
 
                     <button
+                      v-if="canSetPrefix(member)"
+                      type="button"
+                      class="btn btn-outline btn-sm"
+                      :disabled="actionLoading"
+                      @click="startEditPrefix(member)"
+                    >
+                      Звание
+                    </button>
+
+                    <button
                       v-if="canTransferLeadership"
                       type="button"
                       class="btn btn-outline btn-sm"
@@ -1018,6 +1070,20 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                       Исключить
                     </button>
                   </div>
+                </div>
+
+                <div v-if="editingPrefixUserId === member.user_id" class="mt-3 flex gap-2">
+                  <input
+                    v-model="editingPrefixValue"
+                    type="text"
+                    maxlength="64"
+                    placeholder="Введите звание (или оставьте пустым, чтобы сбросить)"
+                    class="input input-sm flex-1 bg-slate-800 text-slate-100 placeholder-slate-500"
+                    @keydown.enter="savePrefix(member.user_id)"
+                    @keydown.esc="cancelEditPrefix"
+                  />
+                  <button type="button" class="btn btn-sm btn-primary" :disabled="actionLoading" @click="savePrefix(member.user_id)">Сохранить</button>
+                  <button type="button" class="btn btn-sm btn-ghost" @click="cancelEditPrefix">Отмена</button>
                 </div>
               </article>
             </div>

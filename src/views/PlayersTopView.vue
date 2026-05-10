@@ -144,7 +144,10 @@ onMounted(load)
 
               <!-- Name + date -->
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold text-slate-100">{{ entry.minecraft_nickname }}</p>
+                <router-link
+                  :to="`/u/${entry.minecraft_nickname}`"
+                  class="truncate text-sm font-semibold text-slate-100 hover:text-violet-300 transition"
+                >{{ entry.minecraft_nickname }}</router-link>
                 <p v-if="fmtDate(entry.last_seen_at)" class="text-xs text-slate-500">
                   был {{ fmtDate(entry.last_seen_at) }}
                 </p>

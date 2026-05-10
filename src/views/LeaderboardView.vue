@@ -125,7 +125,10 @@ onMounted(load)
               </span>
 
               <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-semibold text-slate-100">{{ entry.minecraft_nickname }}</p>
+                <router-link
+                  :to="`/u/${entry.minecraft_nickname}`"
+                  class="truncate text-sm font-semibold text-slate-100 hover:text-violet-300 transition"
+                >{{ entry.minecraft_nickname }}</router-link>
                 <p class="text-xs text-slate-500">{{ fmtDate(entry.unlocked_at) }}</p>
               </div>
 
