@@ -32,12 +32,14 @@ import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import OfferAgreementView from '../views/OfferAgreementView.vue'
 import LeaderboardView from '../views/LeaderboardView.vue'
 import PlayersTopView from '../views/PlayersTopView.vue'
+import RecipesView from '../views/RecipesView.vue'
 import ShopView from '../views/ShopView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
   { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин' } },
   { path: '/guide', name: 'expert-guide', component: ExpertGuideView, meta: { title: 'Гайд сборки' } },
+  { path: '/recipes', name: 'recipes', component: RecipesView, meta: { title: 'Крафты сборки' } },
   { path: '/market', name: 'market', component: MarketView, meta: { title: 'Рынок' } },
   { path: '/market/:material', name: 'market-item', component: MarketItemView, meta: { title: 'Товар' } },
   { path: '/links', name: 'links', component: LinksView, meta: { title: 'Ссылки' } },
