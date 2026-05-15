@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { bootstrapAuth, getIsAuthenticated } from '../stores/authStore'
+import { authState, bootstrapAuth, getIsAuthenticated } from '../stores/authStore'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
@@ -25,6 +25,13 @@ import NationRankingsView from '../views/NationRankingsView.vue'
 import AllianceHubView from '../views/AllianceHubView.vue'
 import AdminLegacyView from '../views/AdminLegacyView.vue'
 import AdminMarketView from '../views/AdminMarketView.vue'
+import AdminLayout from '../views/admin/AdminLayout.vue'
+import AdminDashboardView from '../views/admin/AdminDashboardView.vue'
+import AdminPlayersView from '../views/admin/AdminPlayersView.vue'
+import AdminMarketPanelView from '../views/admin/AdminMarketPanelView.vue'
+import AdminServerView from '../views/admin/AdminServerView.vue'
+import AdminNationsView from '../views/admin/AdminNationsView.vue'
+import AdminModSuggestionsView from '../views/admin/AdminModSuggestionsView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
 import MarketView from '../views/MarketView.vue'
 import MarketItemView from '../views/MarketItemView.vue'
@@ -65,6 +72,19 @@ const routes = [
   { path: '/players/top', name: 'players-top', component: PlayersTopView, meta: { title: 'Топ игроков' } },
   { path: '/internal-admin', name: 'admin-legacy', component: AdminLegacyView, meta: { title: 'Legacy Admin', hidePublicShell: true } },
   { path: '/internal-admin/market', name: 'admin-market', component: AdminMarketView, meta: { title: 'Market Admin', hidePublicShell: true } },
+  {
+    path: '/admin',
+    component: AdminLayout,
+    meta: { requiresAuth: true, requiresAdmin: true, hidePublicShell: true },
+    children: [
+      { path: '', name: 'admin-dashboard', component: AdminDashboardView, meta: { title: 'Панель управления', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'players', name: 'admin-players', component: AdminPlayersView, meta: { title: 'Игроки', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'market', name: 'admin-market-panel', component: AdminMarketPanelView, meta: { title: 'Рынок', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'server', name: 'admin-server', component: AdminServerView, meta: { title: 'Статус сервера', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'nations', name: 'admin-nations', component: AdminNationsView, meta: { title: 'Государства', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'mod-suggestions', name: 'admin-mod-suggestions', component: AdminModSuggestionsView, meta: { title: 'Предложения модов', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+    ],
+  },
 ]
 
 const router = createRouter({
@@ -82,6 +102,10 @@ router.beforeEach(async (to) => {
   if (to.meta?.requiresAuth && !isAuthenticated) {
     NProgress.done()
     return { path: '/login', query: { redirect: to.fullPath } }
+  }
+  if (to.meta?.requiresAdmin && !authState.user?.is_admin) {
+    NProgress.done()
+    return { path: '/' }
   }
   if (to.meta?.guestOnly && isAuthenticated) {
     NProgress.done()

@@ -1,3 +1,5 @@
+import { apiRequest, buildAuthHeaders } from './apiBase'
+
 const ADMIN_API_BASE = '/internal-admin-api'
 
 async function adminRequest(path, options = {}) {
@@ -104,5 +106,94 @@ export function resetAdminMarketItem(material) {
 export function recalculateAdminMarket(decayScores = true) {
   return adminRequest(`/market/recalculate${buildQuery({ decay_scores: decayScores })}`, {
     method: 'POST',
+  })
+}
+
+// ── New JWT-based admin dashboard API ─────────────────────────────────────
+
+function ah(token) {
+  return { headers: buildAuthHeaders(token) }
+}
+
+export function getDashboardStats(token) {
+  return apiRequest('/admin/dashboard/stats', ah(token))
+}
+
+export function getServerStatus(token) {
+  return apiRequest('/admin/dashboard/server-status', ah(token))
+}
+
+export function getRecentUsers(token) {
+  return apiRequest('/admin/dashboard/recent-users', ah(token))
+}
+
+export function adminListPlayers(token, params = {}) {
+  return apiRequest(`/admin/players${buildQuery(params)}`, ah(token))
+}
+
+export function adminGetPlayer(token, playerAccountId) {
+  return apiRequest(`/admin/players/${playerAccountId}`, ah(token))
+}
+
+export function adminPatchLegacy(token, playerAccountId, payload) {
+  return apiRequest(`/admin/players/${playerAccountId}/legacy`, {
+    ...ah(token),
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function adminGetMarketSummary(token) {
+  return apiRequest('/admin/market/summary', ah(token))
+}
+
+export function adminListMarketItems(token, params = {}) {
+  return apiRequest(`/admin/market/items${buildQuery(params)}`, ah(token))
+}
+
+export function adminPatchMarketItem(token, material, payload) {
+  return apiRequest(`/admin/market/items/${encodeURIComponent(material)}`, {
+    ...ah(token),
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function adminEnableMarketItem(token, material) {
+  return apiRequest(`/admin/market/items/${encodeURIComponent(material)}/enable`, {
+    ...ah(token),
+    method: 'POST',
+  })
+}
+
+export function adminDisableMarketItem(token, material) {
+  return apiRequest(`/admin/market/items/${encodeURIComponent(material)}/disable`, {
+    ...ah(token),
+    method: 'POST',
+  })
+}
+
+export function adminResetMarketItem(token, material) {
+  return apiRequest(`/admin/market/items/${encodeURIComponent(material)}/reset`, {
+    ...ah(token),
+    method: 'POST',
+  })
+}
+
+export function adminRecalculateMarket(token, decayScores = true) {
+  return apiRequest(`/admin/market/recalculate${buildQuery({ decay_scores: decayScores })}`, {
+    ...ah(token),
+    method: 'POST',
+  })
+}
+
+export function adminListModSuggestions(token) {
+  return apiRequest('/admin/mod-suggestions/', ah(token))
+}
+
+export function adminDeleteModSuggestion(token, id) {
+  return apiRequest(`/admin/mod-suggestions/${id}`, {
+    ...ah(token),
+    method: 'DELETE',
   })
 }

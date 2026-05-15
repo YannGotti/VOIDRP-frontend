@@ -12,6 +12,7 @@ const openGroup = ref(null)
 const navRef = ref(null)
 
 const isAuthenticated = computed(() => auth.isAuthenticated.value)
+const isAdmin = computed(() => auth.isAdmin.value)
 const displayName = computed(() => auth.displayName.value || 'Профиль')
 const minecraftNick = computed(() => auth.state.playerAccount?.minecraft_nickname || null)
 const avatarUrl = computed(() => auth.avatarUrl.value)
@@ -157,6 +158,12 @@ async function handleLogout() {
           <div class="site-navbar__divider" />
 
           <template v-if="isAuthenticated">
+            <RouterLink v-if="isAdmin" to="/admin" class="site-navbar__admin-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              Админ
+            </RouterLink>
             <RouterLink to="/profile" class="site-navbar__avatar-btn">
               <span class="site-navbar__avatar">
                 <img v-if="avatarUrl" :src="avatarUrl" :alt="displayName" class="site-navbar__avatar-img" />
@@ -383,6 +390,26 @@ async function handleLogout() {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateX(-50%) translateY(-6px);
+}
+
+/* ── Admin button ────────────────────── */
+.site-navbar__admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.site-navbar__admin-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.35);
 }
 
 /* ── External link ────────────────────── */

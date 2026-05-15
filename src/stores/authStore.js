@@ -269,6 +269,7 @@ export function useAuthStore() {
     mustUseLauncher: computed(() => Boolean(authState.security?.must_use_launcher)),
     legacyReady: computed(() => Boolean(authState.security?.legacy_ready)),
     legacyHashPresent: computed(() => Boolean(authState.security?.legacy_hash_present)),
+    isAdmin: computed(() => Boolean(authState.user?.is_admin)),
 
     accountModeText: computed(() => {
       if (authState.security?.must_use_launcher) return 'Только официальный лаунчер'
