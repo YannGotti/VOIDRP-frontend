@@ -1,6 +1,13 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { usePageMeta } from '../composables/usePageMeta.js'
+
+usePageMeta({
+  title: 'Альянсы',
+  description: 'Межгосударственные альянсы сервера VoidRP — военные блоки, экономические союзы и политические федерации между государствами.',
+  url: 'https://void-rp.ru/alliances',
+})
 import AllianceProposalFeed from '../features/alliances/components/AllianceProposalFeed.vue'
 import AllianceRelationsPanel from '../features/alliances/components/AllianceRelationsPanel.vue'
 import {

@@ -1,6 +1,13 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { toastSuccess } from '../services/toast'
+import { usePageMeta } from '../composables/usePageMeta.js'
+
+usePageMeta({
+  title: 'Рынок',
+  description: 'Торговый рынок сервера VoidRP — актуальные цены на все товары, спрос и предложение от государств в реальном времени.',
+  url: 'https://void-rp.ru/market',
+})
 import { useRouter } from 'vue-router'
 import {
   getMarketItems,

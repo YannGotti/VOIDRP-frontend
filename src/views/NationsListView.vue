@@ -4,6 +4,13 @@ import { RouterLink } from 'vue-router'
 import { getMyNation, getNationsList } from '../services/nationsApi'
 import { useAuthStore } from '../stores/authStore'
 import { formatNumber } from '../utils/formatters'
+import { usePageMeta } from '../composables/usePageMeta.js'
+
+usePageMeta({
+  title: 'Государства',
+  description: 'Список всех государств сервера VoidRP. Смотри состав, казну и статистику каждого государства. Создай своё или вступи в существующее.',
+  url: 'https://void-rp.ru/nations',
+})
 
 const auth = useAuthStore()
 

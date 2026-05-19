@@ -1,6 +1,13 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { getProgressionLeaderboard } from '../services/progressionApi'
+import { usePageMeta } from '../composables/usePageMeta.js'
+
+usePageMeta({
+  title: 'Рейтинг прогрессии',
+  description: 'Топ игроков VoidRP по прогрессии — кто дальше всех продвинулся в освоении сборки модов.',
+  url: 'https://void-rp.ru/leaderboard',
+})
 import { toastError } from '../services/toast'
 
 const loading = ref(true)

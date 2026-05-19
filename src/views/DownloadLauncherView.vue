@@ -1,6 +1,13 @@
 <script setup>
 import { computed } from 'vue'
 import { siteConfig } from '../config.site'
+import { usePageMeta } from '../composables/usePageMeta.js'
+
+usePageMeta({
+  title: 'Скачать лаунчер',
+  description: 'Скачай официальный лаунчер VoidRP — автоматическая установка сборки модов, авторизация и запуск Minecraft одной кнопкой.',
+  url: 'https://void-rp.ru/download-launcher',
+})
 import { useAuthStore } from '../stores/authStore'
 
 const auth = useAuthStore()

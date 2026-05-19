@@ -1,6 +1,13 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { siteConfig } from '../config.site'
+import { usePageMeta } from '../composables/usePageMeta.js'
+
+usePageMeta({
+  title: 'Гайд сборки',
+  description: 'Полный гайд по сборке модов VoidRP — как прогрессировать, что крафтить, как работают механики. Всё для новичков и опытных игроков.',
+  url: 'https://void-rp.ru/guide',
+})
 
 const CHECK_STORAGE_KEY = 'voidrp-expert-progression-guide-v1'
 

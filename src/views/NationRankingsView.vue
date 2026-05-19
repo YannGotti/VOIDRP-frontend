@@ -2,6 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { getNationRankings } from '../services/nationStatsApi'
+import { usePageMeta } from '../composables/usePageMeta.js'
+
+usePageMeta({
+  title: 'Рейтинг государств',
+  description: 'Рейтинг государств сервера VoidRP по богатству, активности и размеру. Кто сильнейший на этой неделе?',
+  url: 'https://void-rp.ru/nations/rankings',
+})
 import { useAuthStore } from '../stores/authStore'
 import { formatCompactHoursFromMinutes, formatNumber } from '../utils/formatters'
 

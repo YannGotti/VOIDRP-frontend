@@ -3,8 +3,13 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { siteConfig } from '../config.site.js'
 import { useReveal } from '../composables/useReveal.js'
+import { usePageMeta } from '../composables/usePageMeta.js'
 
 useReveal()
+usePageMeta({
+  title: 'VoidRP — Minecraft Roleplay сервер',
+  description: 'VoidRP — Minecraft roleplay сервер с живой экономикой, государствами, альянсами и сотнями модов. Единый аккаунт, удобный лаунчер — заходи на void-rp.ru.',
+})
 
 const ipCopied = ref(false)
 function copyIp() {
@@ -14,7 +19,6 @@ function copyIp() {
   })
 }
 
-// spotlight — свет за мышью на карточках
 const LIGHT_SELECTOR = '.step-card, .feat-card, .launcher-card, .cta-card'
 let lightCleanup = []
 
@@ -26,9 +30,7 @@ onMounted(() => {
       card.style.setProperty('--my', (e.clientY - r.top) + 'px')
       card.classList.add('lit')
     }
-    function onLeave() {
-      card.classList.remove('lit')
-    }
+    function onLeave() { card.classList.remove('lit') }
     card.addEventListener('mousemove', onMove)
     card.addEventListener('mouseleave', onLeave)
     lightCleanup.push(() => {
@@ -47,14 +49,16 @@ onUnmounted(() => {
 <template>
   <!-- ═══════════════════════ HERO ═══════════════════════ -->
   <section class="hero">
-    <!-- background decoration -->
     <div class="hero__noise"></div>
     <div class="hero__grid"></div>
     <div class="hero__orb hero__orb--1"></div>
     <div class="hero__orb hero__orb--2"></div>
     <div class="hero__orb hero__orb--3"></div>
 
-    <!-- floating Minecraft item decorations -->
+    <!-- ambient bloom pulse on load -->
+    <div class="hero__bloom" aria-hidden="true"></div>
+
+    <!-- floating Minecraft items -->
     <div class="hero__mc-stage" aria-hidden="true">
       <img class="mc-item mc-item--sword"    src="/item-icons/minecraft/diamond_sword.png" alt="">
       <img class="mc-item mc-item--beacon"   src="/item-icons/minecraft/beacon.png" alt="">
@@ -64,6 +68,9 @@ onUnmounted(() => {
       <img class="mc-item mc-item--table"    src="/item-icons/minecraft/enchanting_table.png" alt="">
       <img class="mc-item mc-item--obsidian" src="/item-icons/minecraft/obsidian.png" alt="">
     </div>
+
+    <!-- gradient veil fading hero into page -->
+    <div class="hero__bottom-veil" aria-hidden="true"></div>
 
     <div class="container-shell hero__inner">
       <div class="hero__badge anim-hero anim-d0">
@@ -105,7 +112,6 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- scroll cue -->
     <div class="hero__scroll-cue anim-hero anim-d5">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
     </div>
@@ -115,23 +121,27 @@ onUnmounted(() => {
   <section class="steps-section">
     <div class="container-shell">
       <div class="section-header" data-reveal>
-        <p class="section-kicker">Старт</p>
+        <div class="kicker-wrap">
+          <span class="kicker-line"></span>
+          <p class="section-kicker">Старт</p>
+          <span class="kicker-line"></span>
+        </div>
         <h2 class="section-h2">Три шага до игры</h2>
       </div>
       <div class="steps-grid">
-        <div class="step-card" data-reveal data-delay="0">
+        <div class="step-card" data-num="01" data-reveal data-delay="0">
           <div class="step-card__num">01</div>
           <h3 class="step-card__title">Аккаунт</h3>
           <p class="step-card__desc">Регистрируешься на сайте и подтверждаешь почту — это занимает минуту.</p>
           <RouterLink to="/register" class="step-card__link">Зарегистрироваться →</RouterLink>
         </div>
-        <div class="step-card step-card--accent" data-reveal data-delay="80">
+        <div class="step-card step-card--accent" data-num="02" data-reveal data-delay="80">
           <div class="step-card__num">02</div>
           <h3 class="step-card__title">Лаунчер</h3>
           <p class="step-card__desc">Скачиваешь официальный лаунчер. Он сам подготовит сборку без ручной настройки.</p>
           <a :href="siteConfig.launcherPortableUrl" target="_blank" rel="noreferrer" class="step-card__link">Скачать →</a>
         </div>
-        <div class="step-card" data-reveal data-delay="160">
+        <div class="step-card" data-num="03" data-reveal data-delay="160">
           <div class="step-card__num">03</div>
           <h3 class="step-card__title">Играть</h3>
           <p class="step-card__desc">Входишь тем же аккаунтом и жмёшь «Играть». Готово — сервер сразу доступен.</p>
@@ -147,7 +157,10 @@ onUnmounted(() => {
       <div class="launcher-card" data-reveal>
         <div class="launcher-card__glow"></div>
         <div class="launcher-card__left">
-          <p class="section-kicker section-kicker--light">Официальный клиент</p>
+          <div class="kicker-wrap kicker-wrap--left">
+            <span class="kicker-line"></span>
+            <p class="section-kicker section-kicker--light">Официальный клиент</p>
+          </div>
           <h2 class="launcher-card__title">Лаунчер VoidRP</h2>
           <p class="launcher-card__desc">
             Берёт нужную версию Minecraft, устанавливает всю сборку модов и запускает игру под твоим
@@ -181,7 +194,11 @@ onUnmounted(() => {
   <section class="features-section">
     <div class="container-shell">
       <div class="section-header" data-reveal>
-        <p class="section-kicker">Возможности</p>
+        <div class="kicker-wrap">
+          <span class="kicker-line"></span>
+          <p class="section-kicker">Возможности</p>
+          <span class="kicker-line"></span>
+        </div>
         <h2 class="section-h2">Всё, что нужно — в одном месте</h2>
       </div>
       <div class="features-grid">
@@ -238,7 +255,11 @@ onUnmounted(() => {
         <div class="cta-card__glow"></div>
         <div class="cta-card__orb cta-card__orb--1"></div>
         <div class="cta-card__orb cta-card__orb--2"></div>
-        <p class="section-kicker section-kicker--light">Присоединяйся</p>
+        <div class="kicker-wrap">
+          <span class="kicker-line kicker-line--dim"></span>
+          <p class="section-kicker section-kicker--light">Присоединяйся</p>
+          <span class="kicker-line kicker-line--dim"></span>
+        </div>
         <h2 class="cta-card__title">Готов начать?</h2>
         <p class="cta-card__desc">Создай аккаунт, скачай лаунчер и заходи — всё бесплатно.</p>
         <div class="cta-actions">
@@ -265,8 +286,14 @@ onUnmounted(() => {
    KEYFRAMES
 ════════════════════════════════════ */
 @keyframes hero-in {
-  from { opacity: 0; transform: translateY(28px); }
+  from { opacity: 0; transform: translateY(32px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-bloom {
+  0%   { opacity: 0;   transform: translate(-50%, -50%) scale(.5); }
+  25%  { opacity: 1;   transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(1.8); }
 }
 
 @keyframes orb-float-1 {
@@ -302,7 +329,7 @@ onUnmounted(() => {
 }
 
 @keyframes reveal-up {
-  from { opacity: 0; transform: translateY(32px) scale(.98); }
+  from { opacity: 0; transform: translateY(40px) scale(.985); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
@@ -316,23 +343,23 @@ onUnmounted(() => {
 ════════════════════════════════════ */
 .anim-hero {
   opacity: 0;
-  animation: hero-in .8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: hero-in .85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .anim-d0 { animation-delay: .05s; }
-.anim-d1 { animation-delay: .18s; }
-.anim-d2 { animation-delay: .32s; }
-.anim-d3 { animation-delay: .46s; }
-.anim-d4 { animation-delay: .60s; }
-.anim-d5 { animation-delay: .80s; }
+.anim-d1 { animation-delay: .22s; }
+.anim-d2 { animation-delay: .38s; }
+.anim-d3 { animation-delay: .54s; }
+.anim-d4 { animation-delay: .70s; }
+.anim-d5 { animation-delay: .90s; }
 
 /* ════════════════════════════════════
    SCROLL REVEAL
 ════════════════════════════════════ */
 [data-reveal] {
   opacity: 0;
-  transform: translateY(28px) scale(.99);
-  transition: opacity .65s cubic-bezier(0.16, 1, 0.3, 1),
-              transform .65s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(40px) scale(.985);
+  transition: opacity .75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform .75s cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-reveal].is-revealed {
   opacity: 1;
@@ -344,7 +371,7 @@ onUnmounted(() => {
 ════════════════════════════════════ */
 .btn-hero-primary {
   display: inline-flex; align-items: center; gap: .4rem;
-  padding: .72rem 1.45rem;
+  padding: .78rem 1.55rem;
   border-radius: 14px;
   background: linear-gradient(135deg, #7c3aed, #5b21b6);
   color: #fff; font-weight: 800; font-size: .92rem;
@@ -353,14 +380,14 @@ onUnmounted(() => {
   transition: box-shadow .25s, transform .18s;
 }
 .btn-hero-primary:hover {
-  box-shadow: 0 0 44px rgba(109,40,217,.6);
+  box-shadow: 0 0 48px rgba(109,40,217,.65);
   transform: translateY(-2px);
 }
 .btn-hero-primary:active { transform: translateY(0); }
 
 .btn-hero-secondary {
   display: inline-flex; align-items: center; gap: .45rem;
-  padding: .72rem 1.45rem;
+  padding: .78rem 1.55rem;
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,.16);
   background: rgba(255,255,255,.06);
@@ -377,7 +404,7 @@ onUnmounted(() => {
 
 .btn-hero-ghost {
   display: inline-flex; align-items: center;
-  padding: .72rem 1.1rem;
+  padding: .78rem 1.1rem;
   border-radius: 14px;
   color: rgba(255,255,255,.45); font-weight: 700; font-size: .92rem;
   text-decoration: none;
@@ -390,9 +417,37 @@ onUnmounted(() => {
 ════════════════════════════════════ */
 .hero {
   position: relative; overflow: hidden;
-  padding: 7rem 0 6rem;
-  min-height: 92vh;
+  padding: 7rem 0 8rem;
+  min-height: 100svh;
   display: flex; align-items: center;
+}
+
+/* ambient bloom — fades in then expands out on load */
+.hero__bloom {
+  position: absolute;
+  top: 42%; left: 50%;
+  width: 780px; height: 480px;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(124, 58, 237, .38) 0%,
+    rgba(109, 40, 217, .18) 40%,
+    transparent 70%
+  );
+  filter: blur(48px);
+  animation: hero-bloom 2.2s cubic-bezier(0.16, 1, 0.3, 1) .1s both;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* gradient veil — fades hero into rest of page */
+.hero__bottom-veil {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 320px;
+  background: linear-gradient(to bottom, transparent 0%, rgba(9,7,20,.96) 100%);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* subtle noise grain */
@@ -435,7 +490,7 @@ onUnmounted(() => {
 }
 
 .hero__inner {
-  position: relative; z-index: 2;
+  position: relative; z-index: 3;
   display: flex; flex-direction: column; align-items: flex-start;
 }
 
@@ -458,8 +513,8 @@ onUnmounted(() => {
 }
 
 .hero__title {
-  font-size: clamp(2.8rem, 6.5vw, 4.4rem);
-  font-weight: 900; letter-spacing: -.055em; line-height: .94;
+  font-size: clamp(3rem, 7vw, 4.8rem);
+  font-weight: 900; letter-spacing: -.055em; line-height: .92;
   color: #f8faff;
   margin: 0 0 1.3rem;
 }
@@ -474,10 +529,10 @@ onUnmounted(() => {
 .hero__desc {
   font-size: clamp(.9rem, 2vw, 1.05rem);
   line-height: 1.72; color: rgba(148,163,184,.9);
-  max-width: 500px; margin: 0 0 2rem;
+  max-width: 500px; margin: 0 0 2.2rem;
 }
 
-.hero__actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 2rem; }
+.hero__actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-bottom: 2.2rem; }
 
 .hero__meta {
   display: flex; align-items: center; flex-wrap: wrap;
@@ -514,21 +569,36 @@ onUnmounted(() => {
 .hero__map-link:hover { color: #c4b5fd; }
 
 .hero__scroll-cue {
-  position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
-  z-index: 2; color: rgba(255,255,255,.3);
+  position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+  z-index: 3; color: rgba(255,255,255,.3);
   animation: scroll-bounce 2.2s ease-in-out infinite;
 }
 
 /* ════════════════════════════════════
+   KICKER WITH FLANKING LINES
+════════════════════════════════════ */
+.kicker-wrap {
+  display: flex; align-items: center; gap: .75rem;
+  margin-bottom: .5rem;
+}
+.kicker-wrap--left { justify-content: flex-start; }
+
+.kicker-line {
+  flex: 1; max-width: 2.8rem; height: 1px;
+  background: rgba(139,92,246,.45);
+}
+.kicker-line--dim { background: rgba(167,139,250,.25); }
+
+/* ════════════════════════════════════
    STEPS
 ════════════════════════════════════ */
-.steps-section { padding: 5rem 0; }
+.steps-section { padding: 5.5rem 0; }
 
-.section-header { margin-bottom: 2.5rem; }
+.section-header { margin-bottom: 2.8rem; }
 .section-h2 {
-  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
   font-weight: 900; letter-spacing: -.045em;
-  color: #f1f5f9; margin: .35rem 0 0;
+  color: #f1f5f9; margin: .3rem 0 0;
 }
 
 .steps-grid {
@@ -537,39 +607,60 @@ onUnmounted(() => {
 }
 
 .step-card {
+  position: relative; overflow: hidden;
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 22px;
-  background: rgba(255,255,255,.025);
-  padding: 1.85rem;
+  background:
+    linear-gradient(180deg, rgba(139,92,246,.055) 0%, transparent 50%),
+    rgba(255,255,255,.022);
+  padding: 2rem;
   display: flex; flex-direction: column; gap: .8rem;
-  transition: border-color .25s, background .25s, transform .22s, box-shadow .25s;
+  transition: border-color .28s, background .28s, transform .22s, box-shadow .28s;
 }
 .step-card:hover {
-  border-color: rgba(139,92,246,.28);
-  background: rgba(139,92,246,.04);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 40px rgba(0,0,0,.3), 0 0 0 1px rgba(139,92,246,.1);
+  border-color: rgba(139,92,246,.32);
+  background:
+    linear-gradient(180deg, rgba(139,92,246,.1) 0%, transparent 60%),
+    rgba(139,92,246,.04);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0,0,0,.32), 0 0 0 1px rgba(139,92,246,.12);
+}
+
+/* large ghost number — decorative */
+.step-card::before {
+  content: attr(data-num);
+  position: absolute;
+  right: 1.2rem; bottom: -.6rem;
+  font-size: 7.5rem; font-weight: 900; line-height: 1;
+  letter-spacing: -.08em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,.055);
+  user-select: none; pointer-events: none;
 }
 
 .step-card--accent {
-  background: radial-gradient(ellipse at top left, rgba(109,40,217,.22) 0%, transparent 65%),
-    rgba(255,255,255,.035);
+  background:
+    linear-gradient(180deg, rgba(109,40,217,.18) 0%, transparent 60%),
+    rgba(255,255,255,.032);
   border-color: rgba(139,92,246,.28);
 }
 .step-card--accent:hover {
-  border-color: rgba(139,92,246,.5);
-  box-shadow: 0 12px 40px rgba(0,0,0,.3), 0 0 32px rgba(109,40,217,.15);
+  border-color: rgba(139,92,246,.52);
+  box-shadow: 0 16px 48px rgba(0,0,0,.32), 0 0 36px rgba(109,40,217,.16);
+}
+.step-card--accent::before {
+  -webkit-text-stroke: 1px rgba(139,92,246,.1);
 }
 
 .step-card__num {
   font-size: .62rem; font-weight: 900; letter-spacing: .16em;
-  color: rgba(139,92,246,.65);
+  color: rgba(139,92,246,.7);
 }
 .step-card__title {
-  font-size: 1.08rem; font-weight: 900; color: #f1f5f9; margin: 0;
+  font-size: 1.12rem; font-weight: 900; color: #f1f5f9; margin: 0;
 }
 .step-card__desc {
-  font-size: .84rem; line-height: 1.62; color: rgba(148,163,184,.85); margin: 0; flex: 1;
+  font-size: .84rem; line-height: 1.65; color: rgba(148,163,184,.85); margin: 0; flex: 1;
 }
 .step-card__link {
   display: inline-block; font-size: .82rem; font-weight: 700;
@@ -577,12 +668,12 @@ onUnmounted(() => {
   transition: color .18s, letter-spacing .18s;
 }
 .step-card__link:hover { color: #c4b5fd; letter-spacing: .01em; }
-.step-card__link--muted { color: rgba(148,163,184,.45); pointer-events: none; }
+.step-card__link--muted { color: rgba(148,163,184,.4); pointer-events: none; }
 
 /* ════════════════════════════════════
    LAUNCHER
 ════════════════════════════════════ */
-.launcher-section { padding: 0 0 5rem; }
+.launcher-section { padding: 0 0 5.5rem; }
 
 .launcher-card {
   position: relative; overflow: hidden;
@@ -666,32 +757,49 @@ onUnmounted(() => {
 /* ════════════════════════════════════
    FEATURES
 ════════════════════════════════════ */
-.features-section { padding: 0 0 5rem; }
+.features-section { padding: 0 0 5.5rem; }
 
 .features-grid {
-  display: grid; gap: .8rem;
+  display: grid; gap: .85rem;
   grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
 }
 
 .feat-card {
+  position: relative; overflow: hidden;
   border: 1px solid rgba(255,255,255,.07);
   border-radius: 20px; background: rgba(255,255,255,.022);
-  padding: 1.6rem; display: flex; flex-direction: column; gap: .8rem;
-  transition: border-color .25s, background .25s, transform .22s, box-shadow .25s;
+  padding: 1.7rem; display: flex; flex-direction: column; gap: .85rem;
+  transition: border-color .28s, background .28s, transform .22s, box-shadow .28s;
 }
 .feat-card:hover {
-  border-color: rgba(139,92,246,.25);
+  border-color: rgba(139,92,246,.28);
   background: rgba(139,92,246,.05);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(0,0,0,.25), 0 0 0 1px rgba(139,92,246,.08);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 38px rgba(0,0,0,.28), 0 0 0 1px rgba(139,92,246,.1);
 }
 
+/* gradient border reveal on hover */
+.feat-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(139,92,246,.55) 0%, rgba(56,189,248,.3) 50%, transparent 70%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+}
+.feat-card:hover::before { opacity: 1; }
+
 .feat-card__icon {
-  width: 44px; height: 44px; border-radius: 12px;
+  width: 46px; height: 46px; border-radius: 13px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   transition: transform .22s;
 }
-.feat-card:hover .feat-card__icon { transform: scale(1.08); }
+.feat-card:hover .feat-card__icon { transform: scale(1.1); }
 
 .feat-icon--violet { background: rgba(139,92,246,.14);  border: 1px solid rgba(139,92,246,.24); color: #a78bfa; }
 .feat-icon--sky    { background: rgba(56,189,248,.11);  border: 1px solid rgba(56,189,248,.22);  color: #7dd3fc; }
@@ -701,10 +809,10 @@ onUnmounted(() => {
 .feat-icon--indigo { background: rgba(99,102,241,.11);  border: 1px solid rgba(99,102,241,.22);  color: #a5b4fc; }
 
 .feat-card__title {
-  font-size: .95rem; font-weight: 800; color: #e2e8f0; margin: 0;
+  font-size: .97rem; font-weight: 800; color: #e2e8f0; margin: 0;
 }
 .feat-card__desc {
-  font-size: .81rem; line-height: 1.62; color: rgba(100,116,139,.95); margin: 0;
+  font-size: .81rem; line-height: 1.65; color: rgba(100,116,139,.95); margin: 0;
 }
 
 /* ════════════════════════════════════
@@ -717,7 +825,7 @@ onUnmounted(() => {
   border: 1px solid rgba(255,255,255,.09); border-radius: 28px;
   background: radial-gradient(ellipse at center top, rgba(109,40,217,.22) 0%, transparent 55%),
     linear-gradient(180deg, rgba(18,14,36,.98), rgba(8,8,18,1));
-  padding: 5rem 2rem;
+  padding: 5.5rem 2rem;
   display: flex; flex-direction: column; align-items: center;
   text-align: center;
 }
@@ -745,13 +853,13 @@ onUnmounted(() => {
 }
 
 .cta-card__title {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
   font-weight: 900; letter-spacing: -.055em; color: #fff;
   margin: .5rem 0 .8rem;
 }
 .cta-card__desc {
   font-size: .95rem; color: rgba(255,255,255,.46);
-  margin: 0 0 2.2rem; max-width: 360px;
+  margin: 0 0 2.4rem; max-width: 360px;
 }
 
 .cta-actions {
@@ -779,8 +887,7 @@ onUnmounted(() => {
 .launcher-card::after,
 .cta-card::after {
   content: '';
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   border-radius: inherit;
   opacity: 0;
   transition: opacity .35s ease;
@@ -791,21 +898,21 @@ onUnmounted(() => {
 .feat-card::after {
   background: radial-gradient(
     circle 220px at var(--mx, 50%) var(--my, 50%),
-    rgba(139, 92, 246, .13) 0%,
+    rgba(139, 92, 246, .11) 0%,
     transparent 70%
   );
 }
 .launcher-card::after {
   background: radial-gradient(
     circle 300px at var(--mx, 50%) var(--my, 50%),
-    rgba(139, 92, 246, .16) 0%,
+    rgba(139, 92, 246, .14) 0%,
     transparent 65%
   );
 }
 .cta-card::after {
   background: radial-gradient(
     circle 340px at var(--mx, 50%) var(--my, 50%),
-    rgba(139, 92, 246, .13) 0%,
+    rgba(139, 92, 246, .11) 0%,
     rgba(56, 189, 248, .05) 50%,
     transparent 70%
   );
@@ -847,8 +954,7 @@ onUnmounted(() => {
 .hero__mc-stage {
   position: absolute;
   top: 0; bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 50%; transform: translateX(-50%);
   width: min(1180px, 100vw);
   pointer-events: none;
   z-index: 1;
@@ -859,61 +965,63 @@ onUnmounted(() => {
   position: absolute;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  user-select: none;
-  pointer-events: none;
+  user-select: none; pointer-events: none;
 }
 
 .mc-item--sword {
   width: 108px; height: 108px;
-  top: 14%; right: 18%;
-  opacity: 0.42;
+  top: 14%; right: 18%; opacity: .42;
   animation: mc-float-a 7.5s ease-in-out infinite;
   filter: drop-shadow(0 0 18px rgba(103,232,249,.55)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
 }
 .mc-item--beacon {
   width: 84px; height: 84px;
-  top: 40%; right: 7%;
-  opacity: 0.34;
+  top: 40%; right: 7%; opacity: .34;
   animation: mc-float-b 9.2s ease-in-out infinite;
   filter: drop-shadow(0 0 14px rgba(56,189,248,.5)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
 }
 .mc-item--star {
   width: 76px; height: 76px;
-  top: 8%; right: 32%;
-  opacity: 0.32;
+  top: 8%; right: 32%; opacity: .32;
   animation: mc-float-c 11s ease-in-out infinite;
   filter: drop-shadow(0 0 12px rgba(251,191,36,.55)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
 }
 .mc-item--egg {
   width: 70px; height: 70px;
-  top: 60%; right: 11%;
-  opacity: 0.30;
+  top: 60%; right: 11%; opacity: .30;
   animation: mc-float-d 8.3s ease-in-out infinite;
   filter: drop-shadow(0 0 12px rgba(167,139,250,.5)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
 }
 .mc-item--diamond {
   width: 64px; height: 64px;
-  top: 26%; right: 35%;
-  opacity: 0.33;
+  top: 26%; right: 35%; opacity: .33;
   animation: mc-float-e 6.8s ease-in-out infinite;
   filter: drop-shadow(0 0 10px rgba(103,232,249,.5)) drop-shadow(0 4px 6px rgba(0,0,0,.35));
 }
 .mc-item--table {
   width: 82px; height: 82px;
-  top: 72%; right: 26%;
-  opacity: 0.28;
+  top: 72%; right: 26%; opacity: .28;
   animation: mc-float-a 10.5s ease-in-out infinite reverse;
   filter: drop-shadow(0 0 12px rgba(139,92,246,.45)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
 }
 .mc-item--obsidian {
   width: 66px; height: 66px;
-  top: 46%; right: 38%;
-  opacity: 0.22;
+  top: 46%; right: 38%; opacity: .22;
   animation: mc-float-b 13s ease-in-out infinite;
   filter: drop-shadow(0 0 10px rgba(109,40,217,.4)) drop-shadow(0 4px 6px rgba(0,0,0,.35));
 }
 
 @media (max-width: 1100px) {
   .hero__mc-stage { display: none; }
+}
+
+@media (max-width: 768px) {
+  .container-shell { padding-inline: .9rem; }
+  .hero { padding: 5.5rem 0 6rem; }
+  .hero__bottom-veil { height: 200px; }
+  .steps-section { padding: 4rem 0; }
+  .launcher-section { padding: 0 0 4rem; }
+  .features-section { padding: 0 0 4rem; }
+  .section-h2 { font-size: 1.55rem; }
 }
 </style>
