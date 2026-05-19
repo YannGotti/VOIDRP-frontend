@@ -1,3 +1,119 @@
+const ENCHANT_NAMES = {
+  AQUA_AFFINITY: 'Водное родство',
+  BINDING_CURSE: 'Проклятие несъёмности',
+  BLAST_PROTECTION: 'Защита от взрывов',
+  CHANNELING: 'Переключение',
+  DEPTH_STRIDER: 'Морской странник',
+  EFFICIENCY: 'Эффективность',
+  FEATHER_FALLING: 'Невесомость',
+  FIRE_ASPECT: 'Огненный аспект',
+  FIRE_PROTECTION: 'Огненная защита',
+  FLAME: 'Пламя',
+  FORTUNE: 'Удача',
+  FROST_WALKER: 'Морозная поступь',
+  IMPALING: 'Пронзание',
+  INFINITY: 'Бесконечность',
+  KNOCKBACK: 'Отбрасывание',
+  LOOTING: 'Добыча',
+  LOYALTY: 'Верность',
+  LUCK_OF_THE_SEA: 'Морская удача',
+  LURE: 'Приманка',
+  MENDING: 'Починка',
+  MULTISHOT: 'Многостволка',
+  PIERCING: 'Прокалывание',
+  POWER: 'Мощь',
+  PROJECTILE_PROTECTION: 'Защита от снарядов',
+  PROTECTION: 'Защита',
+  PUNCH: 'Отдача',
+  QUICK_CHARGE: 'Быстрая зарядка',
+  RESPIRATION: 'Дыхание',
+  RIPTIDE: 'Подводный рывок',
+  SHARPNESS: 'Острота',
+  SILK_TOUCH: 'Шёлковое касание',
+  SMITE: 'Кара',
+  SOUL_SPEED: 'Скорость душ',
+  SWEEPING_EDGE: 'Секущий удар',
+  SWIFT_SNEAK: 'Быстрое подкрадывание',
+  THORNS: 'Шипы',
+  UNBREAKING: 'Прочность',
+  VANISHING_CURSE: 'Проклятие исчезновения',
+  WIND_BURST: 'Порыв ветра',
+}
+
+const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
+
+const POTION_EFFECT_NAMES = {
+  HEALING: 'Мгновенного здоровья',
+  FIRE_RESISTANCE: 'Стойкости к огню',
+  NIGHT_VISION: 'Ночного зрения',
+  STRENGTH: 'Силы',
+  SWIFTNESS: 'Скорости',
+  WATER_BREATHING: 'Водного дыхания',
+  REGENERATION: 'Регенерации',
+  STRONG_HEALING: 'Мгновенного здоровья II',
+  STRONG_SWIFTNESS: 'Скорости II',
+  STRONG_STRENGTH: 'Силы II',
+  LONG_FIRE_RESISTANCE: 'Стойкости к огню (долгое)',
+  LONG_NIGHT_VISION: 'Ночного зрения (долгое)',
+  LONG_STRENGTH: 'Силы (долгое)',
+  LONG_SWIFTNESS: 'Скорости (долгое)',
+  LONG_WATER_BREATHING: 'Водного дыхания (долгое)',
+  LONG_REGENERATION: 'Регенерации (долгое)',
+  INVISIBILITY: 'Невидимости',
+  LONG_INVISIBILITY: 'Невидимости (долгое)',
+  LEAPING: 'Прыгучести',
+  LONG_LEAPING: 'Прыгучести (долгое)',
+  STRONG_LEAPING: 'Прыгучести II',
+  SLOW_FALLING: 'Медленного падения',
+  LONG_SLOW_FALLING: 'Медленного падения (долгое)',
+  TURTLE_MASTER: 'Панциря черепахи',
+  LONG_TURTLE_MASTER: 'Панциря черепахи (долгое)',
+  STRONG_TURTLE_MASTER: 'Панциря черепахи II',
+}
+
+function _resolveSpecial(key) {
+  const parts = key.split(':')
+  if (parts.length < 2) return null
+  const base = parts[0]
+  const sub = parts.slice(1).join(':')
+
+  if (base === 'ENCHANTED_BOOK') {
+    const enchParts = sub.split(':')
+    const enchKey = enchParts[0]
+    const level = parseInt(enchParts[1]) || 0
+    const enchName = ENCHANT_NAMES[enchKey]
+    if (!enchName) return null
+    const levelStr = level > 1 && level < ROMAN.length ? ' ' + ROMAN[level] : ''
+    return `Книга зачарований: ${enchName}${levelStr}`
+  }
+
+  if (base === 'POTION') {
+    const effectName = POTION_EFFECT_NAMES[sub]
+    if (effectName) return `Зелье ${effectName.charAt(0).toLowerCase() + effectName.slice(1)}`
+    return null
+  }
+
+  if (base === 'SPLASH_POTION') {
+    const effectName = POTION_EFFECT_NAMES[sub]
+    if (effectName) return `Зелье-плеск ${effectName.charAt(0).toLowerCase() + effectName.slice(1)}`
+    return null
+  }
+
+  if (base === 'LINGERING_POTION') {
+    const effectName = POTION_EFFECT_NAMES[sub]
+    if (effectName) return `Зелье-туча ${effectName.charAt(0).toLowerCase() + effectName.slice(1)}`
+    return null
+  }
+
+  if (base === 'TIPPED_ARROW') {
+    const effectName = POTION_EFFECT_NAMES[sub]
+    if (effectName) return `Стрела ${effectName.charAt(0).toLowerCase() + effectName.slice(1)}`
+    return null
+  }
+
+  return null
+}
+
 const NAMES = {
   // Уголь и топливо
   COAL: 'Уголь',
@@ -347,23 +463,234 @@ const NAMES = {
   LEAD: 'Поводок',
   SADDLE: 'Седло',
   NAMETAG: 'Бирка с именем',
+  NAME_TAG: 'Бирка с именем',
   HONEYCOMB: 'Соты',
   HONEY_BOTTLE: 'Бутылка мёда',
   HONEY_BLOCK: 'Блок мёда',
   HONEYCOMB_BLOCK: 'Блок сот',
   FIREWORK_ROCKET: 'Фейерверк',
+  DIAMOND_HORSE_ARMOR: 'Алмазная броня для лошади',
+
+  // ── Моды ────────────────────────────────────────────────────────────────────
+
+  // Aether
+  AETHER_GOLDEN_GUMMY_SWET: 'Золотая жевательная конфета',
+  AETHER_IRON_BUBBLE: 'Железный пузырь',
+  AETHER_VAMPIRE_BLADE: 'Клинок вампира',
+
+  // Compat: Delightful
+  COMPATDELIGHT_WARDEN_MEAT: 'Мясо Хранителя',
+
+  // Deeper & Darker
+  DEEPERDARKER_WARDEN_CARAPACE: 'Панцирь Хранителя',
+
+  // DMR (Dragon Mounts: Remastered)
+  DMR_DRAGON_ARMOR: 'Броня дракона',
+  DMR_DRAGON_EGG: 'Яйцо дракона',
+
+  // Draconic Evolution
+  DRACONICEVOLUTION_MOB_SOUL: 'Душа моба',
+
+  // Eternal Nether
+  ETERNALNETHER_WITHERED_BONE: 'Иссохшая кость',
+
+  // Ice and Fire
+  ICEANDFIRE_DRAGONSCALES_BLUE: 'Синяя чешуя дракона',
+  ICEANDFIRE_DRAGONSCALES_SAPPHIRE: 'Сапфировая чешуя дракона',
+  ICEANDFIRE_DRAGONSCALES_RED: 'Красная чешуя дракона',
+  ICEANDFIRE_DRAGONSCALES_GREEN: 'Зелёная чешуя дракона',
+  ICEANDFIRE_DRAGONSCALES_BLACK: 'Чёрная чешуя дракона',
+  ICEANDFIRE_DRAGONSCALES_WHITE: 'Белая чешуя дракона',
+  ICEANDFIRE_DRAGONBONE: 'Кость дракона',
+  ICEANDFIRE_DRAGONSTEEL_INGOT: 'Слиток драконьей стали',
+  ICEANDFIRE_FIRE_DRAGON_BLOOD: 'Кровь огненного дракона',
+  ICEANDFIRE_ICE_DRAGON_BLOOD: 'Кровь ледяного дракона',
+
+  // Samurai Dynasty
+  SAMURAI_DYNASTY_SPIRIT_UPGRADE_SMITHING_TEMPLATE: 'Шаблон духовного улучшения',
+
+  // Sophisticated Backpacks
+  SOPHISTICATEDBACKPACKS_BACKPACK: 'Рюкзак',
+  SOPHISTICATEDBACKPACKS_COPPER_BACKPACK: 'Медный рюкзак',
+  SOPHISTICATEDBACKPACKS_IRON_BACKPACK: 'Железный рюкзак',
+  SOPHISTICATEDBACKPACKS_GOLD_BACKPACK: 'Золотой рюкзак',
+  SOPHISTICATEDBACKPACKS_DIAMOND_BACKPACK: 'Алмазный рюкзак',
+  SOPHISTICATEDBACKPACKS_NETHERITE_BACKPACK: 'Незеритовый рюкзак',
+  SOPHISTICATEDBACKPACKS_JUKEBOX_UPGRADE: 'Улучшение «Проигрыватель» для рюкзака',
+  SOPHISTICATEDBACKPACKS_BATTERY_UPGRADE: 'Батарейное улучшение для рюкзака',
+  SOPHISTICATEDBACKPACKS_FEEDING_UPGRADE: 'Кормящее улучшение для рюкзака',
+  SOPHISTICATEDBACKPACKS_FILTERING_UPGRADE: 'Фильтрующее улучшение для рюкзака',
+  SOPHISTICATEDBACKPACKS_MAGNET_UPGRADE: 'Магнитное улучшение для рюкзака',
+  SOPHISTICATEDBACKPACKS_STACK_UPGRADE: 'Стекирующее улучшение для рюкзака',
+  SOPHISTICATEDBACKPACKS_VOID_UPGRADE: 'Пустотное улучшение для рюкзака',
+
+  // Twilight Forest
+  TWILIGHTFOREST_STEELEAF_SHOVEL: 'Лопата из стального листа',
+  TWILIGHTFOREST_STEELEAF_PICKAXE: 'Кирка из стального листа',
+  TWILIGHTFOREST_STEELEAF_AXE: 'Топор из стального листа',
+  TWILIGHTFOREST_STEELEAF_SWORD: 'Меч из стального листа',
+  TWILIGHTFOREST_KNIGHTMETAL_INGOT: 'Слиток рыцарского металла',
+  TWILIGHTFOREST_FIERY_INGOT: 'Огненный слиток',
+  TWILIGHTFOREST_NAGA_SCALE: 'Чешуя наги',
+
+  // Слизь (альтернативный ID)
+  SLIME_BALL: 'Слизь',
+
+  // Незер
+  ANCIENT_DEBRIS: 'Древние обломки',
+  NETHER_STAR: 'Звезда незера',
+  NETHERITE_UPGRADE_SMITHING_TEMPLATE: 'Шаблон незеритового улучшения',
+
+  // Блоки и строительство
+  COBBLED_DEEPSLATE: 'Булыжная глубинная сланцевая порода',
+  COBBLESTONE_STAIRS: 'Булыжниковые ступени',
+  STONE_BRICKS: 'Каменные кирпичи',
+  STONE_SLAB: 'Каменная плита',
+  BRICK_STAIRS: 'Кирпичные ступени',
+  POLISHED_ANDESITE: 'Полированный андезит',
+  POLISHED_ANDESITE_STAIRS: 'Ступени из полированного андезита',
+  POLISHED_BLACKSTONE: 'Полированный чёрный камень',
+  SANDSTONE: 'Песчаник',
+  CALCITE: 'Кальцит',
+  TUFF: 'Туф',
+  MOSS_BLOCK: 'Мшистый блок',
+  HAY_BLOCK: 'Стог сена',
+  SCAFFOLDING: 'Строительные леса',
+  END_STONE_BRICKS: 'Кирпичи из камня края',
+  COBWEB: 'Паутина',
+
+  // Призмарин
+  PRISMARINE: 'Призмарин',
+  PRISMARINE_BRICKS: 'Кирпичи призмарина',
+  PRISMARINE_BRICK_STAIRS: 'Ступени из кирпичей призмарина',
+  PRISMARINE_STAIRS: 'Ступени призмарина',
+  DARK_PRISMARINE: 'Тёмный призмарин',
+  DARK_PRISMARINE_SLAB: 'Плита тёмного призмарина',
+  DARK_PRISMARINE_STAIRS: 'Ступени тёмного призмарина',
+  SEA_LANTERN: 'Морской фонарь',
+
+  // Механизмы и редстоун
+  PISTON: 'Поршень',
+  STICKY_PISTON: 'Липкий поршень',
+  OBSERVER: 'Наблюдатель',
+  HOPPER: 'Воронка',
+  COMPARATOR: 'Компаратор',
+  REPEATER: 'Повторитель',
+  REDSTONE_LAMP: 'Лампа из красного камня',
+  REDSTONE_TORCH: 'Факел из красного камня',
+  TRIPWIRE_HOOK: 'Крюк растяжки',
+  TARGET: 'Мишень',
+
+  // Крафтинговые блоки
+  ANVIL: 'Наковальня',
+  BLAST_FURNACE: 'Доменная печь',
+  BREWING_STAND: 'Стойка для зелий',
+  GRINDSTONE: 'Точильный камень',
+  LOOM: 'Ткацкий станок',
+  SMITHING_TABLE: 'Кузнечный стол',
+  LECTERN: 'Кафедра',
+  BARREL: 'Бочка',
+  BOOKSHELF: 'Книжная полка',
+  FLOWER_POT: 'Цветочный горшок',
+
+  // Маяк
+  BEACON: 'Маяк',
+  BELL: 'Колокол',
+
+  // Сажанцы и листья
+  OAK_SAPLING: 'Дубовый саженец',
+  OAK_LEAVES: 'Дубовые листья',
+  SPRUCE_SAPLING: 'Еловый саженец',
+  CHERRY_SAPLING: 'Вишнёвый саженец',
+  SPRUCE_SIGN: 'Табличка из ели',
+
+  // Бамбук
+  BAMBOO_BLOCK: 'Бамбуковый блок',
+  BAMBOO_PLANKS: 'Бамбуковые доски',
+
+  // Инструменты / разное
+  SPYGLASS: 'Подзорная труба',
+  ENDER_EYE: 'Глаз Эндера',
+  WIND_CHARGE: 'Заряд ветра',
+  BREEZE_ROD: 'Стержень ветра',
+  EGG: 'Яйцо',
+
+  // Вёдра
+  AXOLOTL_BUCKET: 'Ведро с аксолотлем',
+  TROPICAL_FISH_BUCKET: 'Ведро с тропической рыбой',
+
+  // Визг (Sculk)
+  SCULK: 'Визг',
+  SCULK_CATALYST: 'Катализатор визга',
+  SCULK_SENSOR: 'Датчик визга',
+  SCULK_SHRIEKER: 'Завывалка',
+  CALIBRATED_SCULK_SENSOR: 'Калиброванный датчик визга',
+
+  // Зелья
+  POTION: 'Зелье',
+  SPLASH_POTION: 'Зелье-плеск',
+  LINGERING_POTION: 'Зелье-туча',
+  OMINOUS_BOTTLE: 'Зловещая бутылка',
+
+  // Яйца
+  SNIFFER_EGG: 'Яйцо снифера',
+
+  // Медь
+  WAXED_OXIDIZED_CUT_COPPER: 'Вощёная окисленная обрезная медь',
+  WAXED_OXIDIZED_CUT_COPPER_SLAB: 'Плита из вощёной окисленной обрезной меди',
+  WAXED_WEATHERED_CUT_COPPER: 'Вощёная состарившаяся обрезная медь',
+  WAXED_WEATHERED_CUT_COPPER_SLAB: 'Плита из вощёной состарившейся обрезной меди',
+  WAXED_WEATHERED_CUT_COPPER_STAIRS: 'Ступени из вощёной состарившейся обрезной меди',
+
+  // Музыкальные диски
+  MUSIC_DISC_11: 'Музыкальный диск «11»',
+  MUSIC_DISC_BLOCKS: 'Музыкальный диск «Blocks»',
+  MUSIC_DISC_CREATOR: 'Музыкальный диск «Creator»',
+  MUSIC_DISC_MELLOHI: 'Музыкальный диск «Mellohi»',
+  MUSIC_DISC_STAL: 'Музыкальный диск «Stal»',
+  MUSIC_DISC_STRAD: 'Музыкальный диск «Strad»',
+  MUSIC_DISC_WAIT: 'Музыкальный диск «Wait»',
+
+  // Искажённое (Warped)
+  WARPED_FUNGUS: 'Искажённый гриб',
+
+  // Паттерны для знамён
+  FLOW_BANNER_PATTERN: 'Узор для знамени «Поток»',
+  GUSTER_BANNER_PATTERN: 'Узор для знамени «Буря»',
+
+  // Черепки
+  GUSTER_POTTERY_SHERD: 'Черепок «Буря»',
+
+  // Шаблоны для кузнечного стола (armor trims)
+  COAST_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Побережье»',
+  DUNE_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Дюна»',
+  EYE_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Глаз»',
+  FLOW_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Поток»',
+  HOST_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Хозяин»',
+  RAISER_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Подъём»',
+  RIB_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Ребро»',
+  SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Страж»',
+  SHAPER_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Ваятель»',
+  SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Тишина»',
+  SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Рыло»',
+  SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Шпиль»',
+  TIDE_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Прилив»',
+  VEX_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Вэкс»',
+  WARD_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Защита»',
+  WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Первопроходец»',
+  WILD_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Дикий»',
 }
 
 export function getMaterialName(material) {
   if (!material) return 'Предмет'
   const key = String(material).toUpperCase().trim()
-  return NAMES[key] || _fallback(key)
+  return NAMES[key] || _resolveSpecial(key) || _fallback(key)
 }
 
 export function getRussianMaterialName(material) {
   if (!material) return null
   const key = String(material).toUpperCase().trim()
-  return NAMES[key] || null
+  return NAMES[key] || _resolveSpecial(key) || null
 }
 
 function _fallback(key) {

@@ -37,24 +37,26 @@ const activity = ref([])
 const transactions = ref([])
 const donors = ref([])
 
+function bluemapUrl(x, z, world) {
+  const base = siteConfig.bluemapUrl
+  const w = world || 'world'
+  return `${base}/#${encodeURIComponent(w)}:${x}:64:${z}:200:0:0:0:perspective`
+}
+
 const dynmapIframeUrl = computed(() => {
-  const base = siteConfig.dynmapUrl
   const n = nation.value
   if (n?.capital_x != null && n?.capital_z != null) {
-    const world = n.capital_world || 'world'
-    return `${base}/?worldname=${encodeURIComponent(world)}&mapname=flat&x=${n.capital_x}&y=64&z=${n.capital_z}&zoom=4`
+    return bluemapUrl(n.capital_x, n.capital_z, n.capital_world)
   }
-  return `${base}/`
+  return siteConfig.bluemapUrl
 })
 
 const dynmapOpenUrl = computed(() => {
-  const base = siteConfig.dynmapUrl
   const n = nation.value
   if (n?.capital_x != null && n?.capital_z != null) {
-    const world = n.capital_world || 'world'
-    return `${base}/?worldname=${encodeURIComponent(world)}&mapname=flat&x=${n.capital_x}&y=64&z=${n.capital_z}&zoom=4`
+    return bluemapUrl(n.capital_x, n.capital_z, n.capital_world)
   }
-  return base
+  return siteConfig.bluemapUrl
 })
 
 function hexToRgba(hex, alpha) {

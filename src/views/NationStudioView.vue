@@ -1,6 +1,7 @@
 <script setup>
 import {computed, onMounted, reactive, ref, watch} from 'vue'
 import { RouterLink } from 'vue-router'
+import { siteConfig } from '../config.site.js'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import NationMediaSlotCard from '../features/nations/components/NationMediaSlotCard.vue'
 import NationStudioPreview from '../features/nations/components/NationStudioPreview.vue'
@@ -112,6 +113,13 @@ const assetUrls = computed(() => ({
 
 const publicNationUrl = computed(() => (nation.value?.slug ? `/nation/${nation.value.slug}` : ''))
 const allianceSummary = computed(() => nation.value?.alliance_summary || null)
+
+const capitalMapUrl = computed(() => {
+  const n = nation.value
+  if (n?.capital_x == null || n?.capital_z == null) return null
+  const world = n.capital_world || 'world'
+  return `${siteConfig.bluemapUrl}/#${encodeURIComponent(world)}:${n.capital_x}:64:${n.capital_z}:200:0:0:0:perspective`
+})
 
 function formatAllianceType(value) {
   switch (String(value || '').toLowerCase()) {
@@ -425,6 +433,15 @@ async function kickMember(userId) {
   }
 }
 
+const copiedCommand = ref(false)
+
+function copyCommand(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    copiedCommand.value = true
+    setTimeout(() => { copiedCommand.value = false }, 1800)
+  })
+}
+
 const editingPrefixUserId = ref(null)
 const editingPrefixValue = ref('')
 
@@ -440,7 +457,7 @@ function cancelEditPrefix() {
 
 function canSetPrefix(member) {
   if (!canManage.value) return false
-  if (member.user_id === auth.state.user?.id) return false
+  if (member.user_id === auth.state.user?.id && viewerRole.value !== 'leader') return false
   if (viewerRole.value === 'leader') return true
   return member.role === 'member'
 }
@@ -746,6 +763,26 @@ watch(success, (value) => { if (value) toastSuccess(value) })
       </div>
 
       <div v-else class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
+        <div v-if="viewerRole === 'leader' && !nation.capital_world" class="xl:col-span-2 rounded-[20px] border border-violet-500/30 bg-violet-500/10 px-5 py-4 text-sm leading-7 text-violet-100">
+          <p class="font-bold text-violet-200">Столица государства не установлена</p>
+          <p class="mt-1 text-slate-300">
+            Зайди в игру и введи команду
+            <span class="relative inline-block">
+              <code
+                class="cursor-pointer select-none rounded bg-black/40 px-1.5 py-0.5 font-mono text-violet-300 transition-colors hover:bg-black/60 hover:text-violet-200"
+                title="Нажми, чтобы скопировать"
+                @click="copyCommand('/nsetcapital')"
+              >/nsetcapital</code>
+              <span
+                v-if="copiedCommand"
+                class="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-200 shadow-lg"
+              >Скопировано</span>
+            </span>
+            стоя в нужном месте.
+            После установки столицы казна государства получит <strong>50&thinsp;000</strong>.
+          </p>
+        </div>
+
         <aside class="space-y-5">
           <section class="surface-card p-5 md:p-6">
             <div class="section-kicker !mb-2">Превью</div>
@@ -816,7 +853,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                 :selected-file-name="selectedFiles.icon?.name || ''"
                 :uploading="uploadState.icon"
                 :has-asset="Boolean(assetUrls.icon)"
-                recommendation="PNG/JPEG/WEBP, квадрат."
+                recommendation="PNG/JPEG/WEBP. Минимум 256×256 px, рекомендуется 512×512 px."
                 @select-file="onFileSelected('icon', $event)"
                 @upload="uploadSelected('icon')"
                 @remove="removeAsset('icon')"
@@ -831,7 +868,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                 :selected-file-name="selectedFiles.banner?.name || ''"
                 :uploading="uploadState.banner"
                 :has-asset="Boolean(assetUrls.banner)"
-                recommendation="PNG/JPEG/WEBP, широкий формат."
+                recommendation="PNG/JPEG/WEBP. Минимум 1280×320 px, рекомендуется 1600×400 px."
                 @select-file="onFileSelected('banner', $event)"
                 @upload="uploadSelected('banner')"
                 @remove="removeAsset('banner')"
@@ -846,11 +883,40 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                 :selected-file-name="selectedFiles.background?.name || ''"
                 :uploading="uploadState.background"
                 :has-asset="Boolean(assetUrls.background)"
-                recommendation="PNG/JPEG/WEBP, 1600x900+."
+                recommendation="PNG/JPEG/WEBP. Минимум 1600×900 px, рекомендуется 1920×1080 px."
                 @select-file="onFileSelected('background', $event)"
                 @upload="uploadSelected('background')"
                 @remove="removeAsset('background')"
               />
+            </div>
+          </section>
+
+          <section v-if="capitalMapUrl" class="surface-card p-5 md:p-6">
+            <div class="section-kicker !mb-2">Столица</div>
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="text-xl font-black text-slate-50">Карта мира</h2>
+              <a :href="capitalMapUrl" target="_blank" rel="noreferrer" class="text-sm text-violet-400 hover:text-violet-300">↗ открыть</a>
+            </div>
+            <p class="mt-1 text-sm text-slate-400">
+              {{ nation.capital_world || 'world' }} · {{ nation.capital_x }}, {{ nation.capital_z }}
+            </p>
+            <div class="relative mt-4 overflow-hidden rounded-[18px] border border-white/10" style="aspect-ratio:16/9">
+              <iframe
+                :src="capitalMapUrl"
+                class="pointer-events-none h-full w-full"
+                title="BlueMap"
+                allowfullscreen
+                loading="lazy"
+                referrerpolicy="no-referrer"
+              ></iframe>
+              <a
+                :href="capitalMapUrl"
+                target="_blank"
+                rel="noreferrer"
+                class="absolute inset-0 flex items-end justify-center pb-4"
+              >
+                <span class="rounded-xl bg-violet-600 px-4 py-1.5 text-sm font-semibold text-white shadow-lg hover:bg-violet-500">Открыть карту</span>
+              </a>
             </div>
           </section>
         </aside>
@@ -1014,6 +1080,20 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                     <p v-if="member.custom_prefix" class="mt-1 text-xs text-violet-400">
                       Звание: {{ member.custom_prefix }}
                     </p>
+                  </div>
+
+                  <div
+                    v-if="viewerRole === 'leader' && member.user_id === auth.state.user?.id"
+                    class="flex flex-wrap gap-2"
+                  >
+                    <button
+                      type="button"
+                      class="btn btn-outline btn-sm"
+                      :disabled="actionLoading"
+                      @click="startEditPrefix(member)"
+                    >
+                      Звание
+                    </button>
                   </div>
 
                   <div

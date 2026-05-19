@@ -7,7 +7,7 @@ export const siteConfig = {
   launcherPortableUrl:
     import.meta.env.VITE_LAUNCHER_PORTABLE_URL ||
     'https://void-rp.ru/launcher/self-update/VoidRpLauncher.exe',
-  dynmapUrl: 'https://void-rp.ru/map',
+  bluemapUrl: 'https://void-rp.ru/map',
   discordUrl: 'https://discord.gg/j2Dvxm8E',
   telegramUrl: 'https://t.me/voidRPminecraft',
   monitoringChartUrl: 'https://minecraftrating.ru/server_chart/396033/',
