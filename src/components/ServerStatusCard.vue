@@ -43,7 +43,7 @@ function copyIp() {
           <p class="sc-section-desc">Узнай, когда на сервере больше всего игроков.</p>
           <div class="sc-btns">
             <RouterLink to="/download-launcher" class="btn btn-primary btn-sm">Скачать лаунчер</RouterLink>
-            <a :href="siteConfig.dynmapUrl" target="_blank" rel="noreferrer" class="btn btn-outline btn-sm">Карта</a>
+            <a :href="siteConfig.bluemapUrl" target="_blank" rel="noreferrer" class="btn btn-outline btn-sm">Карта</a>
             <a :href="externalStatsUrl" target="_blank" rel="noreferrer" class="btn btn-outline btn-sm">График</a>
           </div>
         </div>

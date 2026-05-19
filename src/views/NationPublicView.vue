@@ -40,7 +40,7 @@ const donors = ref([])
 function bluemapUrl(x, z, world) {
   const base = siteConfig.bluemapUrl
   const w = world || 'world'
-  return `${base}/#${encodeURIComponent(w)}:${x}:64:${z}:200:0:0:0:perspective`
+  return `${base}/#${w}:${x}:64:${z}:150:0:0:0:0:flat`
 }
 
 const dynmapIframeUrl = computed(() => {

@@ -118,7 +118,7 @@ const capitalMapUrl = computed(() => {
   const n = nation.value
   if (n?.capital_x == null || n?.capital_z == null) return null
   const world = n.capital_world || 'world'
-  return `${siteConfig.bluemapUrl}/#${encodeURIComponent(world)}:${n.capital_x}:64:${n.capital_z}:200:0:0:0:perspective`
+  return `${siteConfig.bluemapUrl}/#${world}:${n.capital_x}:64:${n.capital_z}:150:0:0:0:0:flat`
 })
 
 function formatAllianceType(value) {
