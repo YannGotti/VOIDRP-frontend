@@ -83,8 +83,8 @@ onMounted(loadPage)
 </script>
 
 <template>
-  <section class="py-8 md:py-10">
-    <div class="container-shell space-y-6">
+  <section class="py-8 md:py-10 auth-page">
+    <div class="container-shell space-y-6 page-entry">
 
       <!-- Header -->
       <div class="surface-card p-5 md:p-7">

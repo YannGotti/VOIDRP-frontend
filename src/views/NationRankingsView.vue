@@ -47,8 +47,8 @@ onMounted(loadRankings)
 </script>
 
 <template>
-  <section class="nr py-3 md:py-4">
-    <div class="container-shell max-w-[1380px] space-y-3">
+  <section class="nr py-3 md:py-4 auth-page">
+    <div class="container-shell max-w-[1380px] space-y-3 page-entry">
 
       <!-- header -->
       <header class="nr-header">

@@ -91,8 +91,8 @@ onMounted(loadDashboard)
 </script>
 
 <template>
-  <section class="py-8 md:py-10">
-    <div class="container-shell space-y-5">
+  <section class="py-8 md:py-10 auth-page">
+    <div class="container-shell space-y-5 page-entry">
       <section class="surface-card p-5 md:p-7">
         <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>

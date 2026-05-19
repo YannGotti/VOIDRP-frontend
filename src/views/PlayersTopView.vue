@@ -64,10 +64,10 @@ onMounted(load)
 </script>
 
 <template>
-  <section class="py-8 md:py-10">
+  <section class="py-8 md:py-10 auth-page">
     <div class="container-shell">
 
-      <div class="mb-6">
+      <div class="mb-6 page-entry">
         <div class="section-kicker !mb-2">Рейтинг</div>
         <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">Топ игроков</h1>
         <p class="mt-2 text-sm text-slate-400">Лучшие игроки сезона по разным категориям</p>

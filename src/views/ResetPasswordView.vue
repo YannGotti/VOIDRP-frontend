@@ -49,9 +49,9 @@ watch(successMessage, (value) => { if (value) toastSuccess(value, 'Пароль 
 </script>
 
 <template>
-  <section class="py-12 md:py-20">
+  <section class="py-12 md:py-20 auth-page">
     <div class="container-shell max-w-4xl">
-      <div class="surface-card p-6 md:p-8 lg:p-10">
+      <div class="surface-card page-entry p-6 md:p-8 lg:p-10">
         <div class="section-kicker">Новый пароль</div>
         <h1 class="section-title">Сменить пароль</h1>
         <p class="section-subtitle">

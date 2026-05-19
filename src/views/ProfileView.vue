@@ -155,8 +155,8 @@ onMounted(loadData)
 </script>
 
 <template>
-  <section class="py-6 md:py-8">
-    <div class="container-shell space-y-4">
+  <section class="py-6 md:py-8 auth-page">
+    <div class="container-shell space-y-4 page-entry">
 
       <!-- Compact hero -->
       <section class="surface-card p-4 md:p-5">

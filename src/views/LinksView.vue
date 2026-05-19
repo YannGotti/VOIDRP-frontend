@@ -12,7 +12,7 @@ const links = [
   {
     title: 'Карта мира',
     description: 'Онлайн-карта сервера: города, регионы, маршруты и обзор мира в браузере.',
-    url: siteConfig.dynmapUrl,
+    url: siteConfig.bluemapUrl,
     button: 'Открыть карту',
     tag: 'Мир',
   },
@@ -55,7 +55,7 @@ const links = [
         </div>
       </section>
 
-      <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <section class="grid gap-3 page-entry md:grid-cols-2 xl:grid-cols-3">
         <article
           v-for="item in links"
           :key="item.title"

@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AppFooter from './components/AppFooter.vue'
 import GlobalToastStack from './components/GlobalToastStack.vue'
@@ -10,6 +10,32 @@ const auth = useAuthStore()
 const route = useRoute()
 
 const hidePublicShell = computed(() => Boolean(route.meta?.hidePublicShell))
+
+// глобальный spotlight — свет за мышью на всех карточках
+const SPOTLIGHT_SEL = '.surface-card, .action-card, .metric-card'
+
+function onSpotlightMove(e) {
+  const card = e.target.closest(SPOTLIGHT_SEL)
+  if (!card) return
+  const r = card.getBoundingClientRect()
+  card.style.setProperty('--mx', (e.clientX - r.left) + 'px')
+  card.style.setProperty('--my', (e.clientY - r.top) + 'px')
+  card.classList.add('lit')
+}
+function onSpotlightOut(e) {
+  const card = e.target.closest(SPOTLIGHT_SEL)
+  if (!card) return
+  if (!card.contains(e.relatedTarget)) card.classList.remove('lit')
+}
+
+onMounted(() => {
+  document.addEventListener('mousemove', onSpotlightMove)
+  document.addEventListener('mouseout', onSpotlightOut)
+})
+onUnmounted(() => {
+  document.removeEventListener('mousemove', onSpotlightMove)
+  document.removeEventListener('mouseout', onSpotlightOut)
+})
 </script>
 
 <template>
@@ -63,6 +89,60 @@ const hidePublicShell = computed(() => Boolean(route.meta?.hidePublicShell))
 
 .surface-card {
   padding: 1rem;
+  position: relative;
+  transition: border-color .22s, box-shadow .22s;
+}
+
+/* ── spotlight ── */
+.surface-card::after,
+.action-card::after,
+.metric-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle 180px at var(--mx, 50%) var(--my, 50%),
+    rgba(139, 92, 246, .1) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+}
+.surface-card.lit::after,
+.action-card.lit::after,
+.metric-card.lit::after { opacity: 1; }
+
+/* ── hover lift на surface-card ── */
+.surface-card:has(> *):hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,.28);
+}
+
+/* ── auth-page glow ── */
+.auth-page {
+  position: relative;
+  overflow: hidden;
+}
+.auth-page::before {
+  content: '';
+  position: absolute;
+  width: 700px; height: 400px;
+  background: radial-gradient(circle, rgba(109,40,217,.18), transparent 70%);
+  filter: blur(80px);
+  border-radius: 999px;
+  top: -80px; left: 50%; transform: translateX(-50%);
+  pointer-events: none; z-index: 0;
+}
+.auth-page > * { position: relative; z-index: 1; }
+
+/* ── page entry animation ── */
+@keyframes page-entry {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-entry {
+  animation: page-entry .6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .section-kicker {

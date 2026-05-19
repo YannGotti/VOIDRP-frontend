@@ -65,7 +65,7 @@ watch(resendMessage, (value) => { if (value) toastInfo(value, 'Письмо от
 </script>
 
 <template>
-  <section class="py-12 md:py-20">
+  <section class="py-12 md:py-20 auth-page">
     <div class="container-shell max-w-6xl">
       <div v-if="isAlreadyVerified" class="alert alert-success mb-6">
         Почта уже подтверждена. Можно возвращаться в профиль или переходить к скачиванию лаунчера.

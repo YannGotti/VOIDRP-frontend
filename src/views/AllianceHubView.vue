@@ -290,8 +290,8 @@ onMounted(loadPage)
 </script>
 
 <template>
-  <section class="ah py-3 md:py-4">
-    <div class="container-shell max-w-[1380px] space-y-3">
+  <section class="ah py-3 md:py-4 auth-page">
+    <div class="container-shell max-w-[1380px] space-y-3 page-entry">
 
       <!-- header -->
       <header class="ah-header">

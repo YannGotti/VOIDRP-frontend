@@ -120,9 +120,9 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
 </script>
 
 <template>
-  <section class="py-12 md:py-20">
+  <section class="py-12 md:py-20 auth-page">
     <div class="container-shell max-w-6xl">
-      <div class="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+      <div class="grid gap-6 page-entry lg:grid-cols-[1.08fr_0.92fr]">
         <div class="surface-card p-6 md:p-8 lg:p-10">
           <div class="section-kicker">Регистрация</div>
           <h1 class="section-title">Создать аккаунт VoidRP</h1>

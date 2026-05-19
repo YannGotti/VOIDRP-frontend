@@ -28,9 +28,9 @@ watch(successMessage, (value) => { if (value) toastSuccess(value, 'Письмо 
 </script>
 
 <template>
-  <section class="py-12 md:py-20">
+  <section class="py-12 md:py-20 auth-page">
     <div class="container-shell max-w-4xl">
-      <div class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+      <div class="grid gap-6 page-entry lg:grid-cols-[0.9fr_1.1fr]">
         <aside class="gradient-panel p-6 md:p-8">
           <div class="section-kicker section-kicker--light">Восстановление доступа</div>
           <h1 class="text-3xl font-black tracking-tight text-white md:text-4xl">Верни доступ к аккаунту спокойно</h1>

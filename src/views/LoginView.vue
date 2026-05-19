@@ -41,9 +41,9 @@ watch(errorMessage, (value) => { if (value) toastError(value) })
 </script>
 
 <template>
-  <section class="py-10 md:py-16">
+  <section class="py-10 md:py-16 auth-page">
     <div class="container-shell max-w-6xl">
-      <div class="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+      <div class="grid gap-6 page-entry lg:grid-cols-[0.92fr_1.08fr]">
         <aside class="gradient-panel order-last p-6 md:p-8 lg:order-first">
           <div class="section-kicker section-kicker--light">Вход в аккаунт</div>
           <h1 class="text-3xl font-black tracking-tight text-white md:text-5xl">
