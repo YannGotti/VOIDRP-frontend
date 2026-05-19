@@ -593,8 +593,8 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
                   <span>{{ txLabel(item) }}</span>
                   <small>{{ item.comment || '' }}</small>
                 </div>
-                <strong :class="Number(item.amount) >= 0 ? 'positive' : 'negative'">
-                  {{ Number(item.amount) >= 0 ? '+' : '' }}{{ money(item.amount) }}
+                <strong :class="Number(item.net_amount) >= 0 ? 'positive' : 'negative'">
+                  {{ Number(item.net_amount) >= 0 ? '+' : '' }}{{ money(item.net_amount) }}
                 </strong>
               </li>
             </ul>

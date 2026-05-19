@@ -47,6 +47,10 @@ function stateLabel(v) {
   return 'Стабильно'
 }
 
+function trendSign(v) {
+  return Number(v || 0) > 0 ? '+' : ''
+}
+
 function trendClass(v) {
   const n = Number(v || 0)
   if (n > 0) return 'text-emerald-300'
@@ -95,7 +99,6 @@ function groupByDay(points) {
 }
 
 const chartData = computed(() => {
-  // Primary: use historical snapshots
   if (history.value.length >= 2) {
     const points = groupByDay(history.value)
     const allPrices = points.flatMap((p) => [p.avgBuy, p.avgSell].filter((v) => v !== null))
@@ -105,8 +108,6 @@ const chartData = computed(() => {
     const pad = (rawMax - rawMin) * 0.08 || rawMax * 0.05 || 1
     return { points, minVal: Math.max(0, rawMin - pad), maxVal: rawMax + pad, source: 'history' }
   }
-
-  // Fallback: derive from transaction history
   if (!transactions.value.length) return null
   const byDate = {}
   for (const tx of transactions.value) {
@@ -159,6 +160,28 @@ const sellPath = computed(() => {
   const pts = points.map((p, i) => ({ ...p, i })).filter((p) => p.avgSell !== null)
   if (pts.length < 2) return ''
   return pts.map((p, j) => `${j === 0 ? 'M' : 'L'}${cx(p.i, points.length).toFixed(1)},${cy(p.avgSell, minVal, maxVal).toFixed(1)}`).join(' ')
+})
+
+const buyFillPath = computed(() => {
+  if (!chartData.value || !buyPath.value) return ''
+  const { points, minVal, maxVal } = chartData.value
+  const pts = points.map((p, i) => ({ ...p, i })).filter((p) => p.avgBuy !== null)
+  if (pts.length < 2) return ''
+  const firstX = cx(pts[0].i, points.length).toFixed(1)
+  const lastX = cx(pts[pts.length - 1].i, points.length).toFixed(1)
+  const bottom = (PAD.top + PLOT_H).toFixed(1)
+  return `${buyPath.value} L${lastX},${bottom} L${firstX},${bottom} Z`
+})
+
+const sellFillPath = computed(() => {
+  if (!chartData.value || !sellPath.value) return ''
+  const { points, minVal, maxVal } = chartData.value
+  const pts = points.map((p, i) => ({ ...p, i })).filter((p) => p.avgSell !== null)
+  if (pts.length < 2) return ''
+  const firstX = cx(pts[0].i, points.length).toFixed(1)
+  const lastX = cx(pts[pts.length - 1].i, points.length).toFixed(1)
+  const bottom = (PAD.top + PLOT_H).toFixed(1)
+  return `${sellPath.value} L${lastX},${bottom} L${firstX},${bottom} Z`
 })
 
 const yLabels = computed(() => {
@@ -241,74 +264,89 @@ watch(material, load)
 </script>
 
 <template>
-  <section class="item-page py-4 md:py-6">
-    <div class="container-shell max-w-[1100px] space-y-5">
+  <section class="item-page auth-page py-6 md:py-10">
+
+    <!-- ambient orbs -->
+    <div class="item-orb item-orb--green" aria-hidden="true"></div>
+    <div class="item-orb item-orb--violet" aria-hidden="true"></div>
+
+    <div class="container-shell max-w-[1100px] space-y-5 page-entry">
 
       <!-- Breadcrumb -->
-      <nav class="flex items-center gap-2 text-sm text-slate-400">
-        <router-link to="/market" class="hover:text-slate-200 transition-colors">← Рынок</router-link>
-        <span>/</span>
-        <span class="text-slate-200 font-semibold">{{ itemName(item) }}</span>
+      <nav class="flex items-center gap-2 text-sm text-slate-500">
+        <router-link to="/market" class="hover:text-slate-200 transition-colors flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Рынок
+        </router-link>
+        <span class="text-slate-700">/</span>
+        <span class="text-slate-300 font-semibold">{{ itemName(item) }}</span>
       </nav>
 
       <!-- Loading skeleton -->
-      <div v-if="loading" class="surface-card p-5 md:p-6 space-y-4">
-        <div class="skeleton h-9 w-72 rounded-xl"></div>
-        <div class="skeleton h-4 w-36 rounded-lg"></div>
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mt-2">
-          <div v-for="i in 6" :key="i" class="skeleton h-16 rounded-xl"></div>
-        </div>
+      <div v-if="loading" class="space-y-4">
+        <div class="skeleton h-44 rounded-[24px]"></div>
+        <div class="skeleton h-60 rounded-[24px]"></div>
+        <div class="skeleton h-72 rounded-[24px]"></div>
       </div>
 
       <!-- Error -->
       <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-      <!-- Header card -->
-      <div v-if="!loading && item" class="surface-card p-5 md:p-6">
-        <div class="flex flex-wrap items-start gap-3">
-          <div class="flex-1 min-w-0">
-            <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">{{ itemName(item) }}</h1>
-            <p class="mt-1 font-mono text-sm text-slate-500">{{ item.material }}</p>
+      <!-- ── HERO HEADER ── -->
+      <div v-if="!loading && item" class="item-hero" :class="item.demand_state">
+        <div class="item-hero__glow" aria-hidden="true"></div>
+
+        <div class="item-hero__top">
+          <!-- icon placeholder / material code -->
+          <div class="item-hero__icon-wrap">
+            <span class="item-hero__icon-letter">{{ (itemName(item) || '?')[0].toUpperCase() }}</span>
           </div>
-          <span class="state-badge" :class="item.demand_state">{{ stateLabel(item.demand_state) }}</span>
+
+          <div class="item-hero__meta">
+            <div class="item-hero__kicker">{{ item.material }}</div>
+            <h1 class="item-hero__title">{{ itemName(item) }}</h1>
+          </div>
+
+          <span class="state-badge ml-auto" :class="item.demand_state">{{ stateLabel(item.demand_state) }}</span>
         </div>
 
-        <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <div class="stat-cell">
-            <span>Покупка</span>
-            <strong class="text-emerald-300">{{ money(item.current_buy_price) }}</strong>
+        <!-- stats row -->
+        <div class="item-hero__stats">
+          <div class="stat-pill buy">
+            <span class="stat-pill__label">Покупка</span>
+            <strong class="stat-pill__value text-emerald-300">{{ money(item.current_buy_price) }} ₽</strong>
           </div>
-          <div class="stat-cell">
-            <span>Скупка</span>
-            <strong class="text-rose-300">{{ money(item.current_sell_price) }}</strong>
+          <div class="stat-pill sell">
+            <span class="stat-pill__label">Скупка</span>
+            <strong class="stat-pill__value text-rose-300">{{ money(item.current_sell_price) }} ₽</strong>
           </div>
-          <div class="stat-cell">
-            <span>База (покупка)</span>
-            <strong>{{ money(item.base_buy_price) }}</strong>
+          <div class="stat-pill">
+            <span class="stat-pill__label">База (покупка)</span>
+            <strong class="stat-pill__value">{{ money(item.base_buy_price) }} ₽</strong>
           </div>
-          <div class="stat-cell">
-            <span>База (скупка)</span>
-            <strong>{{ money(item.base_sell_price) }}</strong>
+          <div class="stat-pill">
+            <span class="stat-pill__label">База (скупка)</span>
+            <strong class="stat-pill__value">{{ money(item.base_sell_price) }} ₽</strong>
           </div>
-          <div class="stat-cell">
-            <span>Тренд</span>
-            <strong :class="trendClass(item.trend_percent)">
-              {{ Number(item.trend_percent || 0) > 0 ? '+' : '' }}{{ money(item.trend_percent) }}%
+          <div class="stat-pill">
+            <span class="stat-pill__label">Тренд</span>
+            <strong class="stat-pill__value" :class="trendClass(item.trend_percent)">
+              {{ trendSign(item.trend_percent) }}{{ money(item.trend_percent) }}%
             </strong>
           </div>
-          <div class="stat-cell">
-            <span>Спред</span>
-            <strong>{{ money(item.spread_percent) }}%</strong>
+          <div class="stat-pill">
+            <span class="stat-pill__label">Спред</span>
+            <strong class="stat-pill__value">{{ money(item.spread_percent) }}%</strong>
           </div>
         </div>
       </div>
 
-      <!-- Chart -->
+      <!-- ── CHART ── -->
       <div v-if="!loading && !error" class="surface-card p-5 md:p-6">
-        <div class="flex flex-wrap items-end justify-between gap-3">
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
           <div>
             <div class="section-kicker !mb-2">История цен</div>
-            <h2 class="text-lg font-black text-slate-50">Динамика по дням</h2>
+            <h2 class="text-xl font-black text-slate-50">Динамика по дням</h2>
           </div>
           <div v-if="chartSource === 'history'" class="flex items-center gap-1.5">
             <button
@@ -321,17 +359,36 @@ watch(material, load)
           </div>
         </div>
 
-        <div v-if="hasChart" class="mt-4">
+        <div v-if="hasChart">
           <div class="chart-wrap">
             <svg :viewBox="`0 0 ${CW} ${CH}`" class="chart-svg">
+              <defs>
+                <linearGradient id="buyGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgb(52,211,153)" stop-opacity="0.18"/>
+                  <stop offset="100%" stop-color="rgb(52,211,153)" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="sellGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="rgb(251,113,133)" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="rgb(251,113,133)" stop-opacity="0"/>
+                </linearGradient>
+                <filter id="buyGlow" x="-10%" y="-50%" width="120%" height="200%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <filter id="sellGlow" x="-10%" y="-50%" width="120%" height="200%">
+                  <feGaussianBlur stdDeviation="2.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+
               <!-- Horizontal grid lines + y labels -->
               <g v-for="lbl in yLabels" :key="lbl.v">
                 <line
                   :x1="PAD.left" :y1="lbl.y.toFixed(1)"
                   :x2="CW - PAD.right" :y2="lbl.y.toFixed(1)"
-                  stroke="rgba(255,255,255,0.07)" stroke-width="1"
+                  stroke="rgba(255,255,255,0.06)" stroke-width="1"
                 />
-                <text :x="PAD.left - 6" :y="(lbl.y + 4).toFixed(1)" text-anchor="end" class="chart-lbl">
+                <text :x="PAD.left - 8" :y="(lbl.y + 4).toFixed(1)" text-anchor="end" class="chart-lbl">
                   {{ money(lbl.v) }}
                 </text>
               </g>
@@ -343,41 +400,47 @@ watch(material, load)
                 text-anchor="middle" class="chart-lbl"
               >{{ lbl.label }}</text>
 
-              <!-- Buy line -->
-              <path v-if="buyPath" :d="buyPath" fill="none" stroke="rgb(52 211 153)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
-              <!-- Sell line -->
-              <path v-if="sellPath" :d="sellPath" fill="none" stroke="rgb(251 113 133)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+              <!-- Area fills -->
+              <path v-if="buyFillPath" :d="buyFillPath" fill="url(#buyGrad)" stroke="none"/>
+              <path v-if="sellFillPath" :d="sellFillPath" fill="url(#sellGrad)" stroke="none"/>
+
+              <!-- Lines with glow -->
+              <path v-if="buyPath" :d="buyPath" fill="none" stroke="rgb(52 211 153)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#buyGlow)" opacity="0.5"/>
+              <path v-if="buyPath" :d="buyPath" fill="none" stroke="rgb(52 211 153)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+              <path v-if="sellPath" :d="sellPath" fill="none" stroke="rgb(251 113 133)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#sellGlow)" opacity="0.5"/>
+              <path v-if="sellPath" :d="sellPath" fill="none" stroke="rgb(251 113 133)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
             </svg>
           </div>
 
-          <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-400">
-            <span v-if="buyPath" class="flex items-center gap-1.5">
-              <span class="legend-dot" style="background: rgb(52 211 153)"></span>Покупка
+          <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
+            <span v-if="buyPath" class="flex items-center gap-2">
+              <span class="legend-line" style="background:rgb(52 211 153)"></span>
+              <span class="text-emerald-400 font-semibold">Покупка</span>
             </span>
-            <span v-if="sellPath" class="flex items-center gap-1.5">
-              <span class="legend-dot" style="background: rgb(251 113 133)"></span>Скупка
+            <span v-if="sellPath" class="flex items-center gap-2">
+              <span class="legend-line" style="background:rgb(251 113 133)"></span>
+              <span class="text-rose-400 font-semibold">Скупка</span>
             </span>
             <span v-if="chartData" class="chart-range-hint">
               {{ money(chartData.minVal) }} — {{ money(chartData.maxVal) }}
             </span>
-            <span v-if="item?.updated_at" class="ml-auto text-slate-600">
+            <span v-if="item?.updated_at" class="ml-auto text-slate-600 text-xs">
               обновлено {{ formatTxTime(item.updated_at) }}
-            </span>
-            <span v-else-if="chartSource === 'transactions'" class="ml-auto opacity-40">
-              на основе сделок
             </span>
           </div>
         </div>
-        <p v-else class="mt-4 text-sm text-slate-500">
-          История накопится после первого пересчёта цен на сервере.
-        </p>
+        <div v-else class="flex flex-col items-center gap-2 py-10 text-slate-600">
+          <svg class="w-10 h-10 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+          <p class="text-sm">История накопится после первого пересчёта цен</p>
+        </div>
       </div>
 
-      <!-- Transactions + Listings -->
-      <div v-if="!loading && !error" class="grid gap-4 xl:grid-cols-[1fr_320px]">
+      <!-- ── TRANSACTIONS + LISTINGS ── -->
+      <div v-if="!loading && !error" class="grid gap-4 xl:grid-cols-[1fr_340px]">
+
         <!-- Transactions -->
-        <section class="surface-card p-5">
-          <div class="tx-header">
+        <section class="surface-card p-5 md:p-6">
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
               <div class="section-kicker !mb-1">Сделки</div>
               <h2 class="text-lg font-black text-slate-50">
@@ -392,7 +455,7 @@ watch(material, load)
             </div>
           </div>
 
-          <div v-if="filteredTransactions.length" class="tx-table-wrap mt-3">
+          <div v-if="filteredTransactions.length" class="tx-table-wrap">
             <table class="tx-table">
               <thead>
                 <tr>
@@ -420,28 +483,37 @@ watch(material, load)
               </tbody>
             </table>
           </div>
-          <p v-else class="mt-4 text-sm text-slate-500">Нет транзакций по этому товару.</p>
+          <div v-else class="flex flex-col items-center gap-2 py-10 text-slate-600">
+            <svg class="w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <p class="text-sm">Нет транзакций по этому товару</p>
+          </div>
         </section>
 
         <!-- Nation listings -->
-        <section class="surface-card p-5">
+        <section class="surface-card p-5 md:p-6">
           <div class="section-kicker !mb-1">Государственный рынок</div>
-          <h2 class="text-lg font-black text-slate-50 mb-3">Активные лоты</h2>
-          <div v-if="listings.length" class="space-y-2">
+          <h2 class="text-lg font-black text-slate-50 mb-4">Активные лоты</h2>
+
+          <div v-if="listings.length" class="space-y-2.5">
             <div v-for="lot in listings" :key="lot.id" class="listing-row">
-              <div class="flex items-start justify-between gap-2">
-                <div class="min-w-0">
-                  <p class="font-bold text-slate-100 truncate">[{{ lot.nation_tag }}] {{ lot.nation_title }}</p>
-                  <p class="mt-0.5 text-xs text-slate-500">{{ lot.seller_player_name }}</p>
+              <div class="listing-row__nation">
+                <span class="listing-row__tag">[{{ lot.nation_tag }}]</span>
+                <span class="listing-row__name truncate">{{ lot.nation_title }}</span>
+              </div>
+              <p class="listing-row__seller">{{ lot.seller_player_name }}</p>
+              <div class="listing-row__price-block">
+                <strong class="listing-row__price">{{ money(lot.current_unit_price) }} ₽</strong>
+                <div class="listing-row__stock">
+                  <div class="listing-row__stock-bar" :style="{ width: Math.min(100, (lot.remaining_amount / lot.total_amount) * 100) + '%' }"></div>
                 </div>
-                <div class="text-right shrink-0">
-                  <strong class="text-emerald-300 text-base">{{ money(lot.current_unit_price) }}</strong>
-                  <p class="mt-0.5 text-xs text-slate-500">{{ lot.remaining_amount }} / {{ lot.total_amount }} шт</p>
-                </div>
+                <p class="listing-row__stock-label">{{ lot.remaining_amount }} / {{ lot.total_amount }} шт</p>
               </div>
             </div>
           </div>
-          <p v-else class="text-sm text-slate-500">Нет активных лотов по этому товару.</p>
+          <div v-else class="flex flex-col items-center gap-2 py-10 text-slate-600">
+            <svg class="w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            <p class="text-sm">Нет активных лотов</p>
+          </div>
         </section>
       </div>
 
@@ -450,119 +522,189 @@ watch(material, load)
 </template>
 
 <style scoped>
-.item-page::before {
-  pointer-events: none;
+/* ── ambient ── */
+.item-page { position: relative; }
+
+.item-orb {
   position: fixed;
-  inset: 0;
-  z-index: -1;
-  content: '';
-  background:
-    radial-gradient(circle at 14% 10%, rgba(34, 197, 94, 0.07), transparent 26%),
-    radial-gradient(circle at 86% 18%, rgba(109, 93, 246, 0.1), transparent 28%);
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+.item-orb--green  { width: 500px; height: 500px; top: -80px; left: -100px; background: radial-gradient(circle, rgba(34,197,94,.09), transparent 70%); }
+.item-orb--violet { width: 440px; height: 440px; top: 120px; right: -80px; background: radial-gradient(circle, rgba(139,92,246,.1), transparent 70%); }
+
+/* ── hero ── */
+.item-hero {
+  position: relative;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(15,23,42,.7);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+  padding: 1.75rem;
 }
 
-.stat-cell {
+.item-hero__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .6;
+  transition: opacity .3s;
+}
+.item-hero.high_demand .item-hero__glow {
+  background: radial-gradient(circle at 10% 50%, rgba(34,197,94,.1) 0%, transparent 60%);
+}
+.item-hero.oversupply .item-hero__glow {
+  background: radial-gradient(circle at 10% 50%, rgba(251,113,133,.1) 0%, transparent 60%);
+}
+.item-hero.stable .item-hero__glow {
+  background: radial-gradient(circle at 10% 50%, rgba(139,92,246,.08) 0%, transparent 60%);
+}
+
+.item-hero__top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.item-hero__icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.item-hero__icon-letter {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: rgba(255,255,255,.4);
+  line-height: 1;
+}
+
+.item-hero__meta { min-width: 0; }
+.item-hero__kicker {
+  font-size: .65rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin-bottom: .2rem;
+  font-family: monospace;
+}
+.item-hero__title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: rgb(248 250 252);
+  letter-spacing: -.03em;
+  line-height: 1.15;
+}
+@media (max-width: 640px) { .item-hero__title { font-size: 1.35rem; } }
+
+.item-hero__stats {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .6rem;
+  margin-top: 1.5rem;
+}
+@media (min-width: 480px) { .item-hero__stats { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 900px) { .item-hero__stats { grid-template-columns: repeat(6, 1fr); } }
+
+.stat-pill {
   display: flex;
   flex-direction: column;
   gap: .3rem;
+  border-radius: 14px;
+  padding: .75rem .9rem;
+  background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.07);
-  border-radius: 1rem;
-  padding: .7rem .85rem;
-  background: rgba(255,255,255,.03);
+  transition: border-color .2s, background .2s;
 }
+.stat-pill:hover {
+  background: rgba(255,255,255,.065);
+  border-color: rgba(255,255,255,.13);
+}
+.stat-pill.buy { border-color: rgba(52,211,153,.2); background: rgba(52,211,153,.05); }
+.stat-pill.sell { border-color: rgba(251,113,133,.2); background: rgba(251,113,133,.05); }
 
-.stat-cell span {
-  font-size: .68rem;
-  font-weight: 700;
+.stat-pill__label {
+  font-size: .62rem;
+  font-weight: 800;
   letter-spacing: .14em;
   text-transform: uppercase;
   color: rgb(100 116 139);
 }
-
-.stat-cell strong {
-  font-size: 1rem;
+.stat-pill__value {
+  font-size: .95rem;
   font-weight: 900;
   color: rgb(226 232 240);
   word-break: break-all;
 }
 
-@media (max-width: 640px) {
-  .stat-cell {
-    padding: .5rem .6rem;
-  }
-  .stat-cell strong {
-    font-size: 0.875rem;
-  }
-}
-
+/* ── state badge ── */
 .state-badge {
   border-radius: 999px;
   padding: .35rem .9rem;
-  font-size: .7rem;
+  font-size: .65rem;
   font-weight: 900;
   letter-spacing: .14em;
   text-transform: uppercase;
   white-space: nowrap;
 }
+.state-badge.high_demand { background: rgba(34,197,94,.12); color: rgb(134 239 172); border: 1px solid rgba(34,197,94,.2); }
+.state-badge.oversupply  { background: rgba(251,113,133,.12); color: rgb(253 164 175); border: 1px solid rgba(251,113,133,.2); }
+.state-badge.stable      { background: rgba(148,163,184,.08); color: rgb(148 163 184); border: 1px solid rgba(148,163,184,.15); }
 
-.state-badge.high_demand { background: rgba(34,197,94,.12); color: rgb(134 239 172); }
-.state-badge.oversupply  { background: rgba(251,113,133,.12); color: rgb(253 164 175); }
-.state-badge.stable      { background: rgba(148,163,184,.09); color: rgb(148 163 184); }
-
+/* ── chart ── */
 .chart-wrap { overflow-x: auto; }
+.chart-svg { display: block; width: 100%; height: auto; min-width: 340px; }
+.chart-lbl { fill: rgb(71 85 105); font-size: 11px; }
 
-.chart-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  min-width: 340px;
-}
-
-.chart-lbl {
-  fill: rgb(100 116 139);
-  font-size: 11px;
-}
-
-.legend-dot {
+.legend-line {
   display: inline-block;
-  width: 22px;
-  height: 3px;
+  width: 24px;
+  height: 2.5px;
   border-radius: 99px;
 }
 
 .days-btn {
-  border: 1px solid rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.09);
   border-radius: 999px;
   background: transparent;
   color: rgb(100 116 139);
   font-size: .7rem;
   font-weight: 900;
   letter-spacing: .1em;
-  padding: .25rem .65rem;
+  padding: .28rem .7rem;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  transition: background .12s, color .12s, border-color .12s;
 }
-
-.days-btn:hover {
-  border-color: rgba(255,255,255,.22);
-  color: rgb(203 213 225);
-}
-
+.days-btn:hover { border-color: rgba(255,255,255,.2); color: rgb(203 213 225); }
 .days-btn.active {
-  border-color: rgba(52, 211, 153, .5);
-  background: rgba(52, 211, 153, .1);
+  border-color: rgba(52,211,153,.45);
+  background: rgba(52,211,153,.1);
   color: rgb(134 239 172);
 }
 
-/* transactions */
-.tx-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: .75rem;
+.chart-range-hint {
+  font-family: monospace;
+  font-size: .72rem;
+  color: rgb(71 85 105);
+  padding: .1rem .45rem;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 6px;
 }
 
+/* ── transactions ── */
 .tx-count-badge {
   display: inline-flex;
   align-items: center;
@@ -579,13 +721,12 @@ watch(material, load)
 
 .tx-filter-tabs {
   display: flex;
-  gap: .25rem;
+  gap: .2rem;
   padding: .2rem;
   border-radius: 10px;
   background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.07);
 }
-
 .tx-filter-tabs button {
   border: none;
   background: transparent;
@@ -598,9 +739,7 @@ watch(material, load)
   transition: background .12s, color .12s;
   white-space: nowrap;
 }
-
 .tx-filter-tabs button:hover { color: rgb(203 213 225); }
-
 .tx-filter-tabs button.active {
   background: rgba(139,92,246,.15);
   color: rgb(196 181 253);
@@ -609,40 +748,29 @@ watch(material, load)
 .tx-table-wrap {
   overflow-x: auto;
   border: 1px solid rgba(255,255,255,.07);
-  border-radius: 12px;
+  border-radius: 14px;
 }
-
-.tx-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 480px;
-}
-
+.tx-table { width: 100%; border-collapse: collapse; min-width: 480px; }
 .tx-table th {
-  background: rgba(255,255,255,.03);
+  background: rgba(255,255,255,.02);
   border-bottom: 1px solid rgba(255,255,255,.07);
-  padding: .4rem .7rem;
+  padding: .45rem .75rem;
   text-align: left;
-  font-size: .62rem;
+  font-size: .6rem;
   font-weight: 800;
-  letter-spacing: .15em;
+  letter-spacing: .16em;
   text-transform: uppercase;
-  color: rgb(100 116 139);
+  color: rgb(71 85 105);
   white-space: nowrap;
 }
-
-.tx-table th.num,
-.tx-table td.num { text-align: right; }
-
+.tx-table th.num, .tx-table td.num { text-align: right; }
 .tx-table td {
-  border-bottom: 1px solid rgba(255,255,255,.04);
-  padding: .45rem .7rem;
+  border-bottom: 1px solid rgba(255,255,255,.035);
+  padding: .5rem .75rem;
   font-size: .82rem;
   color: rgb(148 163 184);
 }
-
 .tx-table tbody tr:last-child td { border-bottom: none; }
-
 .tx-table tbody tr:hover td { background: rgba(255,255,255,.025); }
 
 .tx-player { color: rgb(203 213 225) !important; font-weight: 600; }
@@ -653,33 +781,70 @@ watch(material, load)
 .tx-badge {
   display: inline-block;
   border-radius: 999px;
-  padding: .16rem .55rem;
-  font-size: .65rem;
+  padding: .18rem .6rem;
+  font-size: .62rem;
   font-weight: 900;
   letter-spacing: .1em;
   text-transform: uppercase;
   white-space: nowrap;
 }
-
 .tx-badge.buy  { background: rgba(34,197,94,.12); color: rgb(134 239 172); }
 .tx-badge.sell { background: rgba(251,113,133,.12); color: rgb(253 164 175); }
 
-/* listings */
+/* ── listings ── */
 .listing-row {
   border: 1px solid rgba(255,255,255,.07);
-  border-radius: .875rem;
-  padding: .65rem .75rem;
-  background: rgba(255,255,255,.025);
+  border-radius: 14px;
+  padding: .85rem 1rem;
+  background: rgba(255,255,255,.02);
+  transition: background .15s, border-color .15s;
+}
+.listing-row:hover {
+  background: rgba(255,255,255,.04);
+  border-color: rgba(255,255,255,.12);
 }
 
-/* chart range hint */
-.chart-range-hint {
-  font-family: monospace;
+.listing-row__nation {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  min-width: 0;
+  margin-bottom: .2rem;
+}
+.listing-row__tag {
+  font-size: .65rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  color: rgb(139 92 246);
+  background: rgba(139,92,246,.12);
+  border-radius: 5px;
+  padding: .1rem .35rem;
+  flex-shrink: 0;
+}
+.listing-row__name {
+  font-weight: 700;
+  font-size: .88rem;
+  color: rgb(203 213 225);
+}
+.listing-row__seller {
   font-size: .72rem;
   color: rgb(71 85 105);
-  padding: .1rem .45rem;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 6px;
+  margin-bottom: .6rem;
 }
+.listing-row__price-block { display: flex; flex-direction: column; gap: .3rem; }
+.listing-row__price { font-size: 1.05rem; font-weight: 900; color: rgb(134 239 172); }
+
+.listing-row__stock {
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.06);
+  overflow: hidden;
+}
+.listing-row__stock-bar {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, rgb(52,211,153), rgb(16,185,129));
+  transition: width .4s;
+}
+.listing-row__stock-label { font-size: .7rem; color: rgb(71 85 105); }
 </style>

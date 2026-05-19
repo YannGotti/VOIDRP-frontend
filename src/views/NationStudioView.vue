@@ -753,7 +753,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
               <div v-for="item in transactions.slice(0, 6)" :key="item.id" class="action-card">
                 <div class="flex items-center justify-between gap-3">
                   <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
-                  <span class="footer-chip">{{ formatNumber(item.net_amount || item.amount) }}</span>
+                  <span class="footer-chip">{{ formatNumber(item.net_amount) }}</span>
                 </div>
                 <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария.' }}</p>
               </div>

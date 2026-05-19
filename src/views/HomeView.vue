@@ -54,6 +54,17 @@ onUnmounted(() => {
     <div class="hero__orb hero__orb--2"></div>
     <div class="hero__orb hero__orb--3"></div>
 
+    <!-- floating Minecraft item decorations -->
+    <div class="hero__mc-stage" aria-hidden="true">
+      <img class="mc-item mc-item--sword"    src="/item-icons/minecraft/diamond_sword.png" alt="">
+      <img class="mc-item mc-item--beacon"   src="/item-icons/minecraft/beacon.png" alt="">
+      <img class="mc-item mc-item--star"     src="/item-icons/minecraft/nether_star.png" alt="">
+      <img class="mc-item mc-item--egg"      src="/item-icons/minecraft/dragon_egg.png" alt="">
+      <img class="mc-item mc-item--diamond"  src="/item-icons/minecraft/diamond.png" alt="">
+      <img class="mc-item mc-item--table"    src="/item-icons/minecraft/enchanting_table.png" alt="">
+      <img class="mc-item mc-item--obsidian" src="/item-icons/minecraft/obsidian.png" alt="">
+    </div>
+
     <div class="container-shell hero__inner">
       <div class="hero__badge anim-hero anim-d0">
         <span class="hero__badge-dot"></span>
@@ -804,4 +815,105 @@ onUnmounted(() => {
 .feat-card.lit::after,
 .launcher-card.lit::after,
 .cta-card.lit::after { opacity: 1; }
+
+/* ════════════════════════════════════
+   MINECRAFT FLOATING ITEMS
+════════════════════════════════════ */
+@keyframes mc-float-a {
+  0%, 100% { transform: translateY(0)    rotate(-5deg)  scale(1);    }
+  50%       { transform: translateY(-22px) rotate(3deg)   scale(1.04); }
+}
+@keyframes mc-float-b {
+  0%, 100% { transform: translateY(0)    rotate(8deg)   scale(1);    }
+  50%       { transform: translateY(-16px) rotate(2deg)   scale(0.97); }
+}
+@keyframes mc-float-c {
+  0%, 100% { transform: translateY(0)    rotate(-10deg) scale(1);    }
+  50%       { transform: translateY(-26px) rotate(-4deg)  scale(1.06); }
+}
+@keyframes mc-float-d {
+  0%, 100% { transform: translateY(0)    rotate(12deg)  scale(1);    }
+  50%       { transform: translateY(-13px) rotate(6deg)   scale(0.96); }
+}
+@keyframes mc-float-e {
+  0%, 100% { transform: translateY(0)    rotate(3deg)   scale(1);    }
+  50%       { transform: translateY(-19px) rotate(-5deg)  scale(1.03); }
+}
+@keyframes mc-stage-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.hero__mc-stage {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1180px, 100vw);
+  pointer-events: none;
+  z-index: 1;
+  animation: mc-stage-in 1.4s ease-out 1.1s both;
+}
+
+.mc-item {
+  position: absolute;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  user-select: none;
+  pointer-events: none;
+}
+
+.mc-item--sword {
+  width: 108px; height: 108px;
+  top: 14%; right: 18%;
+  opacity: 0.42;
+  animation: mc-float-a 7.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(103,232,249,.55)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
+}
+.mc-item--beacon {
+  width: 84px; height: 84px;
+  top: 40%; right: 7%;
+  opacity: 0.34;
+  animation: mc-float-b 9.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px rgba(56,189,248,.5)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
+}
+.mc-item--star {
+  width: 76px; height: 76px;
+  top: 8%; right: 32%;
+  opacity: 0.32;
+  animation: mc-float-c 11s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(251,191,36,.55)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
+}
+.mc-item--egg {
+  width: 70px; height: 70px;
+  top: 60%; right: 11%;
+  opacity: 0.30;
+  animation: mc-float-d 8.3s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(167,139,250,.5)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
+}
+.mc-item--diamond {
+  width: 64px; height: 64px;
+  top: 26%; right: 35%;
+  opacity: 0.33;
+  animation: mc-float-e 6.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(103,232,249,.5)) drop-shadow(0 4px 6px rgba(0,0,0,.35));
+}
+.mc-item--table {
+  width: 82px; height: 82px;
+  top: 72%; right: 26%;
+  opacity: 0.28;
+  animation: mc-float-a 10.5s ease-in-out infinite reverse;
+  filter: drop-shadow(0 0 12px rgba(139,92,246,.45)) drop-shadow(0 4px 8px rgba(0,0,0,.4));
+}
+.mc-item--obsidian {
+  width: 66px; height: 66px;
+  top: 46%; right: 38%;
+  opacity: 0.22;
+  animation: mc-float-b 13s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(109,40,217,.4)) drop-shadow(0 4px 6px rgba(0,0,0,.35));
+}
+
+@media (max-width: 1100px) {
+  .hero__mc-stage { display: none; }
+}
 </style>

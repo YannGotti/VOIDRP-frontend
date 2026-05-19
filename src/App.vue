@@ -103,7 +103,7 @@ onUnmounted(() => {
   border-radius: inherit;
   background: radial-gradient(
     circle 180px at var(--mx, 50%) var(--my, 50%),
-    rgba(139, 92, 246, .1) 0%,
+    rgba(139, 92, 246, .045) 0%,
     transparent 70%
   );
   opacity: 0;
