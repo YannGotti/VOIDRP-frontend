@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { usePageMeta } from '../composables/usePageMeta.js'
 
 usePageMeta({
@@ -32,6 +33,7 @@ import { toastError, toastSuccess } from '../services/toast'
 import { useAuthStore } from '../stores/authStore'
 import { formatNumber, formatRoleLabel } from '../utils/formatters'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 
 const activeTab = ref('overview')
@@ -100,19 +102,19 @@ const myAllianceSlug = computed(() => myNation.value?.alliance_summary?.slug || 
 
 function allianceTypeLabel(value) {
   switch (String(value || '').toLowerCase()) {
-    case 'nato': return 'Военный союз'
-    case 'economic': return 'Экономический союз'
-    case 'un': return 'Политический союз'
-    default: return 'Союз государств'
+    case 'nato': return t('allianceHub.typeMilitary')
+    case 'economic': return t('allianceHub.typeEconomicOpt')
+    case 'un': return t('allianceHub.typePolitical')
+    default: return t('allianceHub.typeDefault')
   }
 }
 
 function txLabel(item) {
   const type = String(item?.transaction_type || '').toLowerCase()
-  if (type === 'alliance_transfer_out') return 'Перевод союзнику'
-  if (type === 'alliance_transfer_in') return 'От союзника'
-  if (type === 'alliance_fee_income') return 'Комиссия союза'
-  return 'Операция'
+  if (type === 'alliance_transfer_out') return t('allianceHub.txAllianceOut')
+  if (type === 'alliance_transfer_in') return t('allianceHub.txAllianceIn')
+  if (type === 'alliance_fee_income') return t('allianceHub.txAllianceFee')
+  return t('allianceHub.txOther')
 }
 
 function money(value) {
@@ -161,7 +163,7 @@ async function loadSelectedAlliance(slug) {
     selectedAlliance.value = null
     proposals.value = []
     allianceTransactions.value = []
-    toastError(err?.message || 'Не удалось загрузить альянс.')
+    toastError(err?.message || t('allianceHub.loadError'))
   } finally {
     detailLoading.value = false
   }
@@ -176,7 +178,7 @@ async function loadPage() {
     selectedSlug.value = preferredSlug
     await loadSelectedAlliance(preferredSlug)
   } catch (err) {
-    error.value = err?.message || 'Не удалось загрузить раздел альянсов.'
+    error.value = err?.message || t('allianceHub.loadError')
   } finally {
     loading.value = false
   }
@@ -186,12 +188,12 @@ async function createAllianceAction() {
   actionLoading.value = true
   try {
     const created = await createAlliance(auth.accessToken, { ...createForm })
-    toastSuccess('Альянс создан.')
+    toastSuccess(t('allianceHub.allianceCreated'))
     await loadAlliances()
     await loadMyNation()
     await loadSelectedAlliance(created?.slug || createForm.slug)
   } catch (err) {
-    toastError(err?.message || 'Не удалось создать альянс.')
+    toastError(err?.message || t('allianceHub.allianceCreateError'))
   } finally {
     actionLoading.value = false
   }
@@ -202,10 +204,10 @@ async function joinSelectedAlliance() {
   actionLoading.value = true
   try {
     await joinAlliance(auth.accessToken, selectedAlliance.value.slug)
-    toastSuccess('Государство вступило в альянс.')
+    toastSuccess(t('allianceHub.joinedSuccess'))
     await loadPage()
   } catch (err) {
-    toastError(err?.message || 'Не удалось вступить в альянс.')
+    toastError(err?.message || t('allianceHub.joinError'))
   } finally {
     actionLoading.value = false
   }
@@ -215,10 +217,10 @@ async function leaveSelectedAlliance() {
   actionLoading.value = true
   try {
     await leaveAlliance(auth.accessToken)
-    toastSuccess('Государство вышло из альянса.')
+    toastSuccess(t('allianceHub.leftSuccess'))
     await loadPage()
   } catch (err) {
-    toastError(err?.message || 'Не удалось выйти из альянса.')
+    toastError(err?.message || t('allianceHub.leaveError'))
   } finally {
     actionLoading.value = false
   }
@@ -231,9 +233,9 @@ async function savePolicies() {
     const payload = await updateAlliancePolicies(auth.accessToken, selectedAlliance.value.slug, { ...policyForm })
     selectedAlliance.value = payload
     hydratePolicyForm(payload)
-    toastSuccess('Правила союза обновлены.')
+    toastSuccess(t('allianceHub.policiesSaved'))
   } catch (err) {
-    toastError(err?.message || 'Не удалось сохранить правила.')
+    toastError(err?.message || t('allianceHub.policiesError'))
   } finally {
     actionLoading.value = false
   }
@@ -245,17 +247,17 @@ async function createProposalAction() {
   try {
     let payloadJson = {}
     try { payloadJson = proposalForm.payload_json?.trim() ? JSON.parse(proposalForm.payload_json) : {} }
-    catch { throw new Error('Поле JSON заполнено неверно.') }
+    catch { throw new Error(t('allianceHub.jsonError')) }
     await createAllianceProposal(auth.accessToken, selectedAlliance.value.slug, {
       proposal_type: proposalForm.proposal_type,
       title: proposalForm.title,
       description: proposalForm.description || null,
       payload_json: payloadJson,
     })
-    toastSuccess('Предложение создано.')
+    toastSuccess(t('allianceHub.proposalCreated'))
     await loadSelectedAlliance(selectedAlliance.value.slug)
   } catch (err) {
-    toastError(err?.message || 'Не удалось создать предложение.')
+    toastError(err?.message || t('allianceHub.proposalError'))
   } finally {
     actionLoading.value = false
   }
@@ -265,10 +267,10 @@ async function castVote({ id, vote }) {
   actionLoading.value = true
   try {
     await voteAllianceProposal(auth.accessToken, id, { vote })
-    toastSuccess('Голос учтён.')
+    toastSuccess(t('allianceHub.voteCast'))
     if (selectedAlliance.value?.slug) await loadSelectedAlliance(selectedAlliance.value.slug)
   } catch (err) {
-    toastError(err?.message || 'Не удалось сохранить голос.')
+    toastError(err?.message || t('allianceHub.voteError'))
   } finally {
     actionLoading.value = false
   }
@@ -284,10 +286,10 @@ async function sendTransfer() {
       amount: Number(transferForm.amount),
       comment: transferForm.comment || null,
     })
-    toastSuccess('Перевод отправлен.')
+    toastSuccess(t('allianceHub.transferSent'))
     await loadSelectedAlliance(selectedAlliance.value.slug)
   } catch (err) {
-    toastError(err?.message || 'Не удалось выполнить перевод.')
+    toastError(err?.message || t('allianceHub.transferError'))
   } finally {
     actionLoading.value = false
   }
@@ -307,19 +309,19 @@ onMounted(loadPage)
       <!-- header -->
       <header class="ah-header">
         <div>
-          <p class="ah-eyebrow">Политика · VoidRP</p>
-          <h1 class="ah-h1">Союзы государств</h1>
+          <p class="ah-eyebrow">{{ t('allianceHub.eyebrow') }}</p>
+          <h1 class="ah-h1">{{ t('allianceHub.title') }}</h1>
         </div>
         <div class="ah-header__actions">
-          <RouterLink to="/nations" class="ah-link-btn">Государства</RouterLink>
+          <RouterLink to="/nations" class="ah-link-btn">{{ t('allianceHub.nationsBtn') }}</RouterLink>
           <RouterLink
             v-if="hasNation"
             :to="canManageNation ? '/nation/studio' : `/nation/${myNation.slug}`"
             class="ah-link-btn"
           >
-            {{ canManageNation ? 'Управлять' : 'Моё государство' }}
+            {{ canManageNation ? t('allianceHub.manageNation') : t('allianceHub.myNationBtn') }}
           </RouterLink>
-          <RouterLink v-else to="/nation/studio" class="ah-link-btn ah-link-btn--accent">Создать государство</RouterLink>
+          <RouterLink v-else to="/nation/studio" class="ah-link-btn ah-link-btn--accent">{{ t('allianceHub.createNationBtn') }}</RouterLink>
         </div>
       </header>
 
@@ -327,12 +329,12 @@ onMounted(loadPage)
 
       <!-- tabs -->
       <div class="ah-tabs">
-        <button class="ah-tab" :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">Обзор</button>
+        <button class="ah-tab" :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">{{ t('allianceHub.tabOverview') }}</button>
         <button class="ah-tab" :class="{ active: activeTab === 'proposals' }" @click="activeTab = 'proposals'">
-          Предложения
+          {{ t('allianceHub.tabProposals') }}
           <span v-if="proposals.length" class="ah-tab__badge">{{ proposals.length }}</span>
         </button>
-        <button class="ah-tab" :class="{ active: activeTab === 'manage' }" @click="activeTab = 'manage'">Управление</button>
+        <button class="ah-tab" :class="{ active: activeTab === 'manage' }" @click="activeTab = 'manage'">{{ t('allianceHub.tabManage') }}</button>
       </div>
 
       <!-- loading -->
@@ -349,9 +351,9 @@ onMounted(loadPage)
           <!-- sidebar: alliance list -->
           <aside class="ah-sidebar">
             <div class="surface-card ah-card">
-              <h2 class="ah-card__title">Альянсы</h2>
+              <h2 class="ah-card__title">{{ t('allianceHub.title') }}</h2>
 
-              <div v-if="!selectableAlliances.length" class="ah-empty">Пока нет альянсов</div>
+              <div v-if="!selectableAlliances.length" class="ah-empty">{{ t('allianceHub.noAlliances') }}</div>
 
               <div v-else class="ah-alliance-list">
                 <button
@@ -375,42 +377,42 @@ onMounted(loadPage)
 
               <!-- my status -->
               <div v-if="hasNation" class="ah-status-block">
-                <p class="ah-status-label">Твоё государство</p>
+                <p class="ah-status-label">{{ t('allianceHub.myNation') }}</p>
                 <p class="ah-status-value">{{ myNation.title }}</p>
                 <p v-if="myNation.alliance_summary" class="ah-status-meta">
-                  В альянсе: {{ myNation.alliance_summary.title }} [{{ myNation.alliance_summary.tag }}]
+                  {{ t('allianceHub.inAlliance', { title: myNation.alliance_summary.title, tag: myNation.alliance_summary.tag }) }}
                 </p>
-                <p v-else class="ah-status-meta">Не состоит в альянсе</p>
+                <p v-else class="ah-status-meta">{{ t('allianceHub.notInAlliance') }}</p>
 
                 <div v-if="selectedAlliance" class="ah-status-actions">
                   <button v-if="canJoinSelected" type="button" class="btn btn-primary btn-sm w-full" :disabled="actionLoading" @click="joinSelectedAlliance">
-                    Вступить в альянс
+                    {{ t('allianceHub.joinAlliance') }}
                   </button>
                   <button v-if="canLeaveSelected" type="button" class="btn btn-outline btn-sm w-full" :disabled="actionLoading" @click="leaveSelectedAlliance">
-                    Покинуть альянс
+                    {{ t('allianceHub.leaveAlliance') }}
                   </button>
                 </div>
               </div>
-              <div v-else class="ah-empty">Создай государство, чтобы вступить в альянс.</div>
+              <div v-else class="ah-empty">{{ t('allianceHub.noNationHint') }}</div>
             </div>
 
             <!-- create alliance form (for nation leaders without alliance) -->
             <div v-if="isAuthenticated && hasNation && !myAllianceSlug && canManageNation" class="surface-card ah-card">
-              <h2 class="ah-card__title">Создать альянс</h2>
+              <h2 class="ah-card__title">{{ t('allianceHub.createAllianceTitle') }}</h2>
               <div class="ah-form">
-                <input v-model="createForm.title" class="input" placeholder="Название" />
+                <input v-model="createForm.title" class="input" :placeholder="t('allianceHub.namePlaceholder')" />
                 <div class="ah-form__row">
-                  <input v-model="createForm.tag" class="input" placeholder="Тег" />
-                  <input v-model="createForm.slug" class="input" placeholder="Slug" />
+                  <input v-model="createForm.tag" class="input" :placeholder="t('allianceHub.tagPlaceholder')" />
+                  <input v-model="createForm.slug" class="input" :placeholder="t('allianceHub.slugPlaceholder')" />
                 </div>
                 <select v-model="createForm.alliance_type" class="select">
-                  <option value="un">Политический союз</option>
-                  <option value="nato">Военный союз</option>
-                  <option value="economic">Экономический союз</option>
+                  <option value="un">{{ t('allianceHub.typePolitical') }}</option>
+                  <option value="nato">{{ t('allianceHub.typeMilitary') }}</option>
+                  <option value="economic">{{ t('allianceHub.typeEconomicOpt') }}</option>
                 </select>
-                <textarea v-model="createForm.description" class="textarea" rows="3" placeholder="Описание"></textarea>
+                <textarea v-model="createForm.description" class="textarea" rows="3" :placeholder="t('allianceHub.descPlaceholder')"></textarea>
                 <button type="button" class="btn btn-primary w-full" :disabled="actionLoading" @click="createAllianceAction">
-                  Создать
+                  {{ t('allianceHub.createBtn') }}
                 </button>
               </div>
             </div>
@@ -437,19 +439,19 @@ onMounted(loadPage)
           />
 
           <div v-if="canCreateProposals" class="surface-card ah-card">
-            <h2 class="ah-card__title">Новое предложение</h2>
+            <h2 class="ah-card__title">{{ t('allianceHub.newProposalTitle') }}</h2>
             <div class="ah-form">
               <select v-model="proposalForm.proposal_type" class="select">
-                <option value="set_policy">Изменение правил</option>
-                <option value="transfer">Перевод средств</option>
-                <option value="accept_member">Принятие участника</option>
-                <option value="remove_member">Исключение участника</option>
+                <option value="set_policy">{{ t('allianceHub.proposalTypePolicy') }}</option>
+                <option value="transfer">{{ t('allianceHub.proposalTypeTransfer') }}</option>
+                <option value="accept_member">{{ t('allianceHub.proposalTypeAccept') }}</option>
+                <option value="remove_member">{{ t('allianceHub.proposalTypeRemove') }}</option>
               </select>
-              <input v-model="proposalForm.title" class="input" placeholder="Заголовок" />
-              <textarea v-model="proposalForm.description" class="textarea" rows="2" placeholder="Описание (необязательно)"></textarea>
+              <input v-model="proposalForm.title" class="input" :placeholder="t('allianceHub.titlePlaceholder')" />
+              <textarea v-model="proposalForm.description" class="textarea" rows="2" :placeholder="t('allianceHub.descOptPlaceholder')"></textarea>
               <textarea v-model="proposalForm.payload_json" class="textarea font-mono text-xs" rows="5" placeholder='{"field":"allow_trade_bonus","value":true}'></textarea>
               <button type="button" class="btn btn-primary w-full" :disabled="actionLoading" @click="createProposalAction">
-                Создать предложение
+                {{ t('allianceHub.createProposalBtn') }}
               </button>
             </div>
           </div>
@@ -459,11 +461,11 @@ onMounted(loadPage)
         <div v-show="activeTab === 'manage'" class="ah-manage-layout">
           <!-- transactions -->
           <div class="surface-card ah-card">
-            <h2 class="ah-card__title">Операции казны</h2>
+            <h2 class="ah-card__title">{{ t('allianceHub.txOpsTitle') }}</h2>
             <div v-if="detailLoading" class="ah-skeletons">
               <div v-for="i in 4" :key="i" class="skeleton" style="height:32px;border-radius:8px"></div>
             </div>
-            <div v-else-if="!allianceTransactions.length" class="ah-empty">Операций пока нет</div>
+            <div v-else-if="!allianceTransactions.length" class="ah-empty">{{ t('allianceHub.noOps') }}</div>
             <ul v-else class="ah-tx-list">
               <li v-for="item in allianceTransactions.slice(0, 10)" :key="item.id">
                 <div class="ah-tx-left">
@@ -478,53 +480,53 @@ onMounted(loadPage)
           <!-- sidebar: policies + transfer -->
           <aside class="ah-manage-sidebar">
             <div v-if="canManagePolicies" class="surface-card ah-card">
-              <h2 class="ah-card__title">Правила союза</h2>
+              <h2 class="ah-card__title">{{ t('allianceHub.rulesTitle') }}</h2>
               <div class="ah-form">
                 <label class="ah-toggle-row">
                   <input v-model="policyForm.allow_internal_transfers" type="checkbox" />
-                  <span>Внутренние переводы</span>
+                  <span>{{ t('allianceHub.internalTransfers') }}</span>
                 </label>
                 <label class="ah-toggle-row">
                   <input v-model="policyForm.allow_joint_defense" type="checkbox" />
-                  <span>Совместная оборона</span>
+                  <span>{{ t('allianceHub.jointDefense') }}</span>
                 </label>
                 <label class="ah-toggle-row">
                   <input v-model="policyForm.allow_trade_bonus" type="checkbox" />
-                  <span>Торговый бонус</span>
+                  <span>{{ t('allianceHub.tradeBonus') }}</span>
                 </label>
                 <label class="ah-toggle-row">
                   <input v-model="policyForm.allow_pvp_protection" type="checkbox" />
-                  <span>PvP-защита</span>
+                  <span>{{ t('allianceHub.pvpProtection') }}</span>
                 </label>
                 <div class="ah-form__field">
-                  <label class="ah-field-label">Комиссия %</label>
+                  <label class="ah-field-label">{{ t('allianceHub.feePercent') }}</label>
                   <input v-model="policyForm.transfer_fee_percent" type="number" min="0" step="0.1" class="input" />
                 </div>
                 <button type="button" class="btn btn-primary w-full" :disabled="actionLoading" @click="savePolicies">
-                  Сохранить
+                  {{ t('allianceHub.saveRulesBtn') }}
                 </button>
               </div>
             </div>
 
             <div v-if="canTransfer" class="surface-card ah-card">
-              <h2 class="ah-card__title">Перевод союзнику</h2>
+              <h2 class="ah-card__title">{{ t('allianceHub.transferToTitle') }}</h2>
               <div class="ah-form">
                 <select v-model="transferForm.to_nation_slug" class="select">
-                  <option disabled value="">Выбрать государство</option>
+                  <option disabled value="">{{ t('allianceHub.selectNationPlaceholder') }}</option>
                   <option v-for="nation in memberTargets" :key="nation.id" :value="nation.slug">
                     {{ nation.title }} [{{ nation.tag }}]
                   </option>
                 </select>
-                <input v-model="transferForm.amount" type="number" min="1" step="1" class="input" placeholder="Сумма" />
-                <textarea v-model="transferForm.comment" class="textarea" rows="2" placeholder="Комментарий"></textarea>
+                <input v-model="transferForm.amount" type="number" min="1" step="1" class="input" :placeholder="t('allianceHub.amountPlaceholder')" />
+                <textarea v-model="transferForm.comment" class="textarea" rows="2" :placeholder="t('allianceHub.commentPlaceholder')"></textarea>
                 <button type="button" class="btn btn-primary w-full" :disabled="actionLoading || !transferForm.to_nation_slug" @click="sendTransfer">
-                  Отправить
+                  {{ t('allianceHub.sendBtn') }}
                 </button>
               </div>
             </div>
 
             <div v-if="!canManageAlliance && selectedAlliance" class="surface-card ah-card ah-readonly">
-              <p>Управляющие действия доступны лидерам и офицерам государства-участника.</p>
+              <p>{{ t('allianceHub.readonlyHint') }}</p>
             </div>
           </aside>
         </div>

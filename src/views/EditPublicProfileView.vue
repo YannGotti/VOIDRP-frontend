@@ -1,6 +1,7 @@
 <script setup>
 import {computed, onMounted, reactive, ref, watch} from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import ProfileMediaSlotCard from '../features/profile/components/ProfileMediaSlotCard.vue'
 import PublicProfileStudioPreview from '../features/profile/components/PublicProfileStudioPreview.vue'
 import {
@@ -16,6 +17,7 @@ import {
 import { toastError, toastSuccess } from '../services/toast'
 import { useAuthStore } from '../stores/authStore'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const loading = ref(true)
@@ -65,13 +67,13 @@ const publicProfileUrl = computed(() => {
 const completionItems = computed(() => {
   const assets = profile.value?.assets || {}
   return [
-    { key: 'slug', label: 'Ссылка', ready: Boolean(form.slug?.trim()), missingText: 'Добавь slug, чтобы страница открывалась по красивой ссылке.' },
-    { key: 'display_name', label: 'Имя', ready: Boolean(form.display_name?.trim()), missingText: 'Укажи отображаемое имя.' },
-    { key: 'status_text', label: 'Статус', ready: Boolean(form.status_text?.trim()), missingText: 'Добавь короткую строку под именем.' },
-    { key: 'bio', label: 'Описание', ready: Boolean(form.bio?.trim()), missingText: 'Заполни блок «О себе».' },
-    { key: 'avatar', label: 'Аватар', ready: Boolean(assets.avatar_url || assets.avatar_preview_url), missingText: 'Загрузи аватар.' },
-    { key: 'banner', label: 'Баннер', ready: Boolean(assets.banner_url || assets.banner_preview_url), missingText: 'Загрузи баннер.' },
-    { key: 'background', label: 'Фон', ready: Boolean(assets.background_url || assets.background_preview_url), missingText: 'Фон необязателен, но делает страницу богаче.', optional: true },
+    { key: 'slug', label: t('editProfile.completionSlug'), ready: Boolean(form.slug?.trim()), missingText: t('editProfile.missingSlug') },
+    { key: 'display_name', label: t('editProfile.completionName'), ready: Boolean(form.display_name?.trim()), missingText: t('editProfile.missingName') },
+    { key: 'status_text', label: t('editProfile.completionStatus'), ready: Boolean(form.status_text?.trim()), missingText: t('editProfile.missingStatus') },
+    { key: 'bio', label: t('editProfile.completionBio'), ready: Boolean(form.bio?.trim()), missingText: t('editProfile.missingBio') },
+    { key: 'avatar', label: t('editProfile.completionAvatar'), ready: Boolean(assets.avatar_url || assets.avatar_preview_url), missingText: t('editProfile.missingAvatar') },
+    { key: 'banner', label: t('editProfile.completionBanner'), ready: Boolean(assets.banner_url || assets.banner_preview_url), missingText: t('editProfile.missingBanner') },
+    { key: 'background', label: t('editProfile.completionBg'), ready: Boolean(assets.background_url || assets.background_preview_url), missingText: t('editProfile.missingBg'), optional: true },
   ]
 })
 
@@ -131,7 +133,7 @@ async function saveProfile() {
     })
 
     hydrateForm(payload)
-    success.value = 'Профиль сохранён.'
+    success.value = t('editProfile.saved')
   } catch (err) {
     error.value = err.message || 'Не удалось сохранить профиль.'
   } finally {
@@ -161,7 +163,7 @@ async function uploadSelected(slot) {
     if (payload) hydrateForm(payload)
     else await loadProfile()
 
-    success.value = 'Изображение загружено.'
+    success.value = t('editProfile.imageSaved')
   } catch (err) {
     error.value = err.message || 'Не удалось загрузить изображение.'
   } finally {
@@ -184,7 +186,7 @@ async function removeAsset(slot) {
     if (payload) hydrateForm(payload)
     else await loadProfile()
 
-    success.value = 'Изображение удалено.'
+    success.value = t('editProfile.imageRemoved')
   } catch (err) {
     error.value = err.message || 'Не удалось удалить изображение.'
   } finally {
@@ -197,7 +199,7 @@ async function copyPublicLink() {
 
   try {
     await navigator.clipboard.writeText(publicProfileUrl.value)
-    success.value = 'Ссылка скопирована.'
+    success.value = t('editProfile.linkCopied')
     error.value = ''
   } catch {
     error.value = 'Не удалось скопировать ссылку.'
@@ -227,28 +229,28 @@ watch(success, (value) => { if (value) toastSuccess(value) })
         <section class="surface-card px-5 py-5 md:px-7 md:py-6">
           <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div class="max-w-3xl">
-              <div class="section-kicker !mb-2">Редактор профиля</div>
+              <div class="section-kicker !mb-2">{{ t('editProfile.kicker') }}</div>
               <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
-                Внешний вид профиля
+                {{ t('editProfile.title') }}
               </h1>
               <p class="mt-2 text-sm leading-6 text-slate-400 md:text-[15px]">
-                Баннер отвечает только за верхнюю обложку. Фон меняет весь холст публичной страницы. Акцентный цвет должен быть заметен и на превью, и на реальном профиле.
+                {{ t('editProfile.subtitle') }}
               </p>
             </div>
 
             <div class="flex flex-wrap gap-3">
-              <RouterLink to="/profile" class="btn btn-outline rounded-2xl">Кабинет</RouterLink>
-              <button v-if="publicProfileUrl" type="button" class="btn btn-outline rounded-2xl" @click="copyPublicLink">Копировать ссылку</button>
+              <RouterLink to="/profile" class="btn btn-outline rounded-2xl">{{ t('editProfile.dashboard') }}</RouterLink>
+              <button v-if="publicProfileUrl" type="button" class="btn btn-outline rounded-2xl" @click="copyPublicLink">{{ t('editProfile.copyLink') }}</button>
               <button type="button" class="btn btn-primary rounded-2xl" :disabled="saving" @click="saveProfile">
                 <span v-if="saving" class="spinner"></span>
-                <span v-else>Сохранить</span>
+                <span v-else>{{ t('editProfile.save') }}</span>
               </button>
             </div>
           </div>
 
           <div v-if="showCompletionPanel" class="mt-5 rounded-[20px] border border-white/10 bg-black/20 px-4 py-4">
             <div class="flex items-center justify-between gap-3">
-              <span class="text-sm font-semibold text-slate-200">Готовность профиля</span>
+              <span class="text-sm font-semibold text-slate-200">{{ t('editProfile.completionTitle') }}</span>
               <span class="text-sm font-bold text-slate-300">{{ completion }}%</span>
             </div>
             <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
@@ -264,13 +266,13 @@ watch(success, (value) => { if (value) toastSuccess(value) })
               >
                 <p class="font-semibold">{{ item.label }}</p>
                 <p class="mt-1 text-xs uppercase tracking-[0.14em]">
-                  {{ item.ready ? 'Готово' : item.optional ? 'Необязательно' : 'Нужно заполнить' }}
+                  {{ item.ready ? t('editProfile.statusReady') : item.optional ? t('editProfile.statusOptional') : t('editProfile.statusMissing') }}
                 </p>
               </div>
             </div>
 
             <div v-if="showCompletionHints" class="mt-4 rounded-[18px] border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-              <p class="font-semibold">Что ещё можно дополнить:</p>
+              <p class="font-semibold">{{ t('editProfile.hintsTitle') }}</p>
               <ul class="mt-2 list-disc space-y-1 pl-5">
                 <li v-for="item in requiredMissingItems" :key="`missing-${item.key}`">{{ item.missingText }}</li>
               </ul>
@@ -282,10 +284,10 @@ watch(success, (value) => { if (value) toastSuccess(value) })
         <div class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
           <aside class="space-y-5">
             <section class="surface-card p-5 md:p-6">
-              <div class="section-kicker !mb-2">Превью</div>
-              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Как страница выглядит</h2>
+              <div class="section-kicker !mb-2">{{ t('editProfile.previewKicker') }}</div>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('editProfile.previewTitle') }}</h2>
               <p class="mt-2 text-sm leading-6 text-slate-400">
-                Здесь фон страницы отделён от баннера. Баннер влияет только на hero, а фон — на весь профиль.
+                {{ t('editProfile.previewDesc') }}
               </p>
 
               <div class="mt-5">
@@ -294,8 +296,8 @@ watch(success, (value) => { if (value) toastSuccess(value) })
             </section>
 
             <section class="surface-card p-5 md:p-6">
-              <div class="section-kicker !mb-2">Акцент</div>
-              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Цвет страницы</h2>
+              <div class="section-kicker !mb-2">{{ t('editProfile.accentKicker') }}</div>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('editProfile.accentTitle') }}</h2>
 
               <div class="mt-5 rounded-[22px] border border-white/10 bg-black/20 p-4">
                 <div class="flex items-center gap-4">
@@ -319,50 +321,50 @@ watch(success, (value) => { if (value) toastSuccess(value) })
 
           <div class="space-y-5">
             <section class="surface-card p-5 md:p-6">
-              <div class="section-kicker !mb-2">Оформление</div>
-              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Картинки профиля</h2>
+              <div class="section-kicker !mb-2">{{ t('editProfile.mediaKicker') }}</div>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('editProfile.mediaTitle') }}</h2>
 
               <div class="mt-5 space-y-4">
                 <ProfileMediaSlotCard
-                  title="Баннер"
-                  subtitle="Верхняя широкая обложка профиля. Используется только в hero-блоке."
+                  :title="t('editProfile.bannerTitle')"
+                  :subtitle="t('editProfile.bannerSubtitle')"
                   slot-name="banner"
                   variant="banner"
                   :preview-url="profile?.assets?.banner_url || profile?.assets?.banner_preview_url || ''"
                   :selected-file-name="selectedFileNames.banner"
                   :uploading="uploading.banner"
                   :has-asset="Boolean(profile?.assets?.banner_url || profile?.assets?.banner_preview_url)"
-                  recommendation="PNG/JPEG/WEBP, до 2 MB, желательно 16:9."
+                  :recommendation="t('editProfile.bannerRec')"
                   @select-file="onFileSelected('banner', $event)"
                   @upload="uploadSelected('banner')"
                   @remove="removeAsset('banner')"
                 />
 
                 <ProfileMediaSlotCard
-                  title="Аватар"
-                  subtitle="Главное изображение рядом с именем."
+                  :title="t('editProfile.avatarTitle')"
+                  :subtitle="t('editProfile.avatarSubtitle')"
                   slot-name="avatar"
                   variant="avatar"
                   :preview-url="profile?.assets?.avatar_url || profile?.assets?.avatar_preview_url || ''"
                   :selected-file-name="selectedFileNames.avatar"
                   :uploading="uploading.avatar"
                   :has-asset="Boolean(profile?.assets?.avatar_url || profile?.assets?.avatar_preview_url)"
-                  recommendation="PNG/JPEG/WEBP, квадрат, до 512 KB."
+                  :recommendation="t('editProfile.avatarRec')"
                   @select-file="onFileSelected('avatar', $event)"
                   @upload="uploadSelected('avatar')"
                   @remove="removeAsset('avatar')"
                 />
 
                 <ProfileMediaSlotCard
-                  title="Фон страницы"
-                  subtitle="Отдельный слой для всего полотна страницы. Не заменяет баннер."
+                  :title="t('editProfile.bgTitle')"
+                  :subtitle="t('editProfile.bgSubtitle')"
                   slot-name="background"
                   variant="background"
                   :preview-url="profile?.assets?.background_url || profile?.assets?.background_preview_url || ''"
                   :selected-file-name="selectedFileNames.background"
                   :uploading="uploading.background"
                   :has-asset="Boolean(profile?.assets?.background_url || profile?.assets?.background_preview_url)"
-                  recommendation="PNG/JPEG/WEBP, до 3 MB, желательно 1600×900 или шире."
+                  :recommendation="t('editProfile.bgRec')"
                   @select-file="onFileSelected('background', $event)"
                   @upload="uploadSelected('background')"
                   @remove="removeAsset('background')"
@@ -371,57 +373,57 @@ watch(success, (value) => { if (value) toastSuccess(value) })
             </section>
 
             <section class="surface-card p-5 md:p-6">
-              <div class="section-kicker !mb-2">Текст</div>
-              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Имя и описание</h2>
+              <div class="section-kicker !mb-2">{{ t('editProfile.textKicker') }}</div>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('editProfile.textTitle') }}</h2>
 
               <div class="mt-5 grid gap-4">
                 <label class="form-control">
-                  <span class="mb-2 text-sm font-semibold text-slate-300">Отображаемое имя</span>
+                  <span class="mb-2 text-sm font-semibold text-slate-300">{{ t('editProfile.displayNameLabel') }}</span>
                   <input v-model="form.display_name" type="text" maxlength="32" class="input rounded-2xl" placeholder="mironoouv" />
                 </label>
 
                 <label class="form-control">
-                  <span class="mb-2 text-sm font-semibold text-slate-300">Slug профиля</span>
+                  <span class="mb-2 text-sm font-semibold text-slate-300">{{ t('editProfile.slugLabel') }}</span>
                   <input v-model="form.slug" type="text" maxlength="32" class="input rounded-2xl" placeholder="mironoouv" />
                 </label>
 
                 <label class="form-control">
-                  <span class="mb-2 text-sm font-semibold text-slate-300">Короткий статус</span>
-                  <input v-model="form.status_text" type="text" maxlength="120" class="input rounded-2xl" placeholder="Строю, исследую, собираю команду" />
+                  <span class="mb-2 text-sm font-semibold text-slate-300">{{ t('editProfile.statusLabel') }}</span>
+                  <input v-model="form.status_text" type="text" maxlength="120" class="input rounded-2xl" :placeholder="t('editProfile.statusPlaceholder')" />
                 </label>
 
                 <label class="form-control">
-                  <span class="mb-2 text-sm font-semibold text-slate-300">Описание</span>
-                  <textarea v-model="form.bio" rows="5" maxlength="1200" class="textarea rounded-2xl" placeholder="Расскажи немного о себе и стиле игры."></textarea>
+                  <span class="mb-2 text-sm font-semibold text-slate-300">{{ t('editProfile.bioLabel') }}</span>
+                  <textarea v-model="form.bio" rows="5" maxlength="1200" class="textarea rounded-2xl" :placeholder="t('editProfile.bioPlaceholder')"></textarea>
                 </label>
               </div>
             </section>
 
             <section class="surface-card p-5 md:p-6">
-              <div class="section-kicker !mb-2">Приватность</div>
-              <h2 class="text-xl font-black text-slate-50 md:text-2xl">Настройки видимости</h2>
+              <div class="section-kicker !mb-2">{{ t('editProfile.privacyKicker') }}</div>
+              <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('editProfile.privacyTitle') }}</h2>
 
               <div class="mt-5 grid gap-4">
                 <label class="panel-card flex items-center justify-between gap-4 p-4">
                   <div>
-                    <p class="font-semibold text-slate-100">Публичный профиль</p>
-                    <p class="mt-1 text-sm leading-6 text-slate-400">Страница будет доступна другим игрокам по ссылке.</p>
+                    <p class="font-semibold text-slate-100">{{ t('editProfile.publicProfile') }}</p>
+                    <p class="mt-1 text-sm leading-6 text-slate-400">{{ t('editProfile.publicProfileDesc') }}</p>
                   </div>
                   <input v-model="form.is_public" type="checkbox" class="toggle" />
                 </label>
 
                 <label class="panel-card flex items-center justify-between gap-4 p-4">
                   <div>
-                    <p class="font-semibold text-slate-100">Список подписчиков</p>
-                    <p class="mt-1 text-sm leading-6 text-slate-400">Разрешить показывать другим игрокам подписчиков профиля.</p>
+                    <p class="font-semibold text-slate-100">{{ t('editProfile.followersList') }}</p>
+                    <p class="mt-1 text-sm leading-6 text-slate-400">{{ t('editProfile.followersListDesc') }}</p>
                   </div>
                   <input v-model="form.allow_followers_list_public" type="checkbox" class="toggle" />
                 </label>
 
                 <label class="panel-card flex items-center justify-between gap-4 p-4">
                   <div>
-                    <p class="font-semibold text-slate-100">Список друзей</p>
-                    <p class="mt-1 text-sm leading-6 text-slate-400">Разрешить показывать друзьям и другим игрокам этот блок.</p>
+                    <p class="font-semibold text-slate-100">{{ t('editProfile.friendsList') }}</p>
+                    <p class="mt-1 text-sm leading-6 text-slate-400">{{ t('editProfile.friendsListDesc') }}</p>
                   </div>
                   <input v-model="form.allow_friends_list_public" type="checkbox" class="toggle" />
                 </label>

@@ -1,9 +1,12 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { siteConfig } from '../config.site.js'
 import { useReveal } from '../composables/useReveal.js'
 import { usePageMeta } from '../composables/usePageMeta.js'
+
+const { t } = useI18n()
 
 useReveal()
 usePageMeta({
@@ -79,19 +82,19 @@ onUnmounted(() => {
       </div>
 
       <h1 class="hero__title anim-hero anim-d1">
-        Войди в мир,<br>
-        <span class="hero__title-grad">который мы создаём вместе</span>
+        {{ t('hero.title1') }}<br>
+        <span class="hero__title-grad">{{ t('hero.title2') }}</span>
       </h1>
 
       <p class="hero__desc anim-hero anim-d2">
-        Своя экономика, государства, альянсы и сотни модов — всё через единый аккаунт и удобный лаунчер.
+        {{ t('hero.desc') }}
       </p>
 
       <div class="hero__actions anim-hero anim-d3">
-        <RouterLink to="/register" class="btn-hero-primary">Создать аккаунт</RouterLink>
+        <RouterLink to="/register" class="btn-hero-primary">{{ t('hero.createAccount') }}</RouterLink>
         <a :href="siteConfig.launcherPortableUrl" class="btn-hero-secondary" target="_blank" rel="noreferrer">
           <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-          Скачать лаунчер
+          {{ t('hero.downloadLauncher') }}
         </a>
         <a :href="siteConfig.discordUrl" target="_blank" rel="noreferrer" class="btn-hero-ghost">Discord</a>
       </div>
@@ -100,15 +103,15 @@ onUnmounted(() => {
         <button class="hero__ip" @click="copyIp">
           <svg v-if="!ipCopied" viewBox="0 0 20 20" fill="currentColor" width="11" height="11"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
           <svg v-else viewBox="0 0 20 20" fill="currentColor" width="11" height="11"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-          {{ ipCopied ? 'Скопировано' : siteConfig.serverIp }}
+          {{ ipCopied ? t('hero.copied') : siteConfig.serverIp }}
         </button>
         <span class="hero__sep">·</span>
         <span class="hero__online">
           <span class="hero__online-dot"></span>
-          Сервер работает
+          {{ t('hero.serverOnline') }}
         </span>
         <span class="hero__sep">·</span>
-        <a :href="siteConfig.bluemapUrl" target="_blank" rel="noreferrer" class="hero__map-link">Карта мира ↗</a>
+        <a :href="siteConfig.bluemapUrl" target="_blank" rel="noreferrer" class="hero__map-link">{{ t('hero.worldMap') }}</a>
       </div>
     </div>
 
@@ -123,28 +126,28 @@ onUnmounted(() => {
       <div class="section-header" data-reveal>
         <div class="kicker-wrap">
           <span class="kicker-line"></span>
-          <p class="section-kicker">Старт</p>
+          <p class="section-kicker">{{ t('steps.kicker') }}</p>
           <span class="kicker-line"></span>
         </div>
-        <h2 class="section-h2">Три шага до игры</h2>
+        <h2 class="section-h2">{{ t('steps.title') }}</h2>
       </div>
       <div class="steps-grid">
         <div class="step-card" data-num="01" data-reveal data-delay="0">
           <div class="step-card__num">01</div>
-          <h3 class="step-card__title">Аккаунт</h3>
-          <p class="step-card__desc">Регистрируешься на сайте и подтверждаешь почту — это занимает минуту.</p>
-          <RouterLink to="/register" class="step-card__link">Зарегистрироваться →</RouterLink>
+          <h3 class="step-card__title">{{ t('steps.s1title') }}</h3>
+          <p class="step-card__desc">{{ t('steps.s1desc') }}</p>
+          <RouterLink to="/register" class="step-card__link">{{ t('steps.s1link') }}</RouterLink>
         </div>
         <div class="step-card step-card--accent" data-num="02" data-reveal data-delay="80">
           <div class="step-card__num">02</div>
-          <h3 class="step-card__title">Лаунчер</h3>
-          <p class="step-card__desc">Скачиваешь официальный лаунчер. Он сам подготовит сборку без ручной настройки.</p>
-          <a :href="siteConfig.launcherPortableUrl" target="_blank" rel="noreferrer" class="step-card__link">Скачать →</a>
+          <h3 class="step-card__title">{{ t('steps.s2title') }}</h3>
+          <p class="step-card__desc">{{ t('steps.s2desc') }}</p>
+          <a :href="siteConfig.launcherPortableUrl" target="_blank" rel="noreferrer" class="step-card__link">{{ t('steps.s2link') }}</a>
         </div>
         <div class="step-card" data-num="03" data-reveal data-delay="160">
           <div class="step-card__num">03</div>
-          <h3 class="step-card__title">Играть</h3>
-          <p class="step-card__desc">Входишь тем же аккаунтом и жмёшь «Играть». Готово — сервер сразу доступен.</p>
+          <h3 class="step-card__title">{{ t('steps.s3title') }}</h3>
+          <p class="step-card__desc">{{ t('steps.s3desc') }}</p>
           <span class="step-card__link step-card__link--muted">IP: void-rp.ru</span>
         </div>
       </div>
@@ -159,30 +162,27 @@ onUnmounted(() => {
         <div class="launcher-card__left">
           <div class="kicker-wrap kicker-wrap--left">
             <span class="kicker-line"></span>
-            <p class="section-kicker section-kicker--light">Официальный клиент</p>
+            <p class="section-kicker section-kicker--light">{{ t('launcher.kicker') }}</p>
           </div>
-          <h2 class="launcher-card__title">Лаунчер VoidRP</h2>
-          <p class="launcher-card__desc">
-            Берёт нужную версию Minecraft, устанавливает всю сборку модов и запускает игру под твоим
-            аккаунтом — никаких ручных настроек.
-          </p>
+          <h2 class="launcher-card__title">{{ t('launcher.title') }}</h2>
+          <p class="launcher-card__desc">{{ t('launcher.desc') }}</p>
           <ul class="launcher-features">
-            <li><span class="lf-dot"></span>Автоматическая установка сборки</li>
-            <li><span class="lf-dot"></span>Авторизация через аккаунт VoidRP</li>
-            <li><span class="lf-dot"></span>Обновляется самостоятельно</li>
-            <li><span class="lf-dot"></span>Windows · поддержка Linux в работе</li>
+            <li><span class="lf-dot"></span>{{ t('launcher.f1') }}</li>
+            <li><span class="lf-dot"></span>{{ t('launcher.f2') }}</li>
+            <li><span class="lf-dot"></span>{{ t('launcher.f3') }}</li>
+            <li><span class="lf-dot"></span>{{ t('launcher.f4') }}</li>
           </ul>
         </div>
         <div class="launcher-card__right">
           <div class="launcher-download-box">
-            <p class="ldb-label">Готово к загрузке</p>
+            <p class="ldb-label">{{ t('launcher.ready') }}</p>
             <a :href="siteConfig.launcherPortableUrl" target="_blank" rel="noreferrer" class="ldb-btn">
               <svg viewBox="0 0 20 20" fill="currentColor" width="17" height="17"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-              Скачать лаунчер
+              {{ t('launcher.download') }}
             </a>
             <p class="ldb-note">
-              Для входа в игру потребуется аккаунт.<br>
-              <RouterLink to="/register">Зарегистрироваться бесплатно →</RouterLink>
+              {{ t('launcher.needAccount') }}<br>
+              <RouterLink to="/register">{{ t('launcher.registerFree') }}</RouterLink>
             </p>
           </div>
         </div>
@@ -196,53 +196,53 @@ onUnmounted(() => {
       <div class="section-header" data-reveal>
         <div class="kicker-wrap">
           <span class="kicker-line"></span>
-          <p class="section-kicker">Возможности</p>
+          <p class="section-kicker">{{ t('features.kicker') }}</p>
           <span class="kicker-line"></span>
         </div>
-        <h2 class="section-h2">Всё, что нужно — в одном месте</h2>
+        <h2 class="section-h2">{{ t('features.title') }}</h2>
       </div>
       <div class="features-grid">
         <div class="feat-card" data-reveal data-delay="0">
           <div class="feat-card__icon feat-icon--violet">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           </div>
-          <h3 class="feat-card__title">Государства</h3>
-          <p class="feat-card__desc">Создавай государство, назначай офицеров, принимай участников и управляй казной прямо на сайте.</p>
+          <h3 class="feat-card__title">{{ t('features.nations') }}</h3>
+          <p class="feat-card__desc">{{ t('features.nationsDesc') }}</p>
         </div>
         <div class="feat-card" data-reveal data-delay="60">
           <div class="feat-card__icon feat-icon--sky">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
-          <h3 class="feat-card__title">Альянсы</h3>
-          <p class="feat-card__desc">Объединяй государства в военные блоки, экономические союзы и политические федерации.</p>
+          <h3 class="feat-card__title">{{ t('features.alliances') }}</h3>
+          <p class="feat-card__desc">{{ t('features.alliancesDesc') }}</p>
         </div>
         <div class="feat-card" data-reveal data-delay="120">
           <div class="feat-card__icon feat-icon--green">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
-          <h3 class="feat-card__title">Экономика</h3>
-          <p class="feat-card__desc">Казна государства, пожертвования игроков, переводы внутри альянса и история операций.</p>
+          <h3 class="feat-card__title">{{ t('features.economy') }}</h3>
+          <p class="feat-card__desc">{{ t('features.economyDesc') }}</p>
         </div>
         <div class="feat-card" data-reveal data-delay="180">
           <div class="feat-card__icon feat-icon--amber">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
           </div>
-          <h3 class="feat-card__title">Карта мира</h3>
-          <p class="feat-card__desc">BlueMap в браузере — смотри территории государств, столицы и активные зоны в реальном времени.</p>
+          <h3 class="feat-card__title">{{ t('features.map') }}</h3>
+          <p class="feat-card__desc">{{ t('features.mapDesc') }}</p>
         </div>
         <div class="feat-card" data-reveal data-delay="240">
           <div class="feat-card__icon feat-icon--rose">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           </div>
-          <h3 class="feat-card__title">Профили</h3>
-          <p class="feat-card__desc">Публичная страница с аватаром, баннером, статистикой и ссылкой для других игроков.</p>
+          <h3 class="feat-card__title">{{ t('features.profiles') }}</h3>
+          <p class="feat-card__desc">{{ t('features.profilesDesc') }}</p>
         </div>
         <div class="feat-card" data-reveal data-delay="300">
           <div class="feat-card__icon feat-icon--indigo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="21" height="21"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
           </div>
-          <h3 class="feat-card__title">Оформление</h3>
-          <p class="feat-card__desc">Иконка, баннер, фон и цвет акцента — государство и профиль выглядят так, как ты хочешь.</p>
+          <h3 class="feat-card__title">{{ t('features.design') }}</h3>
+          <p class="feat-card__desc">{{ t('features.designDesc') }}</p>
         </div>
       </div>
     </div>
@@ -257,24 +257,24 @@ onUnmounted(() => {
         <div class="cta-card__orb cta-card__orb--2"></div>
         <div class="kicker-wrap">
           <span class="kicker-line kicker-line--dim"></span>
-          <p class="section-kicker section-kicker--light">Присоединяйся</p>
+          <p class="section-kicker section-kicker--light">{{ t('cta.kicker') }}</p>
           <span class="kicker-line kicker-line--dim"></span>
         </div>
-        <h2 class="cta-card__title">Готов начать?</h2>
-        <p class="cta-card__desc">Создай аккаунт, скачай лаунчер и заходи — всё бесплатно.</p>
+        <h2 class="cta-card__title">{{ t('cta.title') }}</h2>
+        <p class="cta-card__desc">{{ t('cta.desc') }}</p>
         <div class="cta-actions">
-          <RouterLink to="/register" class="btn-hero-primary">Создать аккаунт</RouterLink>
-          <a :href="siteConfig.launcherPortableUrl" target="_blank" rel="noreferrer" class="btn-hero-secondary">Скачать лаунчер</a>
+          <RouterLink to="/register" class="btn-hero-primary">{{ t('cta.createAccount') }}</RouterLink>
+          <a :href="siteConfig.launcherPortableUrl" target="_blank" rel="noreferrer" class="btn-hero-secondary">{{ t('cta.downloadLauncher') }}</a>
           <a :href="siteConfig.discordUrl" target="_blank" rel="noreferrer" class="btn-hero-ghost">Discord</a>
         </div>
         <div class="cta-links">
-          <RouterLink to="/nations" class="cta-link">Государства</RouterLink>
+          <RouterLink to="/nations" class="cta-link">{{ t('cta.nations') }}</RouterLink>
           <span>·</span>
-          <a :href="siteConfig.bluemapUrl" target="_blank" rel="noreferrer" class="cta-link">Карта мира</a>
+          <a :href="siteConfig.bluemapUrl" target="_blank" rel="noreferrer" class="cta-link">{{ t('cta.worldMap') }}</a>
           <span>·</span>
-          <RouterLink to="/nations/rankings" class="cta-link">Рейтинг</RouterLink>
+          <RouterLink to="/nations/rankings" class="cta-link">{{ t('cta.ranking') }}</RouterLink>
           <span>·</span>
-          <RouterLink to="/guide" class="cta-link">Гайд</RouterLink>
+          <RouterLink to="/guide" class="cta-link">{{ t('cta.guide') }}</RouterLink>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AccountTabs from '../components/AccountTabs.vue'
 import { resendVerification } from '../services/authApi'
 import { getMyNation } from '../services/nationsApi'
@@ -9,6 +10,7 @@ import { getPlayerProgression } from '../services/progressionApi'
 import { toastError, toastSuccess } from '../services/toast'
 import { reloadMe, useAuthStore } from '../stores/authStore'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 
 const loading = ref(true)
@@ -47,9 +49,9 @@ const createdAtText = computed(() => {
 
 const nationRoleText = computed(() => {
   switch (String(myNation.value?.viewer_role || '').toLowerCase()) {
-    case 'leader': return 'Лидер'
-    case 'officer': return 'Офицер'
-    case 'member': return 'Участник'
+    case 'leader': return t('profile.roleLeader')
+    case 'officer': return t('profile.roleOfficer')
+    case 'member': return t('profile.roleMember')
     default: return null
   }
 })
@@ -58,24 +60,24 @@ const canManageNation = computed(() => Boolean(myNation.value?.viewer_can_manage
 
 const checkpoints = computed(() => [
   {
-    label: 'Почта',
+    label: t('profile.checkEmail'),
     done: auth.emailVerified.value,
-    value: auth.emailVerified.value ? 'Подтверждена' : 'Не подтверждена',
+    value: auth.emailVerified.value ? t('profile.emailVerified') : t('profile.emailNotVerified'),
   },
   {
-    label: 'Ник',
+    label: t('profile.checkNick'),
     done: Boolean(auth.state.playerAccount?.minecraft_nickname),
-    value: auth.state.playerAccount?.minecraft_nickname || 'Не указан',
+    value: auth.state.playerAccount?.minecraft_nickname || t('profile.noNickname'),
   },
   {
-    label: 'Профиль',
+    label: t('profile.checkProfile'),
     done: Boolean(publicProfile.value?.slug),
-    value: publicProfile.value?.slug ? `@${publicProfile.value.slug}` : 'Не заполнен',
+    value: publicProfile.value?.slug ? `@${publicProfile.value.slug}` : t('profile.profileNotFilled'),
   },
   {
-    label: 'Государство',
+    label: t('profile.checkNation'),
     done: Boolean(myNation.value?.slug),
-    value: myNation.value?.title || 'Не выбрано',
+    value: myNation.value?.title || t('profile.nationNotSelected'),
   },
 ])
 
@@ -122,7 +124,7 @@ async function loadData() {
     myNation.value = nationPayload || null
     progression.value = progressionPayload || null
   } catch (e) {
-    toastError(e.message || 'Не удалось загрузить кабинет.')
+    toastError(e.message || t('profile.loadError'))
   } finally {
     loading.value = false
   }
@@ -133,9 +135,9 @@ async function sendVerificationAgain() {
   sendingVerification.value = true
   try {
     await resendVerification({ email: auth.state.user.email })
-    toastSuccess('Письмо отправлено.')
+    toastSuccess(t('profile.verificationSent'))
   } catch (e) {
-    toastError(e?.message || 'Не удалось отправить письмо.')
+    toastError(e?.message || t('profile.verificationError'))
   } finally {
     sendingVerification.value = false
   }
@@ -145,9 +147,9 @@ async function copyLink() {
   if (!publicProfileUrl.value || typeof window === 'undefined') return
   try {
     await navigator.clipboard.writeText(`${window.location.origin}${publicProfileUrl.value}`)
-    toastSuccess('Ссылка скопирована.')
+    toastSuccess(t('profile.linkCopied'))
   } catch {
-    toastError('Не удалось скопировать ссылку.')
+    toastError(t('profile.linkCopyError'))
   }
 }
 
@@ -187,26 +189,26 @@ onMounted(loadData)
 
           <div class="hidden shrink-0 gap-2 sm:flex">
             <button v-if="publicProfileUrl" type="button" class="btn btn-outline !py-1.5 !text-xs" @click="copyLink">
-              Скопировать ссылку
+              {{ t('profile.copyLink') }}
             </button>
             <RouterLink to="/profile/public" class="btn btn-primary !py-1.5 !text-xs">
-              Оформление
+              {{ t('profile.appearance') }}
             </RouterLink>
           </div>
         </div>
 
         <div class="mt-3 flex gap-2 sm:hidden">
           <button v-if="publicProfileUrl" type="button" class="btn btn-outline flex-1 !py-1.5 !text-xs" @click="copyLink">
-            Скопировать ссылку
+            {{ t('profile.copyLink') }}
           </button>
           <RouterLink to="/profile/public" class="btn btn-primary !py-1.5 !text-xs" :class="publicProfileUrl ? 'flex-1' : 'w-full'">
-            Оформление
+            {{ t('profile.appearance') }}
           </RouterLink>
         </div>
 
         <div class="mt-3">
           <div class="mb-1 flex items-center justify-between">
-            <span class="text-xs text-slate-500">Готовность профиля</span>
+            <span class="text-xs text-slate-500">{{ t('profile.readiness') }}</span>
             <span class="text-xs font-semibold text-slate-400">{{ readinessPercent }}%</span>
           </div>
           <div style="background: rgba(255,255,255,0.07); height: 5px; border-radius: 999px; overflow: hidden;">
@@ -238,11 +240,11 @@ onMounted(loadData)
           <section class="surface-card p-4 md:p-5">
             <div class="flex items-center justify-between gap-2">
               <div>
-                <div class="section-kicker !mb-1">Прогрессия</div>
-                <h2 class="text-base font-black tracking-tight text-slate-50">Эпохи</h2>
+                <div class="section-kicker !mb-1">{{ t('profile.progressionKicker') }}</div>
+                <h2 class="text-base font-black tracking-tight text-slate-50">{{ t('profile.progressionTitle') }}</h2>
               </div>
               <RouterLink to="/leaderboard" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">
-                Рейтинг →
+                {{ t('profile.leaderboard') }}
               </RouterLink>
             </div>
 
@@ -266,13 +268,13 @@ onMounted(loadData)
             </div>
 
             <p v-if="!progression" class="mt-3 text-center text-xs text-slate-500">
-              Появится после первого захода на сервер
+              {{ t('profile.noProgression') }}
             </p>
           </section>
 
           <section class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-1">Аккаунт</div>
-            <h2 class="text-base font-black tracking-tight text-slate-50">Чеклист</h2>
+            <div class="section-kicker !mb-1">{{ t('profile.checklistKicker') }}</div>
+            <h2 class="text-base font-black tracking-tight text-slate-50">{{ t('profile.checklistTitle') }}</h2>
 
             <div class="mt-3 grid grid-cols-2 gap-2">
               <div
@@ -300,7 +302,7 @@ onMounted(loadData)
               @click="sendVerificationAgain"
             >
               <span v-if="sendingVerification" class="spinner"></span>
-              {{ sendingVerification ? 'Отправляем...' : 'Отправить письмо повторно' }}
+              {{ sendingVerification ? t('profile.resending') : t('profile.resendVerification') }}
             </button>
           </section>
         </div>
@@ -309,16 +311,16 @@ onMounted(loadData)
         <div class="space-y-4">
 
           <section class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-1">Данные</div>
-            <h2 class="text-base font-black tracking-tight text-slate-50">Основная информация</h2>
+            <div class="section-kicker !mb-1">{{ t('profile.dataKicker') }}</div>
+            <h2 class="text-base font-black tracking-tight text-slate-50">{{ t('profile.dataTitle') }}</h2>
 
             <div class="mt-3 space-y-1.5">
               <div class="flex items-center justify-between rounded-xl bg-slate-800/40 px-3 py-2.5">
-                <span class="text-xs text-slate-400">Логин</span>
+                <span class="text-xs text-slate-400">{{ t('profile.loginLabel') }}</span>
                 <span class="text-xs font-semibold text-slate-100">{{ auth.state.user?.site_login || '—' }}</span>
               </div>
               <div class="flex items-center justify-between rounded-xl bg-slate-800/40 px-3 py-2.5">
-                <span class="shrink-0 text-xs text-slate-400">Email</span>
+                <span class="shrink-0 text-xs text-slate-400">{{ t('profile.emailLabel') }}</span>
                 <span
                   class="ml-4 max-w-[120px] truncate text-right text-xs font-semibold text-slate-100 sm:max-w-[180px]"
                   :title="auth.state.user?.email"
@@ -327,75 +329,75 @@ onMounted(loadData)
                 </span>
               </div>
               <div class="flex items-center justify-between rounded-xl bg-slate-800/40 px-3 py-2.5">
-                <span class="text-xs text-slate-400">Ник в игре</span>
+                <span class="text-xs text-slate-400">{{ t('profile.nicknameLabel') }}</span>
                 <span class="text-xs font-semibold text-slate-100">
-                  {{ auth.state.playerAccount?.minecraft_nickname || 'Не указан' }}
+                  {{ auth.state.playerAccount?.minecraft_nickname || t('profile.noNickname') }}
                 </span>
               </div>
             </div>
           </section>
 
           <section class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-1">Государство</div>
+            <div class="section-kicker !mb-1">{{ t('profile.nationKicker') }}</div>
             <h2 class="text-base font-black tracking-tight text-slate-50">
-              {{ myNation ? myNation.title : 'Не выбрано' }}
+              {{ myNation ? myNation.title : t('profile.noNation') }}
             </h2>
 
             <div v-if="myNation" class="mt-3">
               <p class="text-xs text-slate-400">
-                [{{ myNation.tag }}] · {{ myNation.short_description || 'Описание не добавлено' }}
+                [{{ myNation.tag }}] · {{ myNation.short_description || t('profile.nationNoDesc') }}
               </p>
               <div class="mt-3 flex gap-2">
                 <RouterLink
                   :to="canManageNation ? '/nation/studio' : `/nation/${myNation.slug}`"
                   class="btn btn-primary flex-1 !py-1.5 !text-xs"
                 >
-                  {{ canManageNation ? 'Управление' : 'Страница' }}
+                  {{ canManageNation ? t('profile.manage') : t('profile.openPage') }}
                 </RouterLink>
                 <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-outline flex-1 !py-1.5 !text-xs">
-                  Открыть
+                  {{ t('profile.openNation') }}
                 </RouterLink>
               </div>
             </div>
             <div v-else class="mt-3">
               <p class="text-xs text-slate-400">
-                Вступи в существующее государство или создай своё сообщество.
+                {{ t('profile.noNationDesc') }}
               </p>
               <div class="mt-3 flex gap-2">
-                <RouterLink to="/nations" class="btn btn-outline flex-1 !py-1.5 !text-xs">Список</RouterLink>
-                <RouterLink to="/nation/studio" class="btn btn-primary flex-1 !py-1.5 !text-xs">Создать</RouterLink>
+                <RouterLink to="/nations" class="btn btn-outline flex-1 !py-1.5 !text-xs">{{ t('profile.nationsList') }}</RouterLink>
+                <RouterLink to="/nation/studio" class="btn btn-primary flex-1 !py-1.5 !text-xs">{{ t('profile.createNation') }}</RouterLink>
               </div>
             </div>
           </section>
 
           <section class="surface-card p-4 md:p-5">
-            <div class="section-kicker !mb-1">Разделы</div>
-            <h2 class="text-base font-black tracking-tight text-slate-50">Быстрые переходы</h2>
+            <div class="section-kicker !mb-1">{{ t('profile.sectionsKicker') }}</div>
+            <h2 class="text-base font-black tracking-tight text-slate-50">{{ t('profile.sectionsTitle') }}</h2>
 
             <div class="mt-3 grid grid-cols-2 gap-2">
               <RouterLink
                 to="/profile/public"
                 class="action-card !p-3 text-center transition hover:-translate-y-[1px]"
               >
-                <p class="text-xs font-semibold text-slate-100">Оформление</p>
+                <p class="text-xs font-semibold text-slate-100">{{ t('profile.sectionAppearance') }}</p>
               </RouterLink>
               <RouterLink
                 to="/profile/referrals"
                 class="action-card !p-3 text-center transition hover:-translate-y-[1px]"
               >
-                <p class="text-xs font-semibold text-slate-100">Рефералы</p>
+                <p class="text-xs font-semibold text-slate-100">{{ t('profile.sectionReferrals') }}</p>
               </RouterLink>
               <RouterLink
                 to="/profile/social"
                 class="action-card !p-3 text-center transition hover:-translate-y-[1px]"
               >
-                <p class="text-xs font-semibold text-slate-100">Друзья</p>
+                <p class="text-xs font-semibold text-slate-100">{{ t('profile.sectionFriends') }}</p>
               </RouterLink>
               <RouterLink
                 to="/leaderboard"
                 class="action-card !p-3 text-center transition hover:-translate-y-[1px]"
               >
-                <p class="text-xs font-semibold text-slate-100">Рейтинг</p>
+                <p class="text-xs font-semibold text-slate-100">{{ t('profile.sectionLeaderboard') }}</p>
               </RouterLink>
             </div>
           </section>

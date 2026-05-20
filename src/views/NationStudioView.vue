@@ -1,6 +1,7 @@
 <script setup>
 import {computed, onMounted, reactive, ref, watch} from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { siteConfig } from '../config.site.js'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import NationMediaSlotCard from '../features/nations/components/NationMediaSlotCard.vue'
@@ -30,6 +31,7 @@ import { depositNationTreasury, getNationTopDonors, getNationTreasuryTransaction
 import { useAuthStore } from '../stores/authStore'
 import { formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const MIN_CREATE_NATION_BALANCE = 300_000
 
@@ -124,26 +126,26 @@ const capitalMapUrl = computed(() => {
 function formatAllianceType(value) {
   switch (String(value || '').toLowerCase()) {
     case 'nato':
-      return 'Военный блок'
+      return t('allianceHub.typeNato') || 'Военный блок'
     case 'economic':
-      return 'Экономический союз'
+      return t('allianceHub.typeEconomic') || 'Экономический союз'
     case 'un':
-      return 'Политический союз'
+      return t('allianceHub.typeUn') || 'Политический союз'
     default:
-      return 'Альянс'
+      return t('allianceHub.typeDefault') || 'Альянс'
   }
 }
 
 
 function txLabel(item) {
   const type = String(item?.transaction_type || '').toLowerCase()
-  if (type === 'player_donation') return `Донат игрока ${item?.metadata_json?.minecraft_nickname || ''}`.trim()
-  if (type === 'deposit') return 'Пополнение'
-  if (type === 'withdraw') return 'Списание'
-  if (type === 'alliance_transfer_out') return 'Перевод союзнику'
-  if (type === 'alliance_transfer_in') return 'Перевод от союзника'
-  if (type === 'alliance_fee_income') return 'Комиссия альянса'
-  return item?.transaction_type || 'Операция'
+  if (type === 'player_donation') return `${t('nationStudio.txPlayerDonation')} ${item?.metadata_json?.minecraft_nickname || ''}`.trim()
+  if (type === 'deposit') return t('nationStudio.txDeposit')
+  if (type === 'withdraw') return t('nationStudio.txWithdraw')
+  if (type === 'alliance_transfer_out') return t('nationStudio.txAllianceOut')
+  if (type === 'alliance_transfer_in') return t('nationStudio.txAllianceIn')
+  if (type === 'alliance_fee_income') return t('nationStudio.txAllianceFee')
+  return item?.transaction_type || t('nationStudio.txOperation')
 }
 
 function hydrateForms(payload) {
@@ -174,7 +176,7 @@ async function loadNation() {
     if (String(err?.message || '').toLowerCase().includes('not found')) {
       error.value = ''
     } else {
-      error.value = err.message || 'Не удалось загрузить государство.'
+      error.value = err.message || t('nationStudio.loadError')
     }
   } finally {
     loading.value = false
@@ -244,10 +246,10 @@ async function submitDeposit() {
       amount: treasuryForm.deposit_amount,
       comment: treasuryForm.deposit_comment || null,
     })
-    success.value = 'Казна государства пополнена.'
+    success.value = t('nationStudio.depositSuccess')
     await refreshTreasuryBlocks()
   } catch (err) {
-    error.value = err.message || 'Не удалось пополнить казну.'
+    error.value = err.message || t('nationStudio.depositError')
   } finally {
     saving.value = false
   }
@@ -263,10 +265,10 @@ async function submitWithdraw() {
       amount: treasuryForm.withdraw_amount,
       comment: treasuryForm.withdraw_comment || null,
     })
-    success.value = 'Списание из казны выполнено.'
+    success.value = t('nationStudio.withdrawSuccess')
     await refreshTreasuryBlocks()
   } catch (err) {
-    error.value = err.message || 'Не удалось списать из казны.'
+    error.value = err.message || t('nationStudio.withdrawError')
   } finally {
     saving.value = false
   }
@@ -290,10 +292,10 @@ async function submitCreate() {
     })
 
     hydrateForms(payload)
-    success.value = 'Государство создано.'
+    success.value = t('nationStudio.created')
     await Promise.all([loadActivity(), loadTreasury(), loadDonors()])
   } catch (err) {
-    error.value = err.message || 'Не удалось создать государство.'
+    error.value = err.message || t('nationStudio.createError')
   } finally {
     saving.value = false
   }
@@ -317,10 +319,10 @@ async function submitUpdate() {
     })
 
     hydrateForms(payload)
-    success.value = 'Изменения сохранены.'
+    success.value = t('nationStudio.saved')
     await Promise.all([loadActivity(), loadTreasury(), loadDonors()])
   } catch (err) {
-    error.value = err.message || 'Не удалось сохранить изменения.'
+    error.value = err.message || t('nationStudio.saveError')
   } finally {
     saving.value = false
   }
@@ -347,10 +349,10 @@ async function uploadSelected(slot) {
 
     selectedFiles[slot] = null
     if (payload) hydrateForms(payload)
-    success.value = 'Изображение обновлено.'
+    success.value = t('nationStudio.imageUpdated')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось загрузить изображение.'
+    error.value = err.message || t('nationStudio.imageUploadError')
   } finally {
     uploadState[slot] = false
   }
@@ -370,10 +372,10 @@ async function removeAsset(slot) {
 
     selectedFiles[slot] = null
     if (payload) hydrateForms(payload)
-    success.value = 'Изображение удалено.'
+    success.value = t('nationStudio.imageDeleted')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось удалить изображение.'
+    error.value = err.message || t('nationStudio.imageDeleteError')
   } finally {
     uploadState[slot] = false
   }
@@ -387,10 +389,10 @@ async function promoteToOfficer(userId) {
   try {
     const payload = await updateNationMemberRole(auth.accessToken, nation.value.slug, userId, 'officer')
     hydrateForms(payload)
-    success.value = 'Роль обновлена.'
+    success.value = t('nationStudio.roleUpdated')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось обновить роль.'
+    error.value = err.message || t('nationStudio.roleUpdateError')
   } finally {
     actionLoading.value = false
   }
@@ -404,17 +406,17 @@ async function demoteToMember(userId) {
   try {
     const payload = await updateNationMemberRole(auth.accessToken, nation.value.slug, userId, 'member')
     hydrateForms(payload)
-    success.value = 'Роль обновлена.'
+    success.value = t('nationStudio.roleUpdated')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось обновить роль.'
+    error.value = err.message || t('nationStudio.roleUpdateError')
   } finally {
     actionLoading.value = false
   }
 }
 
 async function kickMember(userId) {
-  const confirmed = window.confirm('Исключить участника из государства?')
+  const confirmed = window.confirm(t('nationStudio.kickConfirm'))
   if (!confirmed) return
 
   actionLoading.value = true
@@ -424,10 +426,10 @@ async function kickMember(userId) {
   try {
     const payload = await removeNationMember(auth.accessToken, nation.value.slug, userId)
     hydrateForms(payload)
-    success.value = 'Участник исключён.'
+    success.value = t('nationStudio.kicked')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось исключить участника.'
+    error.value = err.message || t('nationStudio.kickError')
   } finally {
     actionLoading.value = false
   }
@@ -470,11 +472,11 @@ async function savePrefix(userId) {
     const value = editingPrefixValue.value.trim() || null
     const payload = await updateNationMemberPrefix(auth.accessToken, nation.value.slug, userId, value)
     hydrateForms(payload)
-    success.value = 'Звание обновлено.'
+    success.value = t('nationStudio.prefixUpdated')
     editingPrefixUserId.value = null
     editingPrefixValue.value = ''
   } catch (err) {
-    error.value = err.message || 'Не удалось обновить звание.'
+    error.value = err.message || t('nationStudio.prefixUpdateError')
   } finally {
     actionLoading.value = false
   }
@@ -488,10 +490,10 @@ async function approveRequest(requestId) {
   try {
     const payload = await approveNationRequest(auth.accessToken, nation.value.slug, requestId)
     hydrateForms(payload)
-    success.value = 'Заявка одобрена.'
+    success.value = t('nationStudio.requestApproved')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось одобрить заявку.'
+    error.value = err.message || t('nationStudio.requestApproveError')
   } finally {
     actionLoading.value = false
   }
@@ -505,17 +507,17 @@ async function rejectRequest(requestId) {
   try {
     const payload = await rejectNationRequest(auth.accessToken, nation.value.slug, requestId)
     hydrateForms(payload)
-    success.value = 'Заявка отклонена.'
+    success.value = t('nationStudio.requestRejected')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось отклонить заявку.'
+    error.value = err.message || t('nationStudio.requestRejectError')
   } finally {
     actionLoading.value = false
   }
 }
 
 async function passLeadership(userId) {
-  const confirmed = window.confirm('Передать лидерство этому участнику?')
+  const confirmed = window.confirm(t('nationStudio.transferLeadershipConfirm'))
   if (!confirmed) return
 
   actionLoading.value = true
@@ -525,17 +527,17 @@ async function passLeadership(userId) {
   try {
     const payload = await transferNationLeadership(auth.accessToken, nation.value.slug, userId)
     hydrateForms(payload)
-    success.value = 'Лидерство передано.'
+    success.value = t('nationStudio.leadershipTransferred')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось передать лидерство.'
+    error.value = err.message || t('nationStudio.leadershipTransferError')
   } finally {
     actionLoading.value = false
   }
 }
 
 async function handleLeaveNation() {
-  const confirmed = window.confirm('Покинуть государство?')
+  const confirmed = window.confirm(t('nationStudio.leaveConfirm'))
   if (!confirmed) return
 
   actionLoading.value = true
@@ -545,20 +547,20 @@ async function handleLeaveNation() {
   try {
     await leaveMyNation(auth.accessToken)
     nation.value = null
-    success.value = 'Ты покинул государство.'
+    success.value = t('nationStudio.left')
     activity.value = []
     transactions.value = []
     donors.value = []
   } catch (err) {
-    error.value = err.message || 'Не удалось покинуть государство.'
+    error.value = err.message || t('nationStudio.leaveError')
   } finally {
     actionLoading.value = false
   }
 }
 
 async function handleDisbandNation() {
-  const name = nation.value?.title || 'государство'
-  const confirmed = window.confirm(`Расформировать государство «${name}»? Это действие необратимо — все участники будут исключены, история и казна удалены.`)
+  const name = nation.value?.title || t('nationStudio.defaultNationName')
+  const confirmed = window.confirm(t('nationStudio.disbandConfirm', { name }))
   if (!confirmed) return
 
   actionLoading.value = true
@@ -568,12 +570,12 @@ async function handleDisbandNation() {
   try {
     await disbandMyNation(auth.accessToken)
     nation.value = null
-    success.value = 'Государство расформировано.'
+    success.value = t('nationStudio.disbanded')
     activity.value = []
     transactions.value = []
     donors.value = []
   } catch (err) {
-    error.value = err.message || 'Не удалось расформировать государство.'
+    error.value = err.message || t('nationStudio.disbandError')
   } finally {
     actionLoading.value = false
   }
@@ -592,12 +594,12 @@ watch(success, (value) => { if (value) toastSuccess(value) })
     <div class="container-shell space-y-5">
       <section class="surface-card p-5 md:p-7">
         <div class="max-w-3xl">
-          <div class="section-kicker !mb-2">Студия государства</div>
+          <div class="section-kicker !mb-2">{{ isEditMode ? t('nationStudio.editKicker') : t('nationStudio.createKicker') }}</div>
           <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">
-            {{ isEditMode ? 'Управление государством' : 'Создание государства' }}
+            {{ isEditMode ? t('nationStudio.editTitle') : t('nationStudio.createTitle') }}
           </h1>
           <p class="mt-4 text-sm leading-7 text-slate-400 md:text-[15px]">
-            Здесь собраны оформление, участники, заявки и теперь ещё привязка к альянсу.
+            {{ t('nationStudio.headerDesc') }}
           </p>
         </div>
       </section>
@@ -614,48 +616,47 @@ watch(success, (value) => { if (value) toastSuccess(value) })
       <div v-else-if="!isEditMode" class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
         <aside class="space-y-5">
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Что будет дальше</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Новое государство</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.nextStepsKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.createTitle') }}</h2>
             <p class="mt-3 text-sm leading-7 text-slate-400">
-              После создания ты сможешь оформить страницу, принимать участников, смотреть журнал событий и позже подключать альянс.
+              {{ t('nationStudio.nextStepsDesc') }}
             </p>
           </section>
         </aside>
 
         <section class="surface-card p-5 md:p-6">
-          <div class="section-kicker !mb-2">Создание</div>
-          <h2 class="text-xl font-black text-slate-50 md:text-2xl">Основные данные</h2>
+          <div class="section-kicker !mb-2">{{ t('nationStudio.createKicker') }}</div>
+          <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.mainDataTitle') }}</h2>
 
           <div class="mt-5 rounded-[20px] border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-sm leading-6 text-amber-100">
-            Для создания государства нужен баланс игрока минимум {{ formatNumber(MIN_CREATE_NATION_BALANCE) }}.
-            Если баланс ещё не синхронизирован с игрового сервера, backend отклонит создание.
+            {{ t('nationStudio.balanceWarning', { amount: formatNumber(MIN_CREATE_NATION_BALANCE) }) }}
           </div>
 
           <div class="mt-5 grid gap-4">
-            <input v-model="createForm.title" class="input rounded-2xl" placeholder="Название" />
-            <input v-model="createForm.slug" class="input rounded-2xl" placeholder="Адрес страницы" />
-            <input v-model="createForm.tag" class="input rounded-2xl" placeholder="Тег" />
-            <input v-model="createForm.short_description" class="input rounded-2xl" placeholder="Короткое описание" />
-            <textarea v-model="createForm.description" class="textarea rounded-2xl" rows="6" placeholder="Подробное описание"></textarea>
+            <input v-model="createForm.title" class="input rounded-2xl" :placeholder="t('nationStudio.titleLabel')" />
+            <input v-model="createForm.slug" class="input rounded-2xl" :placeholder="t('nationStudio.slugLabel')" />
+            <input v-model="createForm.tag" class="input rounded-2xl" :placeholder="t('nationStudio.tagLabel')" />
+            <input v-model="createForm.short_description" class="input rounded-2xl" :placeholder="t('nationStudio.shortDescLabel')" />
+            <textarea v-model="createForm.description" class="textarea rounded-2xl" rows="6" :placeholder="t('nationStudio.descLabel')"></textarea>
             <input v-model="createForm.accent_color" type="color" class="h-14 w-24 cursor-pointer rounded-2xl border border-white/10 bg-transparent p-1" />
 
             <select v-model="createForm.recruitment_policy" class="select rounded-2xl">
-              <option value="open">Свободное вступление</option>
-              <option value="request">По заявке</option>
-              <option value="invite_only">Только по приглашению</option>
+              <option value="open">{{ t('nationStudio.recruitOpen') }}</option>
+              <option value="request">{{ t('nationStudio.recruitRequest') }}</option>
+              <option value="invite_only">{{ t('nationStudio.recruitInvite') }}</option>
             </select>
 
             <label class="panel-card flex items-center justify-between gap-4 p-4">
               <div>
-                <p class="font-semibold text-slate-100">Публичная страница</p>
-                <p class="mt-1 text-sm leading-6 text-slate-400">Разрешить видеть государство другим игрокам.</p>
+                <p class="font-semibold text-slate-100">{{ t('nationStudio.isPublicLabel') }}</p>
+                <p class="mt-1 text-sm leading-6 text-slate-400">{{ t('nationStudio.isPublicDesc') }}</p>
               </div>
               <input v-model="createForm.is_public" type="checkbox" class="toggle" />
             </label>
 
             <button type="button" class="btn btn-primary" :disabled="saving" @click="submitCreate">
               <span v-if="saving" class="spinner"></span>
-              <span v-else>Создать государство</span>
+              <span v-else>{{ t('nationStudio.submitCreate') }}</span>
             </button>
           </div>
         </section>
@@ -664,58 +665,58 @@ watch(success, (value) => { if (value) toastSuccess(value) })
       <div v-else-if="isReadOnlyMember" class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
         <aside class="space-y-5">
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Твоя роль</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Режим участника</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.yourRoleKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.memberModeTitle') }}</h2>
             <p class="mt-3 text-sm leading-7 text-slate-400">
-              Ты состоишь в государстве, но управляющие действия скрыты. Здесь остаётся только полезный обзор и быстрый переход на публичную страницу.
+              {{ t('nationStudio.memberModeDesc') }}
             </p>
 
             <div class="mt-5 grid gap-3">
               <div class="action-card">
-                <p class="metric-label">Государство</p>
+                <p class="metric-label">{{ t('nationStudio.nationLabel') }}</p>
                 <p class="mt-2 text-sm font-semibold text-slate-100">{{ nation.title }}</p>
-                <p class="mt-2 text-sm leading-6 text-slate-400">[{{ nation.tag }}] · {{ nation.short_description || 'Описание пока не добавлено.' }}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">[{{ nation.tag }}] · {{ nation.short_description || t('nationStudio.noDescYet') }}</p>
               </div>
               <div class="action-card">
-                <p class="metric-label">Роль</p>
+                <p class="metric-label">{{ t('nationStudio.roleLabel') }}</p>
                 <p class="mt-2 text-sm font-semibold text-slate-100">{{ formatRoleLabel(viewerRole) }}</p>
               </div>
             </div>
 
             <div class="mt-5 grid gap-3 sm:grid-cols-2">
-              <RouterLink :to="publicNationUrl" class="btn btn-primary">Открыть страницу</RouterLink>
+              <RouterLink :to="publicNationUrl" class="btn btn-primary">{{ t('nationStudio.publicPage') }}</RouterLink>
               <button type="button" class="btn btn-outline" :disabled="actionLoading" @click="handleLeaveNation">
-                Покинуть государство
+                {{ t('nationStudio.leaveBtn') }}
               </button>
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Альянс</div>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.allianceKicker') }}</div>
             <h2 class="text-xl font-black text-slate-50 md:text-2xl">
-              {{ allianceSummary ? allianceSummary.title : 'Надгосударственный блок' }}
+              {{ allianceSummary ? allianceSummary.title : t('nationStudio.allianceDefaultTitle') }}
             </h2>
 
             <div v-if="!allianceSummary" class="action-card mt-5 text-sm text-slate-400">
-              Государство пока не состоит в альянсе.
+              {{ t('nationStudio.noAlliance') }}
             </div>
 
             <div v-else class="mt-5 space-y-3">
               <div class="action-card">
                 <p class="font-semibold text-slate-100">[{{ allianceSummary.tag }}] · {{ formatAllianceType(allianceSummary.alliance_type) }}</p>
                 <p class="mt-2 text-sm leading-6 text-slate-400">
-                  {{ allianceSummary.description || 'Описание альянса пока не добавлено.' }}
+                  {{ allianceSummary.description || t('nationStudio.noAllianceDesc') }}
                 </p>
               </div>
-              <RouterLink to="/alliances" class="btn btn-outline">Открыть центр альянсов</RouterLink>
+              <RouterLink to="/alliances" class="btn btn-outline">{{ t('nationStudio.openAllianceCenter') }}</RouterLink>
             </div>
           </section>
         </aside>
 
         <div class="space-y-5">
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Состав</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Участники государства</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.membersKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.membersTitle') }}</h2>
 
             <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <div v-for="member in nation.members" :key="member.user_id" class="action-card">
@@ -729,16 +730,16 @@ watch(success, (value) => { if (value) toastSuccess(value) })
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">История</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Последние события</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.historyKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.historyTitle') }}</h2>
             <div class="mt-5">
               <NationActivityFeed :items="activity" :loading="activityLoading" />
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Казна</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Последние операции</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.treasuryKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.recentOpsTitle') }}</h2>
 
             <div v-if="treasuryLoading" class="mt-5 space-y-3">
               <div class="skeleton h-16 rounded-[22px]"></div>
@@ -746,7 +747,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
             </div>
 
             <div v-else-if="!transactions.length" class="action-card mt-5 text-sm text-slate-400">
-              Операций пока нет.
+              {{ t('nationStudio.noOps') }}
             </div>
 
             <div v-else class="mt-5 space-y-3">
@@ -755,7 +756,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                   <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
                   <span class="footer-chip">{{ formatNumber(item.net_amount) }}</span>
                 </div>
-                <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария.' }}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || t('nationStudio.noComment') }}</p>
               </div>
             </div>
           </section>
@@ -764,65 +765,65 @@ watch(success, (value) => { if (value) toastSuccess(value) })
 
       <div v-else class="grid gap-5 xl:grid-cols-[minmax(0,430px)_minmax(0,1fr)]">
         <div v-if="viewerRole === 'leader' && !nation.capital_world" class="xl:col-span-2 rounded-[20px] border border-violet-500/30 bg-violet-500/10 px-5 py-4 text-sm leading-7 text-violet-100">
-          <p class="font-bold text-violet-200">Столица государства не установлена</p>
+          <p class="font-bold text-violet-200">{{ t('nationStudio.capitalNotSet') }}</p>
           <p class="mt-1 text-slate-300">
-            Зайди в игру и введи команду
+            {{ t('nationStudio.capitalHint') }}
             <span class="relative inline-block">
               <code
                 class="cursor-pointer select-none rounded bg-black/40 px-1.5 py-0.5 font-mono text-violet-300 transition-colors hover:bg-black/60 hover:text-violet-200"
-                title="Нажми, чтобы скопировать"
+                :title="t('nationStudio.copyTooltip')"
                 @click="copyCommand('/nsetcapital')"
               >/nsetcapital</code>
               <span
                 v-if="copiedCommand"
                 class="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 rounded-md bg-slate-800 px-2 py-1 text-xs text-slate-200 shadow-lg"
-              >Скопировано</span>
+              >{{ t('nationStudio.copied') }}</span>
             </span>
-            стоя в нужном месте.
-            После установки столицы казна государства получит <strong>50&thinsp;000</strong>.
+            {{ t('nationStudio.capitalHint2') }}
+            {{ t('nationStudio.capitalBonus') }}
           </p>
         </div>
 
         <aside class="space-y-5">
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Превью</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Публичная страница</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.previewKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.publicPage') }}</h2>
 
             <div class="mt-5">
               <NationStudioPreview :nation="nation" />
             </div>
 
             <div class="mt-5 flex flex-wrap gap-3">
-              <RouterLink :to="publicNationUrl" class="btn btn-primary">Открыть страницу</RouterLink>
+              <RouterLink :to="publicNationUrl" class="btn btn-primary">{{ t('nationStudio.openPage') }}</RouterLink>
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Альянс</div>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.allianceKicker') }}</div>
             <h2 class="text-xl font-black text-slate-50 md:text-2xl">
-              {{ allianceSummary ? allianceSummary.title : 'Надгосударственный блок' }}
+              {{ allianceSummary ? allianceSummary.title : t('nationStudio.allianceDefaultTitle') }}
             </h2>
 
             <div v-if="!allianceSummary" class="action-card mt-5 text-sm text-slate-400">
-              Государство пока не состоит в альянсе. Создание, вступление, голосования и внутренние переводы доступны в отдельном центре.
+              {{ t('nationStudio.noAllianceFull') }}
             </div>
 
             <div v-else class="mt-5 space-y-4">
               <div class="action-card">
                 <p class="font-semibold text-slate-100">[{{ allianceSummary.tag }}] · {{ formatAllianceType(allianceSummary.alliance_type) }}</p>
                 <p class="mt-2 text-sm leading-6 text-slate-400">
-                  {{ allianceSummary.description || 'Описание альянса пока не добавлено.' }}
+                  {{ allianceSummary.description || t('nationStudio.noAllianceDesc') }}
                 </p>
               </div>
 
               <div class="grid gap-3 sm:grid-cols-2">
                 <div class="metric-card text-center">
                   <p class="metric-value !text-[1.12rem]">{{ allianceSummary.members_count }}</p>
-                  <p class="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Государств</p>
+                  <p class="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{{ t('nationStudio.nationsLabel') }}</p>
                 </div>
                 <div class="metric-card text-center">
                   <p class="metric-value !text-[1.12rem]">{{ allianceSummary.transfer_fee_percent }}%</p>
-                  <p class="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Комиссия</p>
+                  <p class="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{{ t('nationStudio.feeLabel') }}</p>
                 </div>
               </div>
 
@@ -835,55 +836,55 @@ watch(success, (value) => { if (value) toastSuccess(value) })
             </div>
 
             <RouterLink to="/alliances" class="btn btn-primary mt-5">
-              Открыть центр альянсов
+              {{ t('nationStudio.openAllianceCenter') }}
             </RouterLink>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Оформление</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Изображения</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.mediaKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.mediaTitle') }}</h2>
 
             <div class="mt-5 space-y-4">
               <NationMediaSlotCard
-                title="Иконка"
-                subtitle="Главное изображение государства."
+                :title="t('nationStudio.iconTitle')"
+                :subtitle="t('nationStudio.iconSubtitle')"
                 slot-name="icon"
                 variant="icon"
                 :preview-url="assetUrls.icon"
                 :selected-file-name="selectedFiles.icon?.name || ''"
                 :uploading="uploadState.icon"
                 :has-asset="Boolean(assetUrls.icon)"
-                recommendation="PNG/JPEG/WEBP. Минимум 256×256 px, рекомендуется 512×512 px."
+                :recommendation="t('nationStudio.iconRec')"
                 @select-file="onFileSelected('icon', $event)"
                 @upload="uploadSelected('icon')"
                 @remove="removeAsset('icon')"
               />
 
               <NationMediaSlotCard
-                title="Баннер"
-                subtitle="Верхняя обложка страницы."
+                :title="t('nationStudio.bannerTitle')"
+                :subtitle="t('nationStudio.bannerSubtitle')"
                 slot-name="banner"
                 variant="banner"
                 :preview-url="assetUrls.banner"
                 :selected-file-name="selectedFiles.banner?.name || ''"
                 :uploading="uploadState.banner"
                 :has-asset="Boolean(assetUrls.banner)"
-                recommendation="PNG/JPEG/WEBP. Минимум 1280×320 px, рекомендуется 1600×400 px."
+                :recommendation="t('nationStudio.bannerRec')"
                 @select-file="onFileSelected('banner', $event)"
                 @upload="uploadSelected('banner')"
                 @remove="removeAsset('banner')"
               />
 
               <NationMediaSlotCard
-                title="Фон"
-                subtitle="Фон всей страницы."
+                :title="t('nationStudio.backgroundTitle')"
+                :subtitle="t('nationStudio.backgroundSubtitle')"
                 slot-name="background"
                 variant="background"
                 :preview-url="assetUrls.background"
                 :selected-file-name="selectedFiles.background?.name || ''"
                 :uploading="uploadState.background"
                 :has-asset="Boolean(assetUrls.background)"
-                recommendation="PNG/JPEG/WEBP. Минимум 1600×900 px, рекомендуется 1920×1080 px."
+                :recommendation="t('nationStudio.backgroundRec')"
                 @select-file="onFileSelected('background', $event)"
                 @upload="uploadSelected('background')"
                 @remove="removeAsset('background')"
@@ -892,10 +893,10 @@ watch(success, (value) => { if (value) toastSuccess(value) })
           </section>
 
           <section v-if="capitalMapUrl" class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Столица</div>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.capitalKicker') }}</div>
             <div class="flex items-center justify-between gap-3">
-              <h2 class="text-xl font-black text-slate-50">Карта мира</h2>
-              <a :href="capitalMapUrl" target="_blank" rel="noreferrer" class="text-sm text-violet-400 hover:text-violet-300">↗ открыть</a>
+              <h2 class="text-xl font-black text-slate-50">{{ t('nationStudio.mapTitle') }}</h2>
+              <a :href="capitalMapUrl" target="_blank" rel="noreferrer" class="text-sm text-violet-400 hover:text-violet-300">↗ {{ t('nationStudio.openMap') }}</a>
             </div>
             <p class="mt-1 text-sm text-slate-400">
               {{ nation.capital_world || 'world' }} · {{ nation.capital_x }}, {{ nation.capital_z }}
@@ -915,7 +916,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                 rel="noreferrer"
                 class="absolute inset-0 flex items-end justify-center pb-4"
               >
-                <span class="rounded-xl bg-violet-600 px-4 py-1.5 text-sm font-semibold text-white shadow-lg hover:bg-violet-500">Открыть карту</span>
+                <span class="rounded-xl bg-violet-600 px-4 py-1.5 text-sm font-semibold text-white shadow-lg hover:bg-violet-500">{{ t('nationStudio.openMap') }}</span>
               </a>
             </div>
           </section>
@@ -923,15 +924,15 @@ watch(success, (value) => { if (value) toastSuccess(value) })
 
         <div class="space-y-5">
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Параметры</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Настройки государства</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.paramsKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.paramsTitle') }}</h2>
 
             <div class="mt-5 grid gap-4">
-              <input v-model="editForm.title" class="input rounded-2xl" placeholder="Название" />
-              <input v-model="editForm.slug" class="input rounded-2xl" placeholder="Адрес страницы" />
-              <input v-model="editForm.tag" class="input rounded-2xl" placeholder="Тег" />
-              <input v-model="editForm.short_description" class="input rounded-2xl" placeholder="Короткое описание" />
-              <textarea v-model="editForm.description" class="textarea rounded-2xl" rows="6" placeholder="Подробное описание"></textarea>
+              <input v-model="editForm.title" class="input rounded-2xl" :placeholder="t('nationStudio.titleLabel')" />
+              <input v-model="editForm.slug" class="input rounded-2xl" :placeholder="t('nationStudio.slugLabel')" />
+              <input v-model="editForm.tag" class="input rounded-2xl" :placeholder="t('nationStudio.tagLabel')" />
+              <input v-model="editForm.short_description" class="input rounded-2xl" :placeholder="t('nationStudio.shortDescLabel')" />
+              <textarea v-model="editForm.description" class="textarea rounded-2xl" rows="6" :placeholder="t('nationStudio.descLabel')"></textarea>
               <input v-model="editForm.accent_color" type="color" class="h-14 w-24 cursor-pointer rounded-2xl border border-white/10 bg-transparent p-1" />
 
               <select v-model="editForm.recruitment_policy" class="select rounded-2xl">
@@ -942,8 +943,8 @@ watch(success, (value) => { if (value) toastSuccess(value) })
 
               <label class="panel-card flex items-center justify-between gap-4 p-4">
                 <div>
-                  <p class="font-semibold text-slate-100">Публичная страница</p>
-                  <p class="mt-1 text-sm leading-6 text-slate-400">Показывать государство в каталоге.</p>
+                  <p class="font-semibold text-slate-100">{{ t('nationStudio.isPublicLabel') }}</p>
+                  <p class="mt-1 text-sm leading-6 text-slate-400">{{ t('nationStudio.isPublicCatalogDesc') }}</p>
                 </div>
                 <input v-model="editForm.is_public" type="checkbox" class="toggle" />
               </label>
@@ -951,7 +952,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
               <div class="mt-2 flex flex-wrap gap-3">
                 <button type="button" class="btn btn-primary" :disabled="saving" @click="submitUpdate">
                   <span v-if="saving" class="spinner"></span>
-                  <span v-else>Сохранить изменения</span>
+                  <span v-else>{{ t('nationStudio.submitSave') }}</span>
                 </button>
 
                 <button
@@ -961,14 +962,14 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                   :disabled="actionLoading"
                   @click="handleLeaveNation"
                 >
-                  Покинуть государство
+                  {{ t('nationStudio.leaveBtn') }}
                 </button>
               </div>
 
               <div v-if="viewerRole === 'leader'" class="mt-6 rounded-[18px] border border-red-500/20 bg-red-500/5 p-4">
-                <p class="text-sm font-semibold text-red-300">Опасная зона</p>
+                <p class="text-sm font-semibold text-red-300">{{ t('nationStudio.dangerZone') }}</p>
                 <p class="mt-1 text-sm leading-6 text-slate-400">
-                  Расформирование государства необратимо. Все участники будут исключены, история и казна удалены.
+                  {{ t('nationStudio.disbandWarning') }}
                 </p>
                 <button
                   type="button"
@@ -976,7 +977,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                   :disabled="actionLoading"
                   @click="handleDisbandNation"
                 >
-                  Расформировать государство
+                  {{ t('nationStudio.disbandBtn') }}
                 </button>
               </div>
             </div>
@@ -984,33 +985,33 @@ watch(success, (value) => { if (value) toastSuccess(value) })
 
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Казна</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Управление treasury</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.treasuryKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.treasuryManageTitle') }}</h2>
 
             <div class="mt-5 grid gap-4 md:grid-cols-2">
               <div class="action-card">
-                <p class="font-semibold text-slate-100">Пополнение</p>
-                <input v-model="treasuryForm.deposit_amount" type="number" class="input rounded-2xl mt-3" placeholder="Сумма" />
-                <textarea v-model="treasuryForm.deposit_comment" class="textarea rounded-2xl mt-3" rows="3" placeholder="Комментарий"></textarea>
+                <p class="font-semibold text-slate-100">{{ t('nationStudio.depositLabel') }}</p>
+                <input v-model="treasuryForm.deposit_amount" type="number" class="input rounded-2xl mt-3" :placeholder="t('nationStudio.amountPlaceholder')" />
+                <textarea v-model="treasuryForm.deposit_comment" class="textarea rounded-2xl mt-3" rows="3" :placeholder="t('nationStudio.commentLabel')"></textarea>
                 <button type="button" class="btn btn-primary mt-3" :disabled="saving" @click="submitDeposit">
-                  Пополнить казну
+                  {{ t('nationStudio.deposit') }}
                 </button>
               </div>
 
               <div class="action-card">
-                <p class="font-semibold text-slate-100">Списание</p>
-                <input v-model="treasuryForm.withdraw_amount" type="number" class="input rounded-2xl mt-3" placeholder="Сумма" />
-                <textarea v-model="treasuryForm.withdraw_comment" class="textarea rounded-2xl mt-3" rows="3" placeholder="Комментарий"></textarea>
+                <p class="font-semibold text-slate-100">{{ t('nationStudio.withdrawLabel') }}</p>
+                <input v-model="treasuryForm.withdraw_amount" type="number" class="input rounded-2xl mt-3" :placeholder="t('nationStudio.amountPlaceholder')" />
+                <textarea v-model="treasuryForm.withdraw_comment" class="textarea rounded-2xl mt-3" rows="3" :placeholder="t('nationStudio.commentLabel')"></textarea>
                 <button type="button" class="btn btn-outline mt-3" :disabled="saving" @click="submitWithdraw">
-                  Списать из казны
+                  {{ t('nationStudio.withdraw') }}
                 </button>
               </div>
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Меценаты</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Кто пополняет казну</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.donorsKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.donorsTitle') }}</h2>
 
             <div v-if="donorsLoading" class="mt-5 space-y-3">
               <div class="skeleton h-16 rounded-[22px]"></div>
@@ -1018,7 +1019,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
             </div>
 
             <div v-else-if="!donors.length" class="action-card mt-5 text-sm text-slate-400">
-              Донатов игроков пока не было.
+              {{ t('nationStudio.noDonors') }}
             </div>
 
             <div v-else class="mt-5 grid gap-3 md:grid-cols-2">
@@ -1027,14 +1028,14 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                   <p class="font-semibold text-slate-100">{{ item.minecraft_nickname }}</p>
                   <span class="footer-chip">{{ formatNumber(item.total_amount) }}</span>
                 </div>
-                <p class="mt-2 text-sm leading-6 text-slate-400">Донатов: {{ formatNumber(item.donations_count) }}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">{{ t('nationStudio.donationsCount') }}: {{ formatNumber(item.donations_count) }}</p>
               </div>
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Журнал казны</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Последние операции</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.treasuryLogKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.recentOpsTitle') }}</h2>
 
             <div v-if="treasuryLoading" class="mt-5 space-y-3">
               <div class="skeleton h-20 rounded-[22px]"></div>
@@ -1042,7 +1043,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
             </div>
 
             <div v-else-if="!transactions.length" class="action-card mt-5 text-sm text-slate-400">
-              Операций пока нет.
+              {{ t('nationStudio.noOps') }}
             </div>
 
             <div v-else class="mt-5 space-y-3">
@@ -1051,17 +1052,17 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                   <p class="font-semibold text-slate-100">{{ txLabel(item) }}</p>
                   <span class="footer-chip">{{ formatNumber(item.net_amount) }}</span>
                 </div>
-                <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || 'Без комментария.' }}</p>
+                <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.comment || t('nationStudio.noComment') }}</p>
               </div>
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Участники</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Команда государства</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.membersKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.teamTitle') }}</h2>
 
             <div class="mt-5">
-              <input v-model="memberSearch" class="input rounded-2xl" placeholder="Поиск по логину или нику" />
+              <input v-model="memberSearch" class="input rounded-2xl" :placeholder="t('nationStudio.membersSearch')" />
             </div>
 
             <div class="mt-5 grid gap-3">
@@ -1078,7 +1079,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                       {{ formatRoleLabel(member.role) }}
                     </p>
                     <p v-if="member.custom_prefix" class="mt-1 text-xs text-violet-400">
-                      Звание: {{ member.custom_prefix }}
+                      {{ t('nationStudio.prefixLabel') }}: {{ member.custom_prefix }}
                     </p>
                   </div>
 
@@ -1092,7 +1093,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                       :disabled="actionLoading"
                       @click="startEditPrefix(member)"
                     >
-                      Звание
+                      {{ t('nationStudio.prefixBtn') }}
                     </button>
                   </div>
 
@@ -1107,7 +1108,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                       :disabled="actionLoading"
                       @click="promoteToOfficer(member.user_id)"
                     >
-                      Сделать офицером
+                      {{ t('nationStudio.makeOfficer') }}
                     </button>
 
                     <button
@@ -1117,7 +1118,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                       :disabled="actionLoading"
                       @click="demoteToMember(member.user_id)"
                     >
-                      Снять офицера
+                      {{ t('nationStudio.makeMember') }}
                     </button>
 
                     <button
@@ -1127,7 +1128,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                       :disabled="actionLoading"
                       @click="startEditPrefix(member)"
                     >
-                      Звание
+                      {{ t('nationStudio.prefixBtn') }}
                     </button>
 
                     <button
@@ -1137,7 +1138,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                       :disabled="actionLoading"
                       @click="passLeadership(member.user_id)"
                     >
-                      Передать лидерство
+                      {{ t('nationStudio.transfer') }}
                     </button>
 
                     <button
@@ -1147,7 +1148,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                       :disabled="actionLoading"
                       @click="kickMember(member.user_id)"
                     >
-                      Исключить
+                      {{ t('nationStudio.kick') }}
                     </button>
                   </div>
                 </div>
@@ -1157,24 +1158,24 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                     v-model="editingPrefixValue"
                     type="text"
                     maxlength="64"
-                    placeholder="Введите звание (или оставьте пустым, чтобы сбросить)"
+                    :placeholder="t('nationStudio.prefixPlaceholder')"
                     class="input input-sm flex-1 bg-slate-800 text-slate-100 placeholder-slate-500"
                     @keydown.enter="savePrefix(member.user_id)"
                     @keydown.esc="cancelEditPrefix"
                   />
-                  <button type="button" class="btn btn-sm btn-primary" :disabled="actionLoading" @click="savePrefix(member.user_id)">Сохранить</button>
-                  <button type="button" class="btn btn-sm btn-ghost" @click="cancelEditPrefix">Отмена</button>
+                  <button type="button" class="btn btn-sm btn-primary" :disabled="actionLoading" @click="savePrefix(member.user_id)">{{ t('nationStudio.submitSave') }}</button>
+                  <button type="button" class="btn btn-sm btn-ghost" @click="cancelEditPrefix">{{ t('nationStudio.cancel') }}</button>
                 </div>
               </article>
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Заявки</div>
-            <h2 class="text-xl font-black text-slate-50 md:text-2xl">Ожидают решения</h2>
+            <div class="section-kicker !mb-2">{{ t('nationStudio.requestsKicker') }}</div>
+            <h2 class="text-xl font-black text-slate-50 md:text-2xl">{{ t('nationStudio.requestsTitle') }}</h2>
 
             <div v-if="!nation?.join_requests?.length" class="action-card mt-5 text-sm text-slate-400">
-              Сейчас нет активных заявок.
+              {{ t('nationStudio.noRequests') }}
             </div>
 
             <div v-else class="mt-5 space-y-3">
@@ -1186,15 +1187,15 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                 <div class="flex flex-wrap items-start justify-between gap-3">
                   <div class="min-w-0">
                     <p class="font-semibold text-slate-100">{{ item.minecraft_nickname || item.site_login }}</p>
-                    <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.message || 'Сообщение не указано.' }}</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-400">{{ item.message || t('nationStudio.noMessage') }}</p>
                   </div>
 
                   <div class="mt-3 flex flex-wrap gap-2">
                     <button type="button" class="btn btn-primary btn-sm" :disabled="actionLoading" @click="approveRequest(item.id)">
-                      Одобрить
+                      {{ t('nationStudio.approve') }}
                     </button>
                     <button type="button" class="btn btn-outline btn-sm" :disabled="actionLoading" @click="rejectRequest(item.id)">
-                      Отклонить
+                      {{ t('nationStudio.reject') }}
                     </button>
                   </div>
                 </div>
@@ -1205,8 +1206,8 @@ watch(success, (value) => { if (value) toastSuccess(value) })
           <NationActivityFeed
             :items="activity"
             :loading="activityLoading"
-            title="Журнал государства"
-            subtitle="Создание, вступления, смена ролей, оформление и альянсовые действия сохраняются в истории."
+            :title="t('nationStudio.activityTitle')"
+            :subtitle="t('nationStudio.activitySubtitle')"
           />
         </div>
       </div>

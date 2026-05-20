@@ -1,10 +1,12 @@
 <script setup>
 import {computed, onMounted, reactive, ref, watch} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { previewReferralCode } from '../services/referralApi'
 import { registerAndOptionallyStay } from '../stores/authStore'
 import { toastError, toastInfo } from '../services/toast'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
@@ -37,7 +39,7 @@ const referralPreviewLabel = computed(() => {
     payload.minecraft_nickname ||
     payload.site_login ||
     payload.code ||
-    'Код приглашения принят'
+    ''
   )
 })
 
@@ -56,10 +58,10 @@ async function resolveReferralCode(code) {
     const payload = await previewReferralCode(normalized)
     referralPreview.value = payload
     referralMessage.value = referralPreviewLabel.value
-      ? `Код найден: ${referralPreviewLabel.value}.`
-      : 'Код приглашения найден.'
+      ? t('register.referralFound', { name: referralPreviewLabel.value })
+      : t('register.referralFoundGeneric')
   } catch (error) {
-    referralError.value = error.message || 'Не удалось проверить код приглашения.'
+    referralError.value = error.message || t('register.referralError')
   } finally {
     isCheckingReferral.value = false
   }
@@ -88,7 +90,7 @@ async function submit() {
       },
     })
   } catch (error) {
-    errorMessage.value = error.message || 'Не удалось создать аккаунт.'
+    errorMessage.value = error.message || t('register.createError')
   } finally {
     isSubmitting.value = false
   }
@@ -115,8 +117,8 @@ onMounted(async () => {
   }
 })
 watch(errorMessage, (value) => { if (value) toastError(value) })
-watch(referralError, (value) => { if (value) toastError(value, 'Код приглашения') })
-watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приглашения') })
+watch(referralError, (value) => { if (value) toastError(value, t('register.referralTitle')) })
+watch(referralMessage, (value) => { if (value) toastInfo(value, t('register.referralTitle')) })
 </script>
 
 <template>
@@ -124,31 +126,30 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
     <div class="container-shell max-w-6xl">
       <div class="grid gap-6 page-entry lg:grid-cols-[1.08fr_0.92fr]">
         <div class="surface-card p-6 md:p-8 lg:p-10">
-          <div class="section-kicker">Регистрация</div>
-          <h1 class="section-title">Создать аккаунт VoidRP</h1>
+          <div class="section-kicker">{{ t('register.kicker') }}</div>
+          <h1 class="section-title">{{ t('register.title') }}</h1>
           <p class="section-subtitle max-w-3xl">
-            Один аккаунт нужен для сайта, кабинета и официального лаунчера. После регистрации
-            письмо для подтверждения почты отправится автоматически.
+            {{ t('register.subtitle') }}
           </p>
 
           <form class="mt-8 grid gap-4 md:grid-cols-2" @submit.prevent="submit">
             <label>
-              <span class="field-label">Логин</span>
+              <span class="field-label">{{ t('register.loginLabel') }}</span>
               <input v-model="form.site_login" class="input" required />
             </label>
 
             <label>
-              <span class="field-label">Игровой ник</span>
+              <span class="field-label">{{ t('register.nicknameLabel') }}</span>
               <input v-model="form.minecraft_nickname" class="input" required />
             </label>
 
             <label class="md:col-span-2">
-              <span class="field-label">Email</span>
+              <span class="field-label">{{ t('register.emailLabel') }}</span>
               <input v-model="form.email" type="email" class="input" required />
             </label>
 
             <label>
-              <span class="field-label">Пароль</span>
+              <span class="field-label">{{ t('register.passwordLabel') }}</span>
               <div class="relative">
                 <input
                   v-model="form.password"
@@ -171,7 +172,7 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
             </label>
 
             <label>
-              <span class="field-label">Повтори пароль</span>
+              <span class="field-label">{{ t('register.passwordRepeatLabel') }}</span>
               <div class="relative">
                 <input
                   v-model="form.password_repeat"
@@ -196,11 +197,11 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
             <div class="md:col-span-2 rounded-[1.5rem] border border-white/10 bg-slate-950/65 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
               <div class="flex flex-col gap-3 md:flex-row md:items-end">
                 <label class="flex-1">
-                  <span class="field-label">Код приглашения</span>
+                  <span class="field-label">{{ t('register.referralLabel') }}</span>
                   <input
                     v-model="form.referral_code"
                     class="input"
-                    placeholder="Необязательно"
+                    :placeholder="t('register.referralPlaceholder')"
                   />
                 </label>
 
@@ -211,12 +212,12 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
                   @click="resolveReferralCode(form.referral_code)"
                 >
                   <span v-if="isCheckingReferral" class="spinner"></span>
-                  <span>{{ isCheckingReferral ? 'Проверяем...' : 'Проверить код' }}</span>
+                  <span>{{ isCheckingReferral ? t('register.checkingReferral') : t('register.checkReferral') }}</span>
                 </button>
               </div>
 
               <p class="helper-text mt-3">
-                Если тебя пригласил другой игрок, укажи его код. Это зачтётся в его реферальный прогресс.
+                {{ t('register.referralHelper') }}
               </p>
             </div>
 
@@ -227,21 +228,21 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
                 class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-violet-500"
               />
               <span class="text-xs leading-5 text-slate-400">
-                Я прочитал(а) и соглашаюсь с
+                {{ t('register.agreeText') }}
                 <RouterLink
                   to="/privacy"
                   target="_blank"
                   class="font-bold text-violet-300 transition hover:text-violet-200"
                 >
-                  Политикой конфиденциальности
+                  {{ t('register.privacy') }}
                 </RouterLink>
-                и
+                {{ t('footer.offer') !== t('register.offer') ? '' : '' }}
                 <RouterLink
                   to="/offer"
                   target="_blank"
                   class="font-bold text-violet-300 transition hover:text-violet-200"
                 >
-                  Договором оферты
+                  {{ t('register.offer') }}
                 </RouterLink>.
               </span>
             </label>
@@ -249,39 +250,39 @@ watch(referralMessage, (value) => { if (value) toastInfo(value, 'Код приг
             <div class="md:col-span-2 flex flex-col gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
               <button type="submit" class="btn btn-primary" :disabled="isSubmitting || !agreedToTerms">
                 <span v-if="isSubmitting" class="spinner"></span>
-                <span>{{ isSubmitting ? 'Создаём аккаунт...' : 'Создать аккаунт' }}</span>
+                <span>{{ isSubmitting ? t('register.submitting') : t('register.submit') }}</span>
               </button>
               <RouterLink to="/login" class="text-sm font-semibold text-violet-300 transition hover:text-violet-200">
-                Уже зарегистрирован? Войти
+                {{ t('register.alreadyRegistered') }}
               </RouterLink>
             </div>
           </form>
         </div>
 
         <aside class="gradient-panel p-6 md:p-8">
-          <div class="section-kicker section-kicker--light">Что получит игрок</div>
-          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Нормальный старт без ручной настройки</h2>
+          <div class="section-kicker section-kicker--light">{{ t('register.asideKicker') }}</div>
+          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">{{ t('register.asideTitle') }}</h2>
           <p class="mt-4 text-base leading-8 text-white/78">
-            После регистрации откроется кабинет, публичный профиль и прямой путь к скачиванию лаунчера.
+            {{ t('register.asideDesc') }}
           </p>
 
           <div class="mt-8 grid gap-3">
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Один аккаунт</p>
+              <p class="text-sm font-black text-white">{{ t('register.benefit1title') }}</p>
               <p class="mt-1.5 text-sm leading-6 text-white/74">
-                Для сайта, кабинета, публичного профиля и лаунчера не нужны разные входы.
+                {{ t('register.benefit1desc') }}
               </p>
             </div>
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Письмо придёт автоматически</p>
+              <p class="text-sm font-black text-white">{{ t('register.benefit2title') }}</p>
               <p class="mt-1.5 text-sm leading-6 text-white/74">
-                Сразу после регистрации можно подтвердить почту и продолжить путь к игре.
+                {{ t('register.benefit2desc') }}
               </p>
             </div>
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Оформление потом</p>
+              <p class="text-sm font-black text-white">{{ t('register.benefit3title') }}</p>
               <p class="mt-1.5 text-sm leading-6 text-white/74">
-                Аватар, баннер, фон и описание можно спокойно настроить уже после входа.
+                {{ t('register.benefit3desc') }}
               </p>
             </div>
           </div>

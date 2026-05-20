@@ -1,8 +1,11 @@
 <script setup>
 import {computed, reactive, ref, watch} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { loginWithPassword } from '../stores/authStore'
 import { toastError, toastSuccess } from '../services/toast'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -45,56 +48,47 @@ watch(errorMessage, (value) => { if (value) toastError(value) })
     <div class="container-shell max-w-6xl">
       <div class="grid gap-6 page-entry lg:grid-cols-[0.92fr_1.08fr]">
         <aside class="gradient-panel order-last p-6 md:p-8 lg:order-first">
-          <div class="section-kicker section-kicker--light">Вход в аккаунт</div>
+          <div class="section-kicker section-kicker--light">{{ t('login.kicker') }}</div>
           <h1 class="text-3xl font-black tracking-tight text-white md:text-5xl">
-            Возвращайся в игру без лишних экранов
+            {{ t('login.headline') }}
           </h1>
           <p class="mt-4 text-base leading-8 text-white/78">
-            Тот же аккаунт работает для сайта, кабинета и официального лаунчера.
-            После входа игрок сразу попадает туда, куда шёл.
+            {{ t('login.subtext') }}
           </p>
 
           <div class="mt-8 grid gap-3">
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Логин или почта</p>
-              <p class="mt-1.5 text-sm leading-6 text-white/74">
-                Можно использовать любой из вариантов — система примет оба.
-              </p>
+              <p class="text-sm font-black text-white">{{ t('login.tip1title') }}</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">{{ t('login.tip1desc') }}</p>
             </div>
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Один вход на всё</p>
-              <p class="mt-1.5 text-sm leading-6 text-white/74">
-                Кабинет, профиль, лаунчер и дальнейший запуск игры идут через одну точку.
-              </p>
+              <p class="text-sm font-black text-white">{{ t('login.tip2title') }}</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">{{ t('login.tip2desc') }}</p>
             </div>
             <div class="dark-list-card">
-              <p class="text-sm font-black text-white">Никакой путаницы</p>
-              <p class="mt-1.5 text-sm leading-6 text-white/74">
-                После входа ты сразу сможешь скачать лаунчер или открыть свой кабинет.
-              </p>
+              <p class="text-sm font-black text-white">{{ t('login.tip3title') }}</p>
+              <p class="mt-1.5 text-sm leading-6 text-white/74">{{ t('login.tip3desc') }}</p>
             </div>
           </div>
         </aside>
 
         <div class="surface-card p-6 md:p-8 lg:p-10">
-          <div class="section-kicker">Вход</div>
-          <h2 class="section-title">Войти в аккаунт</h2>
-          <p class="section-subtitle">
-            Используй логин или почту и пароль от аккаунта VoidRP.
-          </p>
+          <div class="section-kicker">{{ t('login.formKicker') }}</div>
+          <h2 class="section-title">{{ t('login.formTitle') }}</h2>
+          <p class="section-subtitle">{{ t('login.formSubtitle') }}</p>
 
           <div v-if="route.query.redirect" class="alert alert-info mt-6">
-            Сначала нужно войти, а затем страница откроется автоматически.
+            {{ t('login.redirectHint') }}
           </div>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submit">
             <label>
-              <span class="field-label">Логин или почта</span>
+              <span class="field-label">{{ t('login.loginLabel') }}</span>
               <input v-model="form.login" class="input" autocomplete="username" required />
             </label>
 
             <label>
-              <span class="field-label">Пароль</span>
+              <span class="field-label">{{ t('login.passwordLabel') }}</span>
               <div class="relative">
                 <input
                   v-model="form.password"
@@ -120,16 +114,16 @@ watch(errorMessage, (value) => { if (value) toastError(value) })
             
             <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
               <span v-if="isSubmitting" class="spinner"></span>
-              <span>{{ isSubmitting ? 'Входим...' : 'Войти' }}</span>
+              <span>{{ isSubmitting ? t('login.submitting') : t('login.submit') }}</span>
             </button>
           </form>
 
           <div class="mt-6 flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
             <RouterLink to="/forgot-password" class="text-slate-300 transition hover:text-white">
-              Забыли пароль?
+              {{ t('login.forgotPassword') }}
             </RouterLink>
             <RouterLink to="/register" class="text-slate-300 transition hover:text-white">
-              Нет аккаунта? Создать
+              {{ t('login.noAccount') }}
             </RouterLink>
           </div>
         </div>

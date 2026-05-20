@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getProgressionLeaderboard } from '../services/progressionApi'
 import { usePageMeta } from '../composables/usePageMeta.js'
 
@@ -14,6 +15,7 @@ usePageMeta({
 })
 import { toastError } from '../services/toast'
 
+const { t } = useI18n()
 const loading = ref(true)
 const leaderboard = ref(null)
 const activeTier = ref(null)
@@ -47,7 +49,7 @@ async function load() {
       activeTier.value = data.tiers[0].tier_name
     }
   } catch (e) {
-    toastError(e.message || 'Не удалось загрузить рейтинг.')
+    toastError(e.message || t('leaderboard.loadError'))
   } finally {
     loading.value = false
   }
@@ -68,9 +70,9 @@ onMounted(load)
     <div class="container-shell">
 
       <div class="mb-6">
-        <div class="section-kicker !mb-2">Рейтинг</div>
-        <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">Прогрессия игроков</h1>
-        <p class="mt-2 text-sm text-slate-400">Кто первым открыл каждую эпоху сезона</p>
+        <div class="section-kicker !mb-2">{{ t('leaderboard.kicker') }}</div>
+        <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">{{ t('leaderboard.title') }}</h1>
+        <p class="mt-2 text-sm text-slate-400">{{ t('leaderboard.desc') }}</p>
       </div>
 
       <div v-if="loading" class="space-y-4">
@@ -106,12 +108,12 @@ onMounted(load)
             <span class="text-2xl leading-none">{{ TIER_ICONS[activeTierData.tier_name] || '🏆' }}</span>
             <div>
               <h2 class="text-base font-black text-slate-50">{{ activeTierData.tier_label }}</h2>
-              <p class="text-xs text-slate-500">Топ {{ activeTierData.entries.length }} игроков</p>
+              <p class="text-xs text-slate-500">{{ t('leaderboard.topCount', { n: activeTierData.entries.length }) }}</p>
             </div>
           </div>
 
           <div v-if="activeTierData.entries.length === 0" class="px-5 py-8 text-center text-sm text-slate-500">
-            Пока никто не открыл эту эпоху
+            {{ t('leaderboard.noEntries') }}
           </div>
 
           <div v-else class="divide-y divide-slate-700/30">
@@ -147,7 +149,7 @@ onMounted(load)
                 v-if="entry.rank <= 3"
                 class="hidden shrink-0 text-xs text-slate-500 sm:block"
               >
-                первый
+                {{ t('leaderboard.first') }}
               </span>
             </div>
           </div>
@@ -156,7 +158,7 @@ onMounted(load)
       </template>
 
       <div v-else class="surface-card p-8 text-center text-sm text-slate-500">
-        Нет данных о прогрессии
+        {{ t('leaderboard.noData') }}
       </div>
 
     </div>

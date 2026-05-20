@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { siteConfig } from '../config.site'
 import NationActivityFeed from '../features/nations/components/NationActivityFeed.vue'
 import {
@@ -16,6 +17,7 @@ import { useAuthStore } from '../stores/authStore'
 import { formatCompactHoursFromMinutes, formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
 import { usePageMeta } from '../composables/usePageMeta.js'
 
+const { t } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
 
@@ -74,22 +76,22 @@ function hexToRgba(hex, alpha) {
 
 function formatAllianceType(value) {
   switch (String(value || '').toLowerCase()) {
-    case 'nato': return 'Военный блок'
-    case 'economic': return 'Экономический союз'
-    case 'un': return 'Политический союз'
-    default: return 'Альянс'
+    case 'nato': return t('allianceHub.typeNato') || 'Military Alliance'
+    case 'economic': return t('allianceHub.typeEconomic') || 'Economic Union'
+    case 'un': return t('allianceHub.typeUn') || 'Political Union'
+    default: return t('allianceHub.typeDefault') || 'Alliance'
   }
 }
 
 function txLabel(item) {
   const type = String(item?.transaction_type || '').toLowerCase()
-  if (type === 'player_donation') return `Донат · ${item?.metadata_json?.minecraft_nickname || 'игрок'}`.trim()
-  if (type === 'deposit') return 'Пополнение'
-  if (type === 'withdraw') return 'Списание'
-  if (type === 'alliance_transfer_out') return 'Перевод союзнику'
-  if (type === 'alliance_transfer_in') return 'От союзника'
-  if (type === 'alliance_fee_income') return 'Комиссия альянса'
-  return item?.transaction_type || 'Операция'
+  if (type === 'player_donation') return `Donation · ${item?.metadata_json?.minecraft_nickname || ''}`.trim()
+  if (type === 'deposit') return 'Deposit'
+  if (type === 'withdraw') return 'Withdrawal'
+  if (type === 'alliance_transfer_out') return 'Transfer to ally'
+  if (type === 'alliance_transfer_in') return 'From ally'
+  if (type === 'alliance_fee_income') return 'Alliance commission'
+  return item?.transaction_type || 'Operation'
 }
 
 function money(value) {
@@ -207,7 +209,7 @@ async function loadNation() {
       ],
     })
   } catch (err) {
-    error.value = err.message || 'Не удалось загрузить страницу государства.'
+    error.value = err.message || t('nationPublic.loadError')
   } finally {
     loading.value = false
   }
@@ -265,11 +267,11 @@ async function handleJoin() {
       message: canRequestJoin.value ? requestMessage.value || null : null,
     })
     nation.value = response?.nation || nation.value
-    actionMessage.value = canJoinDirectly.value ? 'Ты успешно вступил в государство.' : 'Заявка отправлена.'
+    actionMessage.value = canJoinDirectly.value ? t('nationPublic.joinedSuccess') : t('nationPublic.requestSent')
     requestMessage.value = ''
     await Promise.all([loadActivity(), loadCurrentNation()])
   } catch (err) {
-    error.value = err.message || 'Не удалось выполнить действие.'
+    error.value = err.message || t('nationPublic.actionError')
   } finally {
     joinLoading.value = false
   }
@@ -278,20 +280,20 @@ async function handleJoin() {
 async function handleApprove(requestId) {
   try {
     nation.value = await approveNationRequest(auth.accessToken, nation.value.slug, requestId)
-    actionMessage.value = 'Заявка одобрена.'
+    actionMessage.value = t('nationPublic.requestApproved')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось одобрить заявку.'
+    error.value = err.message || t('nationPublic.actionError')
   }
 }
 
 async function handleReject(requestId) {
   try {
     nation.value = await rejectNationRequest(auth.accessToken, nation.value.slug, requestId)
-    actionMessage.value = 'Заявка отклонена.'
+    actionMessage.value = t('nationPublic.requestRejected')
     await loadActivity()
   } catch (err) {
-    error.value = err.message || 'Не удалось отклонить заявку.'
+    error.value = err.message || t('nationPublic.actionError')
   }
 }
 
@@ -331,9 +333,9 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
             <div class="np-chips">
               <span class="np-chip">{{ formatRecruitmentLabel(nation.recruitment_policy) }}</span>
               <span v-if="allianceSummary" class="np-chip">{{ allianceSummary.tag }}</span>
-              <span v-if="viewerHasPendingRequest" class="np-chip np-chip--amber">Заявка на рассмотрении</span>
-              <span v-if="viewerIsMember && !viewerCanManage" class="np-chip np-chip--green">Участник</span>
-              <span v-if="viewerCanManage" class="np-chip np-chip--green">Лидер / Офицер</span>
+              <span v-if="viewerHasPendingRequest" class="np-chip np-chip--amber">{{ t('nationPublic.txPending') }}</span>
+              <span v-if="viewerIsMember && !viewerCanManage" class="np-chip np-chip--green">{{ t('nationPublic.txMember') }}</span>
+              <span v-if="viewerCanManage" class="np-chip np-chip--green">{{ t('nationPublic.txLeader') }}</span>
             </div>
           </div>
 
@@ -349,8 +351,8 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
               </div>
             </div>
             <div class="np-hero__actions">
-              <RouterLink v-if="viewerCanManage" to="/nation/studio" class="btn btn-sm btn-light">Управлять</RouterLink>
-              <RouterLink to="/nations" class="btn btn-sm np-btn-ghost">Все государства</RouterLink>
+              <RouterLink v-if="viewerCanManage" to="/nation/studio" class="btn btn-sm btn-light">{{ t('nationPublic.manage') }}</RouterLink>
+              <RouterLink to="/nations" class="btn btn-sm np-btn-ghost">{{ t('nationPublic.allNations') }}</RouterLink>
             </div>
           </div>
         </header>
@@ -358,27 +360,27 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
         <!-- ─── STATS STRIP ─── -->
         <div class="np-stats">
           <div class="np-stat">
-            <span>Баланс казны</span>
+            <span>{{ t('nationPublic.statTreasury') }}</span>
             <strong v-if="statsLoading" class="np-stat__loading">···</strong>
             <strong v-else>{{ money(stats?.treasury_balance ?? 0) }}</strong>
           </div>
           <div class="np-stat">
-            <span>Территория</span>
+            <span>{{ t('nationPublic.statTerritory') }}</span>
             <strong v-if="statsLoading" class="np-stat__loading">···</strong>
             <strong v-else>{{ formatNumber(stats?.territory_points ?? 0) }}</strong>
           </div>
           <div class="np-stat">
-            <span>Онлайн</span>
+            <span>{{ t('nationPublic.statOnline') }}</span>
             <strong v-if="statsLoading" class="np-stat__loading">···</strong>
             <strong v-else>{{ formatCompactHoursFromMinutes(stats?.total_playtime_minutes ?? 0) }}</strong>
           </div>
           <div class="np-stat">
-            <span>Престиж</span>
+            <span>{{ t('nationPublic.statPrestige') }}</span>
             <strong v-if="statsLoading" class="np-stat__loading">···</strong>
             <strong v-else>{{ formatNumber(stats?.prestige_score ?? 0) }}</strong>
           </div>
           <div class="np-stat">
-            <span>Участников</span>
+            <span>{{ t('nationPublic.statMembers') }}</span>
             <strong>{{ nation.members.length }}</strong>
           </div>
         </div>
@@ -393,14 +395,14 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
 
             <!-- Description -->
             <section v-if="nation.description" class="surface-card np-card" :style="cardStyle">
-              <h2 class="np-card__title">О государстве</h2>
+              <h2 class="np-card__title">{{ t('nationPublic.aboutTitle') }}</h2>
               <p class="np-desc">{{ nation.description }}</p>
             </section>
 
             <!-- Members -->
             <section class="surface-card np-card" :style="cardStyle">
               <div class="np-card__header">
-                <h2 class="np-card__title">Состав</h2>
+                <h2 class="np-card__title">{{ t('nationPublic.membersTitle') }}</h2>
                 <span class="np-badge">{{ nation.members.length }}</span>
               </div>
               <div class="np-members">
@@ -431,75 +433,75 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
             <section class="surface-card np-card" :style="cardStyle">
               <!-- not authenticated -->
               <template v-if="!isAuthenticated">
-                <h2 class="np-card__title">Вступить в государство</h2>
-                <p class="np-sidebar__text">Войди, чтобы присоединиться или подать заявку.</p>
+                <h2 class="np-card__title">{{ t('nationPublic.joinTitle') }}</h2>
+                <p class="np-sidebar__text">{{ t('nationPublic.joinDesc') }}</p>
                 <div class="np-card__actions">
-                  <RouterLink :to="`/login?redirect=${encodeURIComponent(`/nation/${nation.slug}`)}`" class="btn btn-primary w-full">Войти</RouterLink>
-                  <RouterLink to="/register" class="btn btn-outline w-full">Регистрация</RouterLink>
+                  <RouterLink :to="`/login?redirect=${encodeURIComponent(`/nation/${nation.slug}`)}`" class="btn btn-primary w-full">{{ t('nationPublic.loginBtn') }}</RouterLink>
+                  <RouterLink to="/register" class="btn btn-outline w-full">{{ t('nationPublic.registerBtn') }}</RouterLink>
                 </div>
               </template>
 
               <!-- manager -->
               <template v-else-if="viewerCanManage">
-                <h2 class="np-card__title">Твоё государство</h2>
-                <p class="np-sidebar__text">Ты управляешь этим государством. Принимай заявки и настраивай страницу.</p>
-                <RouterLink to="/nation/studio" class="btn btn-outline w-full mt-3" style="min-height:2.4rem">Открыть студию</RouterLink>
+                <h2 class="np-card__title">{{ t('nationPublic.myNationTitle') }}</h2>
+                <p class="np-sidebar__text">{{ t('nationPublic.myNationDesc') }}</p>
+                <RouterLink to="/nation/studio" class="btn btn-outline w-full mt-3" style="min-height:2.4rem">{{ t('nationPublic.openStudio') }}</RouterLink>
               </template>
 
               <!-- already a member -->
               <template v-else-if="viewerIsMember">
                 <div class="np-status-row np-status-row--green">
                   <span class="np-status-dot"></span>
-                  <strong>Ты состоишь в этом государстве</strong>
+                  <strong>{{ t('nationPublic.isMember') }}</strong>
                 </div>
               </template>
 
               <!-- owns another nation -->
               <template v-else-if="viewerOwnsOtherNation">
-                <h2 class="np-card__title">Уже в другом государстве</h2>
+                <h2 class="np-card__title">{{ t('nationPublic.otherNationTitle') }}</h2>
                 <p class="np-sidebar__text">
-                  Ты состоишь в «{{ currentNation?.title || 'другом государстве' }}». Одновременно можно быть только в одном.
+                  {{ t('nationPublic.otherNationDesc', { name: currentNation?.title || '' }) }}
                 </p>
-                <RouterLink to="/nation/studio" class="btn btn-outline w-full mt-3" style="min-height:2.4rem">Открыть своё</RouterLink>
+                <RouterLink to="/nation/studio" class="btn btn-outline w-full mt-3" style="min-height:2.4rem">{{ t('nationPublic.openMine') }}</RouterLink>
               </template>
 
               <!-- pending request -->
               <template v-else-if="viewerHasPendingRequest">
                 <div class="np-status-row np-status-row--amber">
                   <span class="np-status-dot"></span>
-                  <strong>Заявка ожидает решения</strong>
+                  <strong>{{ t('nationPublic.pendingTitle') }}</strong>
                 </div>
-                <p class="np-sidebar__text mt-2">Лидеры ещё не ответили. Повторно подавать не нужно.</p>
+                <p class="np-sidebar__text mt-2">{{ t('nationPublic.pendingDesc') }}</p>
               </template>
 
               <!-- invite only -->
               <template v-else-if="nation.recruitment_policy === 'invite_only'">
-                <h2 class="np-card__title">Только по приглашению</h2>
-                <p class="np-sidebar__text">Это государство принимает игроков только по прямому приглашению от лидера.</p>
+                <h2 class="np-card__title">{{ t('nationPublic.inviteOnlyTitle') }}</h2>
+                <p class="np-sidebar__text">{{ t('nationPublic.inviteOnlyDesc') }}</p>
               </template>
 
               <!-- request join -->
               <template v-else-if="canRequestJoin">
-                <h2 class="np-card__title">Подать заявку</h2>
+                <h2 class="np-card__title">{{ t('nationPublic.requestTitle') }}</h2>
                 <textarea
                   v-model="requestMessage"
                   rows="3"
                   class="textarea w-full mt-3"
-                  placeholder="Коротко — почему хочешь вступить"
+                  :placeholder="t('nationPublic.requestPlaceholder')"
                 ></textarea>
                 <button type="button" class="btn w-full mt-2.5" style="min-height:2.4rem" :style="accentBtnStyle" :disabled="joinLoading || currentNationLoading" @click="handleJoin">
                   <span v-if="joinLoading" class="spinner mr-1.5"></span>
-                  {{ joinLoading ? 'Отправляем...' : 'Подать заявку' }}
+                  {{ joinLoading ? t('nationPublic.requesting') : t('nationPublic.requestBtn') }}
                 </button>
               </template>
 
               <!-- open join -->
               <template v-else-if="canJoinDirectly">
-                <h2 class="np-card__title">Открытый набор</h2>
-                <p class="np-sidebar__text">Вступление произойдёт сразу.</p>
+                <h2 class="np-card__title">{{ t('nationPublic.openJoinTitle') }}</h2>
+                <p class="np-sidebar__text">{{ t('nationPublic.openJoinDesc') }}</p>
                 <button type="button" class="btn w-full mt-3" style="min-height:2.4rem" :style="accentBtnStyle" :disabled="joinLoading || currentNationLoading" @click="handleJoin">
                   <span v-if="joinLoading" class="spinner mr-1.5"></span>
-                  {{ joinLoading ? 'Вступаем...' : 'Вступить' }}
+                  {{ joinLoading ? t('nationPublic.joining') : t('nationPublic.joinBtn') }}
                 </button>
               </template>
             </section>
@@ -507,11 +509,11 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
             <!-- Alliance card -->
             <section class="surface-card np-card" :style="cardStyle">
               <div class="np-card__header">
-                <h2 class="np-card__title">Альянс</h2>
+                <h2 class="np-card__title">{{ t('nationPublic.allianceTitle') }}</h2>
                 <span v-if="allianceSummary" class="np-badge">{{ allianceSummary.tag }}</span>
               </div>
 
-              <div v-if="!allianceSummary" class="np-empty">Не состоит в альянсах</div>
+              <div v-if="!allianceSummary" class="np-empty">{{ t('nationPublic.notInAlliance') }}</div>
 
               <template v-else>
                 <p class="np-sidebar__text np-sidebar__text--name">{{ allianceSummary.title }}</p>
@@ -537,7 +539,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
                 </div>
 
                 <RouterLink to="/alliances" class="btn btn-outline w-full mt-3" style="min-height:2.4rem;font-size:.83rem">
-                  Центр альянсов
+                  {{ t('nationPublic.allianceCenter') }}
                 </RouterLink>
               </template>
             </section>
@@ -545,7 +547,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
             <!-- Requests (manager only) -->
             <section v-if="viewerCanManage && nation.join_requests?.length" class="surface-card np-card" :style="cardStyle">
               <div class="np-card__header">
-                <h2 class="np-card__title">Заявки</h2>
+                <h2 class="np-card__title">{{ t('nationPublic.requestsTitle') }}</h2>
                 <span class="np-badge np-badge--accent">{{ nation.join_requests.length }}</span>
               </div>
               <div class="np-requests">
@@ -556,8 +558,8 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
                     <p v-if="item.message">{{ item.message }}</p>
                   </div>
                   <div class="np-request__btns">
-                    <button type="button" class="btn btn-outline btn-sm" @click="handleReject(item.id)">Отклонить</button>
-                    <button type="button" class="btn btn-sm" :style="accentBtnStyle" @click="handleApprove(item.id)">Принять</button>
+                    <button type="button" class="btn btn-outline btn-sm" @click="handleReject(item.id)">{{ t('nationPublic.rejectBtn') }}</button>
+                    <button type="button" class="btn btn-sm" :style="accentBtnStyle" @click="handleApprove(item.id)">{{ t('nationPublic.approveBtn') }}</button>
                   </div>
                 </div>
               </div>
@@ -566,8 +568,8 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
             <!-- Map card -->
             <section class="surface-card np-card np-map-card" :style="cardStyle">
               <div class="np-card__header" style="margin-bottom:.5rem">
-                <h2 class="np-card__title" style="margin-bottom:0">Карта мира</h2>
-                <a :href="dynmapOpenUrl" target="_blank" rel="noreferrer" class="np-map-link">↗ открыть</a>
+                <h2 class="np-card__title" style="margin-bottom:0">{{ t('nationPublic.mapTitle') }}</h2>
+                <a :href="dynmapOpenUrl" target="_blank" rel="noreferrer" class="np-map-link">↗</a>
               </div>
               <div class="np-map-wrap">
                 <iframe
@@ -580,14 +582,14 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
                 ></iframe>
                 <div class="np-map-overlay">
                   <a :href="dynmapOpenUrl" target="_blank" rel="noreferrer" class="np-map-open-btn" :style="{ background: accent }">
-                    Открыть карту
+                    {{ t('nationPublic.openMap') }}
                   </a>
                 </div>
               </div>
             </section>
 
             <RouterLink to="/nations/rankings" class="btn btn-outline w-full" style="min-height:2.4rem;font-size:.83rem">
-              Рейтинг государств
+              {{ t('nationPublic.nationRanking') }}
             </RouterLink>
           </aside>
         </div>
@@ -595,11 +597,11 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
         <!-- ─── BOTTOM: TREASURY + DONORS ─── -->
         <div class="np-bottom">
           <section class="surface-card np-card" :style="cardStyle">
-            <h2 class="np-card__title">Последние операции казны</h2>
+            <h2 class="np-card__title">{{ t('nationPublic.treasuryTitle') }}</h2>
             <div v-if="treasuryLoading" class="np-skeletons mt-3">
               <div v-for="i in 4" :key="i" class="skeleton" style="height:32px;border-radius:8px"></div>
             </div>
-            <div v-else-if="!transactions.length" class="np-empty mt-3">Операций пока нет</div>
+            <div v-else-if="!transactions.length" class="np-empty mt-3">{{ t('nationPublic.noTransactions') }}</div>
             <ul v-else class="np-list mt-3">
               <li v-for="item in transactions.slice(0, 8)" :key="item.id">
                 <div class="np-list__left">
@@ -614,11 +616,11 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
           </section>
 
           <section class="surface-card np-card" :style="cardStyle">
-            <h2 class="np-card__title">Топ донатеров</h2>
+            <h2 class="np-card__title">{{ t('nationPublic.donorsTitle') }}</h2>
             <div v-if="donorsLoading" class="np-skeletons mt-3">
               <div v-for="i in 4" :key="i" class="skeleton" style="height:32px;border-radius:8px"></div>
             </div>
-            <div v-else-if="!donors.length" class="np-empty mt-3">Пока никто не донатил через сайт</div>
+            <div v-else-if="!donors.length" class="np-empty mt-3">{{ t('nationPublic.noDonors') }}</div>
             <ul v-else class="np-list mt-3">
               <li v-for="(item, idx) in donors.slice(0, 8)" :key="item.user_id || item.site_login">
                 <div class="np-list__left">

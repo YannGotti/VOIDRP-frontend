@@ -1,9 +1,11 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { getMarketItem, getMarketItemHistory, getMarketTransactions, getNationMarketListings } from '../services/marketApi'
 import { getMaterialName, getRussianMaterialName } from '../utils/materialNames'
 
+const { t } = useI18n()
 const route = useRoute()
 
 const material = computed(() => String(route.params.material || '').toUpperCase())
@@ -42,9 +44,9 @@ function itemName(itm) {
 }
 
 function stateLabel(v) {
-  if (v === 'high_demand') return 'Высокий спрос'
-  if (v === 'oversupply') return 'Перепроизводство'
-  return 'Стабильно'
+  if (v === 'high_demand') return t('marketItem.stateHigh')
+  if (v === 'oversupply') return t('marketItem.stateOver')
+  return t('marketItem.stateStable')
 }
 
 function trendSign(v) {
@@ -59,9 +61,9 @@ function trendClass(v) {
 }
 
 function txTypeLabel(type) {
-  const t = String(type || '').toLowerCase()
-  if (t.includes('buy')) return 'Покупка'
-  if (t.includes('sell')) return 'Продажа'
+  const tl = String(type || '').toLowerCase()
+  if (tl.includes('buy')) return t('marketItem.filterBuy') || 'Buy'
+  if (tl.includes('sell')) return t('marketItem.filterSell') || 'Sell'
   return type
 }
 
@@ -238,7 +240,7 @@ async function load() {
     history.value = historyData?.points || []
     document.title = `${itemName(itemData)} — VoidRP`
   } catch (err) {
-    error.value = err?.status === 404 ? 'Товар не найден.' : (err?.message || 'Не удалось загрузить данные о товаре.')
+    error.value = err?.status === 404 ? t('marketItem.noData') : (err?.message || t('marketItem.loadError'))
   } finally {
     loading.value = false
   }
@@ -276,7 +278,7 @@ watch(material, load)
       <nav class="flex items-center gap-2 text-sm text-slate-500">
         <router-link to="/market" class="hover:text-slate-200 transition-colors flex items-center gap-1">
           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-          Рынок
+          {{ t('marketItem.backToMarket') }}
         </router-link>
         <span class="text-slate-700">/</span>
         <span class="text-slate-300 font-semibold">{{ itemName(item) }}</span>
@@ -313,29 +315,29 @@ watch(material, load)
         <!-- stats row -->
         <div class="item-hero__stats">
           <div class="stat-pill buy">
-            <span class="stat-pill__label">Покупка</span>
+            <span class="stat-pill__label">{{ t('marketItem.stateBuy') }}</span>
             <strong class="stat-pill__value text-emerald-300">{{ money(item.current_buy_price) }} ₽</strong>
           </div>
           <div class="stat-pill sell">
-            <span class="stat-pill__label">Скупка</span>
+            <span class="stat-pill__label">{{ t('marketItem.stateSell') }}</span>
             <strong class="stat-pill__value text-rose-300">{{ money(item.current_sell_price) }} ₽</strong>
           </div>
           <div class="stat-pill">
-            <span class="stat-pill__label">База (покупка)</span>
+            <span class="stat-pill__label">Base ({{ t('marketItem.stateBuy') }})</span>
             <strong class="stat-pill__value">{{ money(item.base_buy_price) }} ₽</strong>
           </div>
           <div class="stat-pill">
-            <span class="stat-pill__label">База (скупка)</span>
+            <span class="stat-pill__label">Base ({{ t('marketItem.stateSell') }})</span>
             <strong class="stat-pill__value">{{ money(item.base_sell_price) }} ₽</strong>
           </div>
           <div class="stat-pill">
-            <span class="stat-pill__label">Тренд</span>
+            <span class="stat-pill__label">{{ t('marketItem.stateTrend') }}</span>
             <strong class="stat-pill__value" :class="trendClass(item.trend_percent)">
               {{ trendSign(item.trend_percent) }}{{ money(item.trend_percent) }}%
             </strong>
           </div>
           <div class="stat-pill">
-            <span class="stat-pill__label">Спред</span>
+            <span class="stat-pill__label">Spread</span>
             <strong class="stat-pill__value">{{ money(item.spread_percent) }}%</strong>
           </div>
         </div>
@@ -345,8 +347,8 @@ watch(material, load)
       <div v-if="!loading && !error" class="surface-card p-5 md:p-6">
         <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
           <div>
-            <div class="section-kicker !mb-2">История цен</div>
-            <h2 class="text-xl font-black text-slate-50">Динамика по дням</h2>
+            <div class="section-kicker !mb-2">{{ t('marketItem.chartTitle') }}</div>
+            <h2 class="text-xl font-black text-slate-50">{{ t('marketItem.chartTitle') }}</h2>
           </div>
           <div v-if="chartSource === 'history'" class="flex items-center gap-1.5">
             <button
@@ -415,11 +417,11 @@ watch(material, load)
           <div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
             <span v-if="buyPath" class="flex items-center gap-2">
               <span class="legend-line" style="background:rgb(52 211 153)"></span>
-              <span class="text-emerald-400 font-semibold">Покупка</span>
+              <span class="text-emerald-400 font-semibold">{{ t('marketItem.stateBuy') }}</span>
             </span>
             <span v-if="sellPath" class="flex items-center gap-2">
               <span class="legend-line" style="background:rgb(251 113 133)"></span>
-              <span class="text-rose-400 font-semibold">Скупка</span>
+              <span class="text-rose-400 font-semibold">{{ t('marketItem.stateSell') }}</span>
             </span>
             <span v-if="chartData" class="chart-range-hint">
               {{ money(chartData.minVal) }} — {{ money(chartData.maxVal) }}
@@ -442,16 +444,16 @@ watch(material, load)
         <section class="surface-card p-5 md:p-6">
           <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
-              <div class="section-kicker !mb-1">Сделки</div>
+              <div class="section-kicker !mb-1">{{ t('marketItem.txTitle') }}</div>
               <h2 class="text-lg font-black text-slate-50">
-                Транзакции
+                {{ t('marketItem.txTitle') }}
                 <span class="tx-count-badge">{{ filteredTransactions.length }}</span>
               </h2>
             </div>
             <div class="tx-filter-tabs">
-              <button :class="{ active: txFilter === 'all' }" @click="txFilter = 'all'">Все</button>
-              <button :class="{ active: txFilter === 'buy' }" @click="txFilter = 'buy'">Покупки</button>
-              <button :class="{ active: txFilter === 'sell' }" @click="txFilter = 'sell'">Продажи</button>
+              <button :class="{ active: txFilter === 'all' }" @click="txFilter = 'all'">{{ t('marketItem.filterAll') }}</button>
+              <button :class="{ active: txFilter === 'buy' }" @click="txFilter = 'buy'">{{ t('marketItem.filterBuy') }}</button>
+              <button :class="{ active: txFilter === 'sell' }" @click="txFilter = 'sell'">{{ t('marketItem.filterSell') }}</button>
             </div>
           </div>
 
@@ -459,12 +461,12 @@ watch(material, load)
             <table class="tx-table">
               <thead>
                 <tr>
-                  <th>Тип</th>
-                  <th>Игрок</th>
-                  <th class="num">Кол-во</th>
-                  <th class="num">Цена/шт</th>
-                  <th class="num">Итого</th>
-                  <th class="num">Время</th>
+                  <th>Type</th>
+                  <th>Player</th>
+                  <th class="num">Amount</th>
+                  <th class="num">Price/u</th>
+                  <th class="num">Total</th>
+                  <th class="num">Time</th>
                 </tr>
               </thead>
               <tbody>
@@ -491,8 +493,8 @@ watch(material, load)
 
         <!-- Nation listings -->
         <section class="surface-card p-5 md:p-6">
-          <div class="section-kicker !mb-1">Государственный рынок</div>
-          <h2 class="text-lg font-black text-slate-50 mb-4">Активные лоты</h2>
+          <div class="section-kicker !mb-1">{{ t('marketItem.listingsTitle') }}</div>
+          <h2 class="text-lg font-black text-slate-50 mb-4">{{ t('marketItem.listingsTitle') }}</h2>
 
           <div v-if="listings.length" class="space-y-2.5">
             <div v-for="lot in listings" :key="lot.id" class="listing-row">

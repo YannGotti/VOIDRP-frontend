@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { siteConfig } from '../config.site'
-import { externalNavigation, primaryNavigation } from '../config/navigation'
 import { logoutCurrentSession, useAuthStore } from '../stores/authStore'
+import { setLocale, getLocale } from '../i18n'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const route = useRoute()
 const mobileOpen = ref(false)
@@ -13,7 +15,7 @@ const navRef = ref(null)
 
 const isAuthenticated = computed(() => auth.isAuthenticated.value)
 const isAdmin = computed(() => auth.isAdmin.value)
-const displayName = computed(() => auth.displayName.value || 'Профиль')
+const displayName = computed(() => auth.displayName.value || t('auth.profile'))
 const minecraftNick = computed(() => auth.state.playerAccount?.minecraft_nickname || null)
 const avatarUrl = computed(() => auth.avatarUrl.value)
 const userInitial = computed(() => {
@@ -21,8 +23,57 @@ const userInitial = computed(() => {
   return name.charAt(0).toUpperCase() || '?'
 })
 
-const navItems = primaryNavigation
-const externalItems = externalNavigation
+const currentLang = ref(getLocale())
+function switchLang(lang) {
+  setLocale(lang)
+  currentLang.value = lang
+}
+
+const navItems = computed(() => [
+  {
+    label: t('nav.home'),
+    to: '/',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><polyline points="9 21 9 12 15 12 15 21"/></svg>',
+  },
+  {
+    label: t('nav.guide'),
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+    children: [
+      { label: t('nav.guideModpack'), to: '/guide', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>', desc: t('nav.guideModpackDesc') },
+      { label: t('nav.recipes'), to: '/recipes', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>', desc: t('nav.recipesDesc') },
+    ],
+  },
+  {
+    label: t('nav.economy'),
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    children: [
+      { label: t('nav.market'), to: '/market', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>', desc: t('nav.marketDesc') },
+      { label: t('nav.shop'), to: '/shop', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>', desc: t('nav.shopDesc') },
+    ],
+  },
+  {
+    label: t('nav.factions'),
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    children: [
+      { label: t('nav.nations'), to: '/nations', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', desc: t('nav.nationsDesc') },
+      { label: t('nav.alliances'), to: '/alliances', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', desc: t('nav.alliancesDesc') },
+    ],
+  },
+  {
+    label: t('nav.rankings'),
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    children: [
+      { label: t('nav.topPlayers'), to: '/players/top', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', desc: t('nav.topPlayersDesc') },
+      { label: t('nav.ageProgress'), to: '/leaderboard', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>', desc: t('nav.ageProgressDesc') },
+      { label: t('nav.nationsRanking'), to: '/nations/rankings', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>', desc: t('nav.nationsRankingDesc') },
+    ],
+  },
+])
+
+const externalItems = computed(() => [
+  { label: t('nav.map'), href: siteConfig.bluemapUrl },
+  { label: t('nav.discord'), href: siteConfig.discordUrl },
+])
 
 function isLeafActive(item) {
   if (!item.to) return false

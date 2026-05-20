@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { getMyNation, getNationsList } from '../services/nationsApi'
 import { useAuthStore } from '../stores/authStore'
 import { formatNumber } from '../utils/formatters'
@@ -16,6 +17,7 @@ usePageMeta({
   ],
 })
 
+const { t } = useI18n()
 const auth = useAuthStore()
 
 const loading = ref(true)
@@ -66,10 +68,10 @@ const filteredNations = computed(() => {
 })
 
 const counters = computed(() => [
-  { label: 'Всего', value: allItems.value.length },
-  { label: 'Открытый вход', value: allItems.value.filter((i) => i.recruitment_policy === 'open').length },
-  { label: 'По заявке', value: allItems.value.filter((i) => i.recruitment_policy === 'request').length },
-  { label: 'Только приглашение', value: allItems.value.filter((i) => i.recruitment_policy === 'invite_only').length },
+  { label: t('nationsList.totalAll'), value: allItems.value.length },
+  { label: t('nationsList.totalOpen'), value: allItems.value.filter((i) => i.recruitment_policy === 'open').length },
+  { label: t('nationsList.totalRequest'), value: allItems.value.filter((i) => i.recruitment_policy === 'request').length },
+  { label: t('nationsList.totalInvite'), value: allItems.value.filter((i) => i.recruitment_policy === 'invite_only').length },
 ])
 
 async function loadPage() {
@@ -83,16 +85,16 @@ async function loadPage() {
     nations.value = listPayload || { total: 0, items: [] }
     myNation.value = myPayload || null
   } catch (err) {
-    error.value = err.message || 'Не удалось загрузить государства.'
+    error.value = err.message || t('nationsList.loadError')
   } finally {
     loading.value = false
   }
 }
 
 function policyLabel(value) {
-  if (value === 'open') return 'Открытый'
-  if (value === 'request') return 'По заявке'
-  return 'Закрытый'
+  if (value === 'open') return t('nationsList.policyOpen')
+  if (value === 'request') return t('nationsList.policyRequest')
+  return t('nationsList.policyClosed')
 }
 
 function policyClass(value) {
@@ -111,28 +113,28 @@ function bannerUrl(nation) {
 
 function cta(nation) {
   if (!auth.isAuthenticated.value) {
-    return { label: 'Войти', to: '/login', style: 'outline' }
+    return { label: t('nationsList.ctaLogin'), to: '/login', style: 'outline' }
   }
   if (myNation.value?.slug === nation.slug) {
     return {
-      label: myNation.value.viewer_can_manage ? 'Управлять' : 'Открыть',
+      label: myNation.value.viewer_can_manage ? t('nationsList.ctaManage') : t('nationsList.ctaOpen'),
       to: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${nation.slug}`,
       style: 'mine',
     }
   }
   if (myNation.value?.slug && myNation.value.slug !== nation.slug) {
-    return { label: 'Моё государство', to: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${myNation.value.slug}`, style: 'outline' }
+    return { label: t('nationsList.ctaMyNation'), to: myNation.value.viewer_can_manage ? '/nation/studio' : `/nation/${myNation.value.slug}`, style: 'outline' }
   }
   if (nation.viewer_request_status === 'pending') {
-    return { label: 'Заявка отправлена', to: `/nation/${nation.slug}`, style: 'muted' }
+    return { label: t('nationsList.ctaPending'), to: `/nation/${nation.slug}`, style: 'muted' }
   }
   if (nation.recruitment_policy === 'invite_only') {
-    return { label: 'Только по приглашению', to: `/nation/${nation.slug}`, style: 'muted' }
+    return { label: t('nationsList.ctaInviteOnly'), to: `/nation/${nation.slug}`, style: 'muted' }
   }
   if (nation.recruitment_policy === 'open') {
-    return { label: 'Вступить', to: `/nation/${nation.slug}`, style: 'accent' }
+    return { label: t('nationsList.ctaJoin'), to: `/nation/${nation.slug}`, style: 'accent' }
   }
-  return { label: 'Подать заявку', to: `/nation/${nation.slug}`, style: 'accent' }
+  return { label: t('nationsList.ctaRequest'), to: `/nation/${nation.slug}`, style: 'accent' }
 }
 
 onMounted(loadPage)
@@ -145,33 +147,33 @@ onMounted(loadPage)
       <!-- header + controls -->
       <header class="nl-header">
         <div class="nl-header__title">
-          <p class="nl-eyebrow">Государства · VoidRP</p>
-          <h1 class="nl-h1">Каталог сообществ</h1>
+          <p class="nl-eyebrow">{{ t('nationsList.eyebrow') }}</p>
+          <h1 class="nl-h1">{{ t('nationsList.title') }}</h1>
         </div>
         <div class="nl-controls">
           <div class="nl-search">
             <svg class="nl-search__icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
             </svg>
-            <input v-model="search" class="nl-search__input" placeholder="Поиск..." />
+            <input v-model="search" class="nl-search__input" :placeholder="t('nationsList.searchPlaceholder')" />
             <span v-if="search" class="nl-search__count">{{ filteredNations.length }}</span>
           </div>
           <select v-model="recruitmentFilter" class="nl-select">
-            <option value="all">Все типы</option>
-            <option value="open">Открытый</option>
-            <option value="request">По заявке</option>
-            <option value="invite_only">Закрытый</option>
+            <option value="all">{{ t('nationsList.allTypes') }}</option>
+            <option value="open">{{ t('nationsList.filterOpen') }}</option>
+            <option value="request">{{ t('nationsList.filterRequest') }}</option>
+            <option value="invite_only">{{ t('nationsList.filterClosed') }}</option>
           </select>
           <select v-model="sortMode" class="nl-select">
-            <option value="recommended">По релевантности</option>
-            <option value="members">По участникам</option>
-            <option value="newest">Сначала новые</option>
+            <option value="recommended">{{ t('nationsList.sortRelevance') }}</option>
+            <option value="members">{{ t('nationsList.sortMembers') }}</option>
+            <option value="newest">{{ t('nationsList.sortNewest') }}</option>
           </select>
-          <RouterLink to="/nations/rankings" class="nl-btn-link">Рейтинг</RouterLink>
+          <RouterLink to="/nations/rankings" class="nl-btn-link">{{ t('nationsList.rankingLink') }}</RouterLink>
           <RouterLink v-if="auth.isAuthenticated.value" to="/nation/studio" class="nl-btn-accent">
-            {{ myNation ? 'Моё государство' : 'Создать' }}
+            {{ myNation ? t('nationsList.myNation') : t('nationsList.create') }}
           </RouterLink>
-          <RouterLink v-else to="/login" class="nl-btn-accent">Войти</RouterLink>
+          <RouterLink v-else to="/login" class="nl-btn-accent">{{ t('nationsList.loginBtn') }}</RouterLink>
         </div>
       </header>
 
@@ -193,11 +195,11 @@ onMounted(loadPage)
         </div>
         <div class="nl-mine__info">
           <strong>{{ myNation.title }}</strong>
-          <small>[{{ myNation.tag }}] · {{ myNation.short_description || 'Описание не заполнено' }}</small>
+          <small>[{{ myNation.tag }}] · {{ myNation.short_description || t('nationsList.noDescFilled') }}</small>
         </div>
         <div class="nl-mine__actions">
-          <RouterLink v-if="myNation.viewer_can_manage" to="/nation/studio" class="btn btn-sm btn-outline" style="min-height:2.2rem">Управлять</RouterLink>
-          <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-sm btn-outline" style="min-height:2.2rem">Страница</RouterLink>
+          <RouterLink v-if="myNation.viewer_can_manage" to="/nation/studio" class="btn btn-sm btn-outline" style="min-height:2.2rem">{{ t('nationsList.manage') }}</RouterLink>
+          <RouterLink :to="`/nation/${myNation.slug}`" class="btn btn-sm btn-outline" style="min-height:2.2rem">{{ t('nationsList.page') }}</RouterLink>
         </div>
       </div>
 
@@ -208,14 +210,14 @@ onMounted(loadPage)
 
       <!-- empty -->
       <div v-else-if="!allItems.length" class="surface-card nl-empty">
-        <h2>Государств пока нет</h2>
-        <p>{{ auth.isAuthenticated.value ? 'Будь первым — создай своё государство.' : 'Войди, чтобы создать или вступить.' }}</p>
+        <h2>{{ t('nationsList.noNations') }}</h2>
+        <p>{{ auth.isAuthenticated.value ? t('nationsList.noNationsAuth') : t('nationsList.noNationsGuest') }}</p>
       </div>
 
       <!-- no results -->
       <div v-else-if="!filteredNations.length" class="surface-card nl-empty">
-        <h2>Ничего не найдено</h2>
-        <p>Попробуй другой поиск или убери фильтр по типу набора.</p>
+        <h2>{{ t('nationsList.noResults') }}</h2>
+        <p>{{ t('nationsList.noResultsHint') }}</p>
       </div>
 
       <!-- grid -->
@@ -234,10 +236,10 @@ onMounted(loadPage)
                 {{ policyLabel(nation.recruitment_policy) }}
               </span>
               <span v-if="nation.viewer_request_status === 'pending'" class="nl-policy-badge nl-policy-badge--amber">
-                Заявка ожидает
+                {{ t('nationsList.pendingBadge') }}
               </span>
               <span v-if="myNation?.slug === nation.slug" class="nl-policy-badge nl-policy-badge--mine">
-                Моё
+                {{ t('nationsList.mineBadge') }}
               </span>
             </div>
             <div class="nl-card__accent-bar" :style="{ background: nation.accent_color || '#6d5df6' }"></div>
@@ -257,7 +259,7 @@ onMounted(loadPage)
             </div>
 
             <!-- description -->
-            <p class="nl-card__desc">{{ nation.short_description || 'Описание пока не добавлено.' }}</p>
+            <p class="nl-card__desc">{{ nation.short_description || t('nationsList.noDesc') }}</p>
 
             <!-- stats row -->
             <div class="nl-card__stats">
@@ -276,7 +278,7 @@ onMounted(loadPage)
             </div>
 
             <!-- cta -->
-            <RouterLink :to="`/nation/${nation.slug}`" class="nl-card__view">Открыть страницу</RouterLink>
+            <RouterLink :to="`/nation/${nation.slug}`" class="nl-card__view">{{ t('nationsList.openPage') }}</RouterLink>
             <RouterLink
               :to="cta(nation).to"
               class="nl-card__cta"

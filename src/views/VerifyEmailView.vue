@@ -1,10 +1,12 @@
 <script setup>
 import {computed, reactive, ref, watch} from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { resendVerification, verifyEmail } from '../services/authApi'
 import { toastError, toastSuccess, toastInfo } from '../services/toast'
 import { reloadMe, useAuthStore } from '../stores/authStore'
 
+const { t } = useI18n()
 const route = useRoute()
 const auth = useAuthStore()
 
@@ -33,7 +35,7 @@ async function submitVerify() {
 
   try {
     await verifyEmail({ token: form.token.trim() })
-    verifyMessage.value = 'Почта успешно подтверждена.'
+    verifyMessage.value = t('verifyEmail.verified')
 
     if (auth.isAuthenticated.value) {
       await reloadMe()
@@ -52,7 +54,7 @@ async function submitResend() {
 
   try {
     await resendVerification({ email: form.email.trim() })
-    resendMessage.value = 'Если аккаунт существует и почта ещё не подтверждена, новое письмо уже отправлено.'
+    resendMessage.value = t('verifyEmail.resent')
   } catch (error) {
     errorMessage.value = error.message || 'Не удалось отправить письмо повторно.'
   } finally {
@@ -60,37 +62,37 @@ async function submitResend() {
   }
 }
 watch(errorMessage, (value) => { if (value) toastError(value) })
-watch(verifyMessage, (value) => { if (value) toastSuccess(value, 'Почта подтверждена') })
-watch(resendMessage, (value) => { if (value) toastInfo(value, 'Письмо отправлено') })
+watch(verifyMessage, (value) => { if (value) toastSuccess(value, t('verifyEmail.verifiedTitle')) })
+watch(resendMessage, (value) => { if (value) toastInfo(value, t('verifyEmail.sentTitle')) })
 </script>
 
 <template>
   <section class="py-12 md:py-20 auth-page">
     <div class="container-shell max-w-6xl">
       <div v-if="isAlreadyVerified" class="alert alert-success mb-6">
-        Почта уже подтверждена. Можно возвращаться в профиль или переходить к скачиванию лаунчера.
+        {{ t('verifyEmail.alreadyVerified') }}
       </div>
 
       <div class="grid gap-6 lg:grid-cols-2">
         <div class="surface-card p-6 md:p-8 lg:p-10">
-          <div class="section-kicker">Подтверждение почты</div>
-          <h1 class="section-title">Проверь почту</h1>
+          <div class="section-kicker">{{ t('verifyEmail.kicker') }}</div>
+          <h1 class="section-title">{{ t('verifyEmail.title') }}</h1>
           <p class="section-subtitle">
-            Обычно достаточно открыть письмо и нажать кнопку подтверждения. Если нужно, токен можно вставить вручную.
+            {{ t('verifyEmail.subtitle') }}
           </p>
 
           <div v-if="sentFromRegister && hasEmail" class="alert alert-info mt-6">
-            Мы отправили письмо на <strong>{{ form.email }}</strong>. Если его нет во входящих, проверь папку «Спам» или запроси отправку ещё раз.
+            {{ t('verifyEmail.sentToEmail', { email: form.email }) }}
           </div>
 
           <div v-else-if="hasEmail" class="alert alert-info mt-6">
-            Почта для подтверждения: <strong>{{ form.email }}</strong>
+            {{ t('verifyEmail.emailHint', { email: form.email }) }}
           </div>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submitVerify">
             <label>
-              <span class="field-label">Токен подтверждения</span>
-              <input v-model="form.token" class="input" placeholder="Вставь токен, если нужно" />
+              <span class="field-label">{{ t('verifyEmail.tokenLabel') }}</span>
+              <input v-model="form.token" class="input" :placeholder="t('verifyEmail.tokenPlaceholder')" />
             </label>
 
             <p v-if="verifyMessage" class="alert alert-success">{{ verifyMessage }}</p>
@@ -98,33 +100,33 @@ watch(resendMessage, (value) => { if (value) toastInfo(value, 'Письмо от
 
             <button type="submit" class="btn btn-primary" :disabled="isSubmitting || !hasToken">
               <span v-if="isSubmitting" class="spinner"></span>
-              <span>{{ isSubmitting ? 'Проверяем...' : 'Подтвердить вручную' }}</span>
+              <span>{{ isSubmitting ? t('verifyEmail.submitting') : t('verifyEmail.submit') }}</span>
             </button>
           </form>
 
           <div class="mt-6 flex flex-wrap gap-3">
             <RouterLink v-if="auth.isAuthenticated.value" to="/profile" class="btn btn-outline">
-              Вернуться в профиль
+              {{ t('verifyEmail.backToProfile') }}
             </RouterLink>
             <RouterLink v-else to="/login" class="btn btn-outline">
-              Войти
+              {{ t('verifyEmail.toLogin') }}
             </RouterLink>
             <RouterLink to="/download-launcher" class="btn btn-ghost">
-              Скачать лаунчер
+              {{ t('verifyEmail.downloadLauncher') }}
             </RouterLink>
           </div>
         </div>
 
         <div class="gradient-panel p-6 md:p-8 lg:p-10">
-          <div class="section-kicker section-kicker--light">Не пришло письмо?</div>
-          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">Запроси новое письмо подтверждения</h2>
+          <div class="section-kicker section-kicker--light">{{ t('verifyEmail.resendKicker') }}</div>
+          <h2 class="text-3xl font-black tracking-tight text-white md:text-4xl">{{ t('verifyEmail.resendTitle') }}</h2>
           <p class="mt-4 text-base leading-8 text-white/78">
-            Для безопасности мы всегда показываем нейтральный ответ. Даже если почта уже подтверждена, экран останется аккуратным и понятным.
+            {{ t('verifyEmail.resendDesc') }}
           </p>
 
           <form class="mt-8 grid gap-4" @submit.prevent="submitResend">
             <label>
-              <span class="field-label !text-white/88">Email</span>
+              <span class="field-label !text-white/88">{{ t('verifyEmail.emailLabel') }}</span>
               <input v-model="form.email" type="email" class="input" required />
             </label>
 
@@ -132,7 +134,7 @@ watch(resendMessage, (value) => { if (value) toastInfo(value, 'Письмо от
 
             <button type="submit" class="btn btn-light" :disabled="isResending">
               <span v-if="isResending" class="spinner"></span>
-              <span>{{ isResending ? 'Отправляем...' : 'Отправить письмо повторно' }}</span>
+              <span>{{ isResending ? t('verifyEmail.resending') : t('verifyEmail.resendSubmit') }}</span>
             </button>
           </form>
         </div>
@@ -140,5 +142,3 @@ watch(resendMessage, (value) => { if (value) toastInfo(value, 'Письмо от
     </div>
   </section>
 </template>
-
-

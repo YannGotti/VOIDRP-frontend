@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { getPublicProfileBySlug } from '../services/profileApi'
 import { followProfile, unfollowProfile } from '../services/socialApi'
 import { useAuthStore } from '../stores/authStore'
 
+const { t } = useI18n()
 const route = useRoute()
 const authStore = useAuthStore()
 
@@ -110,9 +112,9 @@ const canFollow = computed(() => {
 const stats = computed(() => {
   if (!profile.value) return []
   return [
-    { label: 'Подписчики', value: Number(profile.value?.stats?.followers || 0) },
-    { label: 'Подписки', value: Number(profile.value?.stats?.following || 0) },
-    { label: 'Друзья', value: Number(profile.value?.stats?.friends || 0) },
+    { label: t('publicProfile.followers'), value: Number(profile.value?.stats?.followers || 0) },
+    { label: t('publicProfile.following'), value: Number(profile.value?.stats?.following || 0) },
+    { label: t('publicProfile.friends'), value: Number(profile.value?.stats?.friends || 0) },
   ]
 })
 
@@ -120,12 +122,12 @@ const profileFacts = computed(() => {
   const items = []
 
   if (profile.value?.player_account?.minecraft_nickname) {
-    items.push({ label: 'Игровой ник', value: profile.value.player_account.minecraft_nickname })
+    items.push({ label: t('publicProfile.factNick'), value: profile.value.player_account.minecraft_nickname })
   }
 
   if (publicNation.value?.title) {
     items.push({
-      label: 'Государство',
+      label: t('publicProfile.factNation'),
       value: publicNation.value.title,
       hint: publicNation.value.tag ? `[${publicNation.value.tag}]` : '',
       to: nationLink.value,
@@ -133,7 +135,7 @@ const profileFacts = computed(() => {
   }
 
   if (profile.value?.status_text) {
-    items.push({ label: 'Статус', value: profile.value.status_text })
+    items.push({ label: t('publicProfile.factStatus'), value: profile.value.status_text })
   }
 
   return items
@@ -153,7 +155,7 @@ async function loadProfile() {
     const payload = await getPublicProfileBySlug(route.params.slug, authStore.accessToken || null)
     profile.value = payload
   } catch (err) {
-    error.value = err.message || 'Не удалось загрузить профиль.'
+    error.value = err.message || t('publicProfile.loadError')
   } finally {
     loading.value = false
   }
@@ -176,9 +178,9 @@ async function toggleFollow() {
     }
 
     await loadProfile()
-    actionMessage.value = wasFollowing ? 'Подписка удалена.' : 'Подписка оформлена.'
+    actionMessage.value = wasFollowing ? t('publicProfile.unfollowed') : t('publicProfile.followed')
   } catch (err) {
-    error.value = err.message || 'Не удалось изменить подписку.'
+    error.value = err.message || t('publicProfile.followError')
   } finally {
     followLoading.value = false
   }
@@ -187,10 +189,10 @@ async function toggleFollow() {
 async function copyProfileLink() {
   try {
     await navigator.clipboard.writeText(window.location.href)
-    actionMessage.value = 'Ссылка на профиль скопирована.'
+    actionMessage.value = t('publicProfile.linkCopied')
     error.value = ''
   } catch {
-    error.value = 'Не удалось скопировать ссылку.'
+    error.value = t('publicProfile.linkCopyError')
   }
 }
 
@@ -224,10 +226,10 @@ onBeforeUnmount(() => {
               <div class="relative px-5 pb-5 pt-5 md:px-7 md:pb-7 md:pt-7">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
-                    Профиль игрока
+                    {{ t('publicProfile.playerProfile') }}
                   </span>
                   <span class="rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em]" :style="accentBadgeStyle">
-                    Акцент
+                    {{ t('publicProfile.accent') }}
                   </span>
                   <RouterLink
                     v-if="publicNation?.slug"
@@ -269,15 +271,15 @@ onBeforeUnmount(() => {
                       @click="toggleFollow"
                     >
                       <span v-if="followLoading" class="spinner"></span>
-                      <span v-else>{{ profile.viewer?.is_following ? 'Отписаться' : 'Подписаться' }}</span>
+                      <span v-else>{{ profile.viewer?.is_following ? t('publicProfile.unfollow') : t('publicProfile.follow') }}</span>
                     </button>
 
                     <RouterLink v-if="profile.viewer?.is_self" to="/profile/public" class="btn btn-outline rounded-2xl">
-                      Редактировать
+                      {{ t('publicProfile.edit') }}
                     </RouterLink>
 
                     <button type="button" class="btn btn-outline rounded-2xl" @click="copyProfileLink">
-                      Поделиться
+                      {{ t('publicProfile.share') }}
                     </button>
                   </div>
                 </div>
@@ -290,13 +292,13 @@ onBeforeUnmount(() => {
 
             <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
               <section class="surface-card p-4 md:p-5" :style="cardStyle">
-                <div class="section-kicker !mb-2">О себе</div>
+                <div class="section-kicker !mb-2">{{ t('publicProfile.aboutKicker') }}</div>
                 <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div class="min-w-0 flex-1">
-                    <h2 class="text-lg font-black text-slate-50 md:text-xl">Описание игрока</h2>
+                    <h2 class="text-lg font-black text-slate-50 md:text-xl">{{ t('publicProfile.aboutTitle') }}</h2>
                     <div class="mt-3 h-[2px] w-full rounded-full" :style="accentLineStyle"></div>
                     <p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-300 md:text-[15px]">
-                      {{ profile.bio || 'Игрок пока ничего о себе не написал.' }}
+                      {{ profile.bio || t('publicProfile.noBio') }}
                     </p>
                   </div>
 
@@ -313,8 +315,8 @@ onBeforeUnmount(() => {
 
               <aside class="space-y-4">
                 <section class="surface-card p-4 md:p-5" :style="cardStyle">
-                  <div class="section-kicker !mb-2">Игрок</div>
-                  <h2 class="text-lg font-black text-slate-50">Коротко</h2>
+                  <div class="section-kicker !mb-2">{{ t('publicProfile.infoKicker') }}</div>
+                  <h2 class="text-lg font-black text-slate-50">{{ t('publicProfile.infoTitle') }}</h2>
 
                   <div class="mt-4 space-y-3">
                     <component

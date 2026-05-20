@@ -1,43 +1,47 @@
 <script setup>
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { siteConfig } from '../config.site'
 
-const links = [
+const { t } = useI18n()
+
+const links = computed(() => [
   {
-    title: 'Скачать лаунчер',
-    description: 'Официальная загрузка лаунчера и быстрый путь к старту игры.',
+    title: t('links.launcherTitle'),
+    description: t('links.launcherDesc'),
     internal: '/download-launcher',
-    button: 'Скачать лаунчер',
-    tag: 'Старт',
+    button: t('links.launcherBtn'),
+    tag: t('links.launcherTag'),
   },
   {
-    title: 'Карта мира',
-    description: 'Онлайн-карта сервера: города, регионы, маршруты и обзор мира в браузере.',
+    title: t('links.mapTitle'),
+    description: t('links.mapDesc'),
     url: siteConfig.bluemapUrl,
-    button: 'Открыть карту',
-    tag: 'Мир',
+    button: t('links.mapBtn'),
+    tag: t('links.mapTag'),
   },
   {
-    title: 'Discord',
-    description: 'Общение, анонсы, новости сервера и связь с игроками в одном месте.',
+    title: t('links.discordTitle'),
+    description: t('links.discordDesc'),
     url: siteConfig.discordUrl,
-    button: 'Перейти в Discord',
-    tag: 'Сообщество',
+    button: t('links.discordBtn'),
+    tag: t('links.discordTag'),
   },
   {
-    title: 'Telegram',
-    description: 'Новости проекта, объявления и важные сообщения для игроков.',
+    title: t('links.telegramTitle'),
+    description: t('links.telegramDesc'),
     url: siteConfig.telegramUrl,
-    button: 'Перейти в Telegram',
-    tag: 'Новости',
+    button: t('links.telegramBtn'),
+    tag: t('links.telegramTag'),
   },
   {
-    title: 'Главная страница',
-    description: 'Возврат на стартовый экран с путём к игре и всей навигацией по сайту.',
+    title: t('links.siteTitle'),
+    description: t('links.siteDesc'),
     url: siteConfig.siteUrl,
-    button: 'Открыть сайт',
-    tag: 'Навигация',
+    button: t('links.siteBtn'),
+    tag: t('links.siteTag'),
   },
-]
+])
 </script>
 
 <template>
@@ -45,12 +49,12 @@ const links = [
     <div class="container-shell space-y-4">
       <section class="surface-card p-4 md:p-5">
         <div class="max-w-3xl">
-          <div class="section-kicker !mb-2">Полезные ссылки</div>
+          <div class="section-kicker !mb-2">{{ t('links.kicker') }}</div>
           <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-3xl">
-            Всё важное под рукой
+            {{ t('links.title') }}
           </h1>
           <p class="mt-3 text-sm leading-6 text-slate-400 md:text-[14px]">
-            Карта, Discord, Telegram, сайт и загрузка лаунчера собраны в одном спокойном разделе.
+            {{ t('links.desc') }}
           </p>
         </div>
       </section>
@@ -63,7 +67,7 @@ const links = [
         >
           <div class="flex items-center justify-between gap-3">
             <div class="section-kicker !mb-0">{{ item.tag }}</div>
-            <div class="footer-chip">Быстрый переход</div>
+            <div class="footer-chip">{{ t('links.quickLink') }}</div>
           </div>
 
           <h2 class="mt-3 text-lg font-black tracking-tight text-slate-50 md:text-xl">

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import CraftingGrid from '../components/CraftingGrid.vue'
 import ItemSlot from '../components/ItemSlot.vue'
 import RecipeTreeModal from '../components/RecipeTreeModal.vue'
@@ -8,6 +9,7 @@ import recipesData from '../data/recipes.json'
 import { useItemNames } from '../composables/useItemNames'
 import { useRecipeGraph } from '../composables/useRecipeGraph'
 
+const { t } = useI18n()
 const itemNames = useItemNames()
 const { getRecipesByIngredient } = useRecipeGraph()
 
@@ -107,10 +109,10 @@ function filterByIngredient(item) {
 
       <!-- Заголовок -->
       <div class="mb-6">
-        <div class="section-kicker !mb-2">Сборка VoidRP</div>
-        <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">Крафты сборки</h1>
+        <div class="section-kicker !mb-2">{{ t('recipes.kicker') }}</div>
+        <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">{{ t('recipes.title') }}</h1>
         <p class="mt-2 text-sm text-slate-400">
-          {{ allRecipes.length }} кастомных рецептов — нажми на карточку для дерева зависимостей
+          {{ t('recipes.desc', { count: allRecipes.length }) }}
         </p>
       </div>
 
@@ -123,25 +125,25 @@ function filterByIngredient(item) {
           <input
             v-model="search"
             type="text"
-            placeholder="Поиск по названию, ID, ингредиентам..."
+            :placeholder="t('recipes.searchPlaceholder')"
             class="w-full pl-9 pr-3 py-2 bg-slate-800/60 border border-slate-700/60 rounded-xl text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-violet-500/60 transition"
           />
         </div>
 
         <select v-model="selectedCategory" class="bg-slate-800/60 border border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-100 outline-none focus:border-violet-500/60 transition">
-          <option value="">Все категории</option>
+          <option value="">{{ t('recipes.allCategories') }}</option>
           <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
         </select>
 
         <select v-model="selectedMod" class="bg-slate-800/60 border border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-100 outline-none focus:border-violet-500/60 transition">
-          <option value="">Все моды</option>
+          <option value="">{{ t('recipes.allMods') }}</option>
           <option v-for="mod in outputMods" :key="mod" :value="mod">{{ modLabel(mod) }}</option>
         </select>
 
         <select v-model="selectedType" class="bg-slate-800/60 border border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-100 outline-none focus:border-violet-500/60 transition">
-          <option value="">Все типы</option>
-          <option value="shaped">Верстак</option>
-          <option value="shapeless">Без порядка</option>
+          <option value="">{{ t('recipes.allTypes') }}</option>
+          <option value="shaped">{{ t('recipes.typeShaped') }}</option>
+          <option value="shapeless">{{ t('recipes.typeShapeless') }}</option>
         </select>
 
         <button
@@ -150,18 +152,18 @@ function filterByIngredient(item) {
           @click="clearFilters"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          Сбросить
+          {{ t('recipes.clearFilters') }}
         </button>
       </div>
 
       <!-- Счётчик -->
       <p class="mb-4 text-xs text-slate-500">
-        Показано <span class="text-slate-300 font-semibold">{{ filtered.length }}</span> из {{ allRecipes.length }} рецептов
+        {{ t('recipes.showing') }} <span class="text-slate-300 font-semibold">{{ filtered.length }}</span> {{ t('recipes.of') }} {{ allRecipes.length }} {{ t('recipes.recipesWord') }}
       </p>
 
       <!-- Пусто -->
       <div v-if="filtered.length === 0" class="surface-card p-10 text-center text-sm text-slate-500">
-        Рецептов не найдено — попробуй изменить фильтры
+        {{ t('recipes.noRecipes') }}
       </div>
 
       <!-- Сетка карточек -->
@@ -193,7 +195,7 @@ function filterByIngredient(item) {
                 :class="recipe.type === 'shaped'
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                   : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'"
-              >{{ recipe.type === 'shaped' ? 'верстак' : 'shapeless' }}</span>
+              >{{ recipe.type === 'shaped' ? t('recipes.typeShaped') : t('recipes.typeShapeless') }}</span>
               <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400 border border-slate-600/40">
                 {{ recipe.category }}
               </span>

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { getNationRankings } from '../services/nationStatsApi'
 import { usePageMeta } from '../composables/usePageMeta.js'
 
@@ -17,6 +18,7 @@ usePageMeta({
 import { useAuthStore } from '../stores/authStore'
 import { formatCompactHoursFromMinutes, formatNumber } from '../utils/formatters'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 const router = useRouter()
 const loading = ref(true)
@@ -33,7 +35,7 @@ async function loadRankings() {
     const payload = await getNationRankings(auth.accessToken || null)
     rankings.value = payload?.items || []
   } catch (err) {
-    error.value = err.message || 'Не удалось загрузить рейтинг.'
+    error.value = err.message || t('nationRankings.loadError')
   } finally {
     loading.value = false
   }
@@ -65,12 +67,12 @@ onMounted(loadRankings)
       <!-- header -->
       <header class="nr-header">
         <div>
-          <p class="nr-eyebrow">Государства · VoidRP</p>
-          <h1 class="nr-h1">Рейтинг государств</h1>
+          <p class="nr-eyebrow">{{ t('nationRankings.eyebrow') }}</p>
+          <h1 class="nr-h1">{{ t('nationRankings.title') }}</h1>
         </div>
         <RouterLink to="/nations" class="nr-back-btn">
           <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
-          Каталог
+          {{ t('nationRankings.backBtn') }}
         </RouterLink>
       </header>
 
@@ -90,8 +92,8 @@ onMounted(loadRankings)
 
       <template v-else-if="!rankings.length">
         <div class="surface-card nr-empty">
-          <h2>Рейтинг ещё не сформирован</h2>
-          <p>Нужен первый синк статистики с игрового сервера.</p>
+          <h2>{{ t('nationRankings.emptyTitle') }}</h2>
+          <p>{{ t('nationRankings.emptyDesc') }}</p>
         </div>
       </template>
 
@@ -122,15 +124,15 @@ onMounted(loadRankings)
             </div>
             <div class="nr-podium-card__stats">
               <div>
-                <span>Score</span>
+                <span>{{ t('nationRankings.score') }}</span>
                 <strong>{{ formatNumber(item.score ?? 0) }}</strong>
               </div>
               <div>
-                <span>Участников</span>
+                <span>{{ t('nationRankings.members') }}</span>
                 <strong>{{ formatNumber(item.members_count ?? 0) }}</strong>
               </div>
               <div>
-                <span>Баланс</span>
+                <span>{{ t('nationRankings.balance') }}</span>
                 <strong>{{ formatNumber(item.treasury_balance ?? 0) }}</strong>
               </div>
             </div>
@@ -140,8 +142,8 @@ onMounted(loadRankings)
         <!-- ─── RANKING TABLE ─── -->
         <div class="surface-card nr-table-card">
           <div class="nr-table-header">
-            <h2 class="nr-section-title">Полная таблица</h2>
-            <span class="nr-count">{{ rankings.length }} государств</span>
+            <h2 class="nr-section-title">{{ t('nationRankings.fullTable') }}</h2>
+            <span class="nr-count">{{ t('nationRankings.nationCount', { n: rankings.length }) }}</span>
           </div>
 
           <!-- desktop table -->
@@ -150,12 +152,12 @@ onMounted(loadRankings)
               <thead>
                 <tr>
                   <th class="nr-th-rank">#</th>
-                  <th>Государство</th>
-                  <th class="num">Участников</th>
-                  <th class="num">Баланс</th>
-                  <th class="num">Территория</th>
-                  <th class="num">Онлайн</th>
-                  <th class="num">Score</th>
+                  <th>{{ t('nationRankings.colNation') }}</th>
+                  <th class="num">{{ t('nationRankings.colMembers') }}</th>
+                  <th class="num">{{ t('nationRankings.colBalance') }}</th>
+                  <th class="num">{{ t('nationRankings.colTerritory') }}</th>
+                  <th class="num">{{ t('nationRankings.colOnline') }}</th>
+                  <th class="num">{{ t('nationRankings.colScore') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,7 +209,7 @@ onMounted(loadRankings)
               </div>
               <div class="nr-mitem__info">
                 <strong>{{ item.title }}</strong>
-                <small>[{{ item.tag }}] · {{ formatNumber(item.members_count ?? 0) }} уч. · {{ formatNumber(item.score ?? 0) }} pts</small>
+                <small>[{{ item.tag }}] · {{ formatNumber(item.members_count ?? 0) }} · {{ formatNumber(item.score ?? 0) }} pts</small>
               </div>
               <svg class="nr-mitem__arrow" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
             </div>

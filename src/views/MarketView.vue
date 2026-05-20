@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { toastSuccess } from '../services/toast'
 import { usePageMeta } from '../composables/usePageMeta.js'
 
@@ -22,6 +23,7 @@ import {
 import { formatNumber } from '../utils/formatters'
 import { getMaterialName, getRussianMaterialName } from '../utils/materialNames'
 
+const { t } = useI18n()
 const router = useRouter()
 
 const loading = ref(true)
@@ -103,8 +105,8 @@ function openItem(item) {
 }
 
 function stateLabel(value) {
-  if (value === 'high_demand') return 'Спрос'
-  if (value === 'oversupply') return 'Избыток'
+  if (value === 'high_demand') return t('market.stateDemand')
+  if (value === 'oversupply') return t('market.stateSupply')
   return null
 }
 
@@ -121,9 +123,9 @@ function trendSign(value) {
 }
 
 function txTypeLabel(type) {
-  const t = String(type || '').toLowerCase()
-  if (t.includes('buy')) return 'Покупка'
-  if (t.includes('sell')) return 'Продажа'
+  const tl = String(type || '').toLowerCase()
+  if (tl.includes('buy')) return t('market.txBuy')
+  if (tl.includes('sell')) return t('market.txSell')
   return type
 }
 
@@ -173,7 +175,7 @@ async function loadMarket() {
     listings.value = listingPayload?.items || []
     transactions.value = transactionPayload?.items || []
   } catch (err) {
-    error.value = err?.message || 'Не удалось загрузить рынок.'
+    error.value = err?.message || t('market.loadError')
   } finally {
     loading.value = false
   }
@@ -189,15 +191,15 @@ onMounted(loadMarket)
       <!-- header -->
       <header class="mp-header">
         <div class="mp-header__title">
-          <p class="mp-eyebrow">Экономика · VoidRP</p>
-          <h1 class="mp-h1">Рынок</h1>
+          <p class="mp-eyebrow">{{ t('market.eyebrow') }}</p>
+          <h1 class="mp-h1">{{ t('market.title') }}</h1>
         </div>
         <div class="mp-controls">
           <div class="mp-search">
             <svg class="mp-search__icon" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
             </svg>
-            <input v-model="filters.q" class="mp-search__input" placeholder="Поиск..." />
+            <input v-model="filters.q" class="mp-search__input" :placeholder="t('market.searchPlaceholder')" />
             <span v-if="filters.q" class="mp-search__count">{{ filteredItems.length }}</span>
           </div>
         </div>
@@ -208,19 +210,19 @@ onMounted(loadMarket)
       <!-- stats strip -->
       <div class="mp-stats">
         <div class="mp-stat">
-          <span>Товаров</span>
+          <span>{{ t('market.statItems') }}</span>
           <strong>{{ formatNumber(summary?.active_items || 0) }}</strong>
         </div>
         <div class="mp-stat">
-          <span>Лотов</span>
+          <span>{{ t('market.statListings') }}</span>
           <strong>{{ formatNumber(summary?.active_nation_listings || 0) }}</strong>
         </div>
         <div class="mp-stat">
-          <span>Оборот магазина 24ч</span>
+          <span>{{ t('market.statShopVolume') }}</span>
           <strong>{{ money(summary?.shop_volume_24h || 0) }}</strong>
         </div>
         <div class="mp-stat">
-          <span>Оборот лотов 24ч</span>
+          <span>{{ t('market.statListingsVolume') }}</span>
           <strong>{{ money(summary?.nation_volume_24h || 0) }}</strong>
         </div>
       </div>
@@ -232,12 +234,12 @@ onMounted(loadMarket)
           <!-- table toolbar -->
           <div class="mp-toolbar">
             <div class="mp-demand-tabs">
-              <button :class="{ active: demandFilter === 'all' }" @click="demandFilter = 'all'">Все</button>
+              <button :class="{ active: demandFilter === 'all' }" @click="demandFilter = 'all'">{{ t('market.filterAll') }}</button>
               <button :class="{ active: demandFilter === 'high_demand' }" @click="demandFilter = 'high_demand'">
-                <span class="dot demand"></span>Спрос
+                <span class="dot demand"></span>{{ t('market.filterDemand') }}
               </button>
               <button :class="{ active: demandFilter === 'oversupply' }" @click="demandFilter = 'oversupply'">
-                <span class="dot supply"></span>Избыток
+                <span class="dot supply"></span>{{ t('market.filterSupply') }}
               </button>
             </div>
             <span class="mp-count">{{ filteredItems.length }} / {{ allItems.length }}</span>
@@ -248,7 +250,7 @@ onMounted(loadMarket)
           </div>
 
           <template v-else-if="filteredItems.length === 0">
-            <p class="mp-empty">Ничего не найдено</p>
+            <p class="mp-empty">{{ t('market.notFound') }}</p>
           </template>
 
           <template v-else>
@@ -257,11 +259,11 @@ onMounted(loadMarket)
               <table class="mp-tbl">
                 <thead>
                   <tr>
-                    <th class="sortable" @click="setSort('material')">Предмет<span class="sort-arrow">{{ sortIcon('material') }}</span></th>
-                    <th class="num sortable" @click="setSort('buy')">Покупка<span class="sort-arrow">{{ sortIcon('buy') }}</span></th>
-                    <th class="num sortable" @click="setSort('sell')">Скупка<span class="sort-arrow">{{ sortIcon('sell') }}</span></th>
-                    <th class="num sortable" @click="setSort('trend')">Изм.<span class="sort-arrow">{{ sortIcon('trend') }}</span></th>
-                    <th class="sortable" @click="setSort('demand')">Статус<span class="sort-arrow">{{ sortIcon('demand') }}</span></th>
+                    <th class="sortable" @click="setSort('material')">{{ t('market.colItem') }}<span class="sort-arrow">{{ sortIcon('material') }}</span></th>
+                    <th class="num sortable" @click="setSort('buy')">{{ t('market.colBuy') }}<span class="sort-arrow">{{ sortIcon('buy') }}</span></th>
+                    <th class="num sortable" @click="setSort('sell')">{{ t('market.colSell') }}<span class="sort-arrow">{{ sortIcon('sell') }}</span></th>
+                    <th class="num sortable" @click="setSort('trend')">{{ t('market.colChange') }}<span class="sort-arrow">{{ sortIcon('trend') }}</span></th>
+                    <th class="sortable" @click="setSort('demand')">{{ t('market.colStatus') }}<span class="sort-arrow">{{ sortIcon('demand') }}</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -300,11 +302,11 @@ onMounted(loadMarket)
                 </div>
                 <div class="mp-mcard__prices">
                   <div class="mp-mcard__price buy">
-                    <small>Покупка</small>
+                    <small>{{ t('market.colBuy') }}</small>
                     <strong>{{ money(item.current_buy_price) }}</strong>
                   </div>
                   <div class="mp-mcard__price sell">
-                    <small>Скупка</small>
+                    <small>{{ t('market.colSell') }}</small>
                     <strong>{{ money(item.current_sell_price) }}</strong>
                   </div>
                 </div>
@@ -317,11 +319,11 @@ onMounted(loadMarket)
         <aside class="mp-sidebar">
           <!-- top movers -->
           <div class="surface-card mp-side-card">
-            <h3 class="mp-section-title">Заметные изменения</h3>
+            <h3 class="mp-section-title">{{ t('market.topMovers') }}</h3>
             <div v-if="loading" class="mp-skeletons mt-2">
               <div v-for="i in 4" :key="i" class="skeleton" style="height:28px;border-radius:6px"></div>
             </div>
-            <div v-else-if="topMovers.length === 0" class="mp-empty">Нет изменений</div>
+            <div v-else-if="topMovers.length === 0" class="mp-empty">{{ t('market.noMovers') }}</div>
             <ul v-else class="mp-mover-list">
               <li v-for="item in topMovers" :key="item.material" class="mp-mover-item" @click="openItem(item)">
                 <span class="mp-mover-name">{{ materialLabel(item) }}</span>
@@ -332,7 +334,7 @@ onMounted(loadMarket)
 
           <!-- recent transactions -->
           <div class="surface-card mp-side-card">
-            <h3 class="mp-section-title">Последние сделки</h3>
+            <h3 class="mp-section-title">{{ t('market.recentTrades') }}</h3>
             <div v-if="loading" class="mp-skeletons mt-2">
               <div v-for="i in 5" :key="i" class="skeleton" style="height:44px;border-radius:6px"></div>
             </div>
@@ -360,7 +362,7 @@ onMounted(loadMarket)
       <!-- nation listings -->
       <div v-if="listings.length" class="surface-card mp-listings-card">
         <div class="mp-table-header">
-          <h2 class="mp-section-title">Лоты государств</h2>
+          <h2 class="mp-section-title">{{ t('market.nationListings') }}</h2>
           <span class="mp-count">{{ listings.length }}</span>
         </div>
         <div class="mp-listings-grid">
@@ -373,8 +375,8 @@ onMounted(loadMarket)
               <span class="mp-lot__qty">{{ lot.remaining_amount }}/{{ lot.total_amount }}</span>
             </div>
             <div class="mp-lot__meta">
-              <div><small>Цена</small><strong>{{ money(lot.current_unit_price) }}</strong></div>
-              <div><small>Продавец</small><strong class="mp-lot__seller" :title="lot.seller_player_name">{{ lot.seller_player_name }}</strong></div>
+              <div><small>{{ t('marketItem.stateBuy') }}</small><strong>{{ money(lot.current_unit_price) }}</strong></div>
+              <div><small>Seller</small><strong class="mp-lot__seller" :title="lot.seller_player_name">{{ lot.seller_player_name }}</strong></div>
             </div>
             <button class="mp-lot__copy" :title="lot.id" @click.stop="copyLotId(lot.id)">
               ID лота

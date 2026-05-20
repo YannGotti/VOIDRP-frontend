@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AccountTabs from '../components/AccountTabs.vue'
 import { getMyReferralDashboard, regenerateMyReferralCode } from '../services/referralApi'
 import { useAuthStore } from '../stores/authStore'
 
+const { t } = useI18n()
 const auth = useAuthStore()
 
 const loading = ref(true)
@@ -14,7 +16,7 @@ const success = ref('')
 const dashboard = ref(null)
 
 const rankLabel = computed(
-  () => dashboard.value?.current_reward?.rank_name || dashboard.value?.current_reward?.rank || 'Без ранга',
+  () => dashboard.value?.current_reward?.rank_name || dashboard.value?.current_reward?.rank || t('referral.noRank'),
 )
 
 const recentItems = computed(() => {
@@ -46,7 +48,7 @@ async function loadDashboard() {
   try {
     dashboard.value = await getMyReferralDashboard(auth.accessToken)
   } catch (err) {
-    error.value = err?.message || 'Не удалось загрузить реферальный центр.'
+    error.value = err?.message || t('referral.loadError')
   } finally {
     loading.value = false
   }
@@ -59,9 +61,9 @@ async function regenerateCode() {
 
   try {
     dashboard.value = await regenerateMyReferralCode(auth.accessToken)
-    success.value = 'Новый реферальный код создан.'
+    success.value = t('referral.newCodeCreated')
   } catch (err) {
-    error.value = err?.message || 'Не удалось сгенерировать новый код.'
+    error.value = err?.message || t('referral.regenerateError')
   } finally {
     regenerating.value = false
   }
@@ -70,20 +72,20 @@ async function regenerateCode() {
 async function copyInviteUrl() {
   try {
     await navigator.clipboard.writeText(inviteLink.value || '')
-    success.value = 'Ссылка приглашения скопирована.'
+    success.value = t('referral.linkCopied')
     error.value = ''
   } catch {
-    error.value = 'Не удалось скопировать ссылку.'
+    error.value = t('referral.copyError')
   }
 }
 
 async function copyCode() {
   try {
     await navigator.clipboard.writeText(currentCode.value || '')
-    success.value = 'Код приглашения скопирован.'
+    success.value = t('referral.codeCopied')
     error.value = ''
   } catch {
-    error.value = 'Не удалось скопировать код.'
+    error.value = t('referral.codeCopyError')
   }
 }
 
@@ -96,17 +98,17 @@ onMounted(loadDashboard)
       <section class="surface-card p-5 md:p-7">
         <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <div class="section-kicker !mb-2">Реферальный центр</div>
+            <div class="section-kicker !mb-2">{{ t('referral.kicker') }}</div>
             <h1 class="text-2xl font-black tracking-tight text-slate-50 md:text-4xl">
-              Приглашай игроков без лишней путаницы
+              {{ t('referral.title') }}
             </h1>
             <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-400 md:text-[15px]">
-              Здесь твой код приглашения, прогресс и недавние регистрации. Всё собрано компактно и по делу.
+              {{ t('referral.desc') }}
             </p>
           </div>
 
           <RouterLink to="/profile/public" class="btn btn-outline">
-            Публичный профиль
+            {{ t('referral.publicProfile') }}
           </RouterLink>
         </div>
       </section>
@@ -124,13 +126,13 @@ onMounted(loadDashboard)
       <template v-else>
         <div class="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Твой код</div>
+            <div class="section-kicker !mb-2">{{ t('referral.codeKicker') }}</div>
             <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              Личная ссылка приглашения
+              {{ t('referral.codeTitle') }}
             </h2>
 
             <div class="action-card mt-5">
-              <p class="metric-label">Referral code</p>
+              <p class="metric-label">{{ t('referral.referralCode') }}</p>
               <p class="mt-2 break-all text-3xl font-black tracking-[0.12em] text-slate-50">
                 {{ currentCode }}
               </p>
@@ -140,38 +142,38 @@ onMounted(loadDashboard)
             </div>
 
             <div class="mt-4 grid gap-3 sm:grid-cols-2">
-              <button class="btn btn-primary" @click="copyInviteUrl">Скопировать ссылку</button>
-              <button class="btn btn-outline" @click="copyCode">Скопировать код</button>
+              <button class="btn btn-primary" @click="copyInviteUrl">{{ t('referral.copyLink') }}</button>
+              <button class="btn btn-outline" @click="copyCode">{{ t('referral.copyCode') }}</button>
               <button class="btn btn-ghost sm:col-span-2" :disabled="regenerating" @click="regenerateCode">
                 <span v-if="regenerating" class="spinner"></span>
-                <span>{{ regenerating ? 'Создаём...' : 'Сгенерировать новый код' }}</span>
+                <span>{{ regenerating ? t('referral.regenerating') : t('referral.regenerate') }}</span>
               </button>
             </div>
           </section>
 
           <section class="surface-card p-5 md:p-6">
-            <div class="section-kicker !mb-2">Прогресс</div>
+            <div class="section-kicker !mb-2">{{ t('referral.progressKicker') }}</div>
             <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-              Текущее состояние
+              {{ t('referral.progressTitle') }}
             </h2>
 
             <div class="metric-grid metric-grid-3 mt-5">
               <div class="metric-card text-center">
-                <p class="metric-label">Ожидают</p>
+                <p class="metric-label">{{ t('referral.pending') }}</p>
                 <p class="metric-value">{{ dashboard?.totals?.pending || 0 }}</p>
               </div>
               <div class="metric-card text-center">
-                <p class="metric-label">Засчитано</p>
+                <p class="metric-label">{{ t('referral.qualified') }}</p>
                 <p class="metric-value">{{ dashboard?.totals?.qualified || 0 }}</p>
               </div>
               <div class="metric-card text-center">
-                <p class="metric-label">Ранг</p>
+                <p class="metric-label">{{ t('referral.rank') }}</p>
                 <p class="metric-value !text-[1.2rem] md:!text-[1.5rem]">{{ rankLabel }}</p>
               </div>
             </div>
 
             <div class="action-card mt-5 text-sm text-slate-300">
-              Чем больше приглашённых игроков дойдут до нужного статуса, тем выше твой ранг и ценность реферального центра.
+              {{ t('referral.progressHint') }}
             </div>
           </section>
         </div>
@@ -179,16 +181,16 @@ onMounted(loadDashboard)
         <section class="surface-card p-5 md:p-6">
           <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div class="section-kicker !mb-2">История</div>
+              <div class="section-kicker !mb-2">{{ t('referral.historyKicker') }}</div>
               <h2 class="text-xl font-black tracking-tight text-slate-50 md:text-2xl">
-                Недавние регистрации
+                {{ t('referral.historyTitle') }}
               </h2>
             </div>
-            <span class="footer-chip">Всего событий: {{ recentItems.length }}</span>
+            <span class="footer-chip">{{ t('referral.totalEvents', { count: recentItems.length }) }}</span>
           </div>
 
           <div v-if="!recentItems.length" class="action-card mt-5 text-sm text-slate-400">
-            Пока приглашённых регистраций нет.
+            {{ t('referral.noHistory') }}
           </div>
 
           <div v-else class="mt-5 grid gap-3 lg:grid-cols-2">
@@ -205,7 +207,7 @@ onMounted(loadDashboard)
                       item.minecraft_nickname ||
                       item.site_login ||
                       item.player_name ||
-                      'Игрок'
+                      t('referral.defaultPlayer')
                     }}
                   </div>
                   <div class="mt-1 text-sm text-slate-400">
@@ -218,8 +220,8 @@ onMounted(loadDashboard)
               </div>
 
               <div class="mt-4 grid gap-2 text-sm text-slate-400">
-                <div>Дата: {{ formatDate(item.created_at || item.registered_at) }}</div>
-                <div>Награда: {{ item.reward_name || item.reward || '—' }}</div>
+                <div>{{ t('referral.dateLabel') }} {{ formatDate(item.created_at || item.registered_at) }}</div>
+                <div>{{ t('referral.rewardLabel') }} {{ item.reward_name || item.reward || '—' }}</div>
               </div>
             </article>
           </div>

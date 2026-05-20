@@ -1,9 +1,11 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getPlayersTop } from '../services/playerStatsApi'
 import { formatNumber } from '../utils/formatters'
 import { toastError } from '../services/toast'
 
+const { t } = useI18n()
 const loading = ref(true)
 const data = ref(null)
 const activeKey = ref(null)
@@ -54,7 +56,7 @@ async function load() {
       activeKey.value = result.categories[0].key
     }
   } catch (e) {
-    toastError(e.message || 'Не удалось загрузить рейтинг игроков.')
+    toastError(e.message || t('playersTop.loadError'))
   } finally {
     loading.value = false
   }
@@ -68,9 +70,9 @@ onMounted(load)
     <div class="container-shell">
 
       <div class="mb-6 page-entry">
-        <div class="section-kicker !mb-2">Рейтинг</div>
-        <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">Топ игроков</h1>
-        <p class="mt-2 text-sm text-slate-400">Лучшие игроки сезона по разным категориям</p>
+        <div class="section-kicker !mb-2">{{ t('playersTop.kicker') }}</div>
+        <h1 class="text-3xl font-black tracking-tight text-slate-50 md:text-4xl">{{ t('playersTop.title') }}</h1>
+        <p class="mt-2 text-sm text-slate-400">{{ t('playersTop.desc') }}</p>
       </div>
 
       <!-- Loading skeleton -->
@@ -106,12 +108,12 @@ onMounted(load)
             <span class="text-2xl leading-none">{{ CATEGORY_ICONS[activeCategory.key] || '🏆' }}</span>
             <div>
               <h2 class="text-base font-black text-slate-50">{{ activeCategory.label }}</h2>
-              <p class="text-xs text-slate-500">Топ {{ activeCategory.entries.length }} · {{ activeCategory.unit }}</p>
+              <p class="text-xs text-slate-500">{{ t('playersTop.topCount', { n: activeCategory.entries.length, unit: activeCategory.unit }) }}</p>
             </div>
           </div>
 
           <div v-if="activeCategory.entries.length === 0" class="px-5 py-8 text-center text-sm text-slate-500">
-            Нет данных
+            {{ t('playersTop.noData') }}
           </div>
 
           <div v-else class="divide-y divide-slate-700/30">
@@ -149,7 +151,7 @@ onMounted(load)
                   class="truncate text-sm font-semibold text-slate-100 hover:text-violet-300 transition"
                 >{{ entry.minecraft_nickname }}</router-link>
                 <p v-if="fmtDate(entry.last_seen_at)" class="text-xs text-slate-500">
-                  был {{ fmtDate(entry.last_seen_at) }}
+                  {{ t('playersTop.lastSeen', { date: fmtDate(entry.last_seen_at) }) }}
                 </p>
               </div>
 
@@ -164,7 +166,7 @@ onMounted(load)
       </template>
 
       <div v-else class="surface-card p-8 text-center text-sm text-slate-500">
-        Нет данных
+        {{ t('playersTop.noDataEmpty') }}
       </div>
 
     </div>
