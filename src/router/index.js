@@ -32,6 +32,7 @@ import AdminMarketPanelView from '../views/admin/AdminMarketPanelView.vue'
 import AdminServerView from '../views/admin/AdminServerView.vue'
 import AdminNationsView from '../views/admin/AdminNationsView.vue'
 import AdminModSuggestionsView from '../views/admin/AdminModSuggestionsView.vue'
+import AdminMetrikaView from '../views/admin/AdminMetrikaView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
 import MarketView from '../views/MarketView.vue'
 import MarketItemView from '../views/MarketItemView.vue'
@@ -44,7 +45,7 @@ import ShopView from '../views/ShopView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
-  { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин' } },
+  { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин', requiresAuth: true } },
   { path: '/guide', name: 'expert-guide', component: ExpertGuideView, meta: { title: 'Гайд сборки' } },
   { path: '/recipes', name: 'recipes', component: RecipesView, meta: { title: 'Крафты сборки' } },
   { path: '/market', name: 'market', component: MarketView, meta: { title: 'Рынок' } },
@@ -83,6 +84,7 @@ const routes = [
       { path: 'server', name: 'admin-server', component: AdminServerView, meta: { title: 'Статус сервера', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'nations', name: 'admin-nations', component: AdminNationsView, meta: { title: 'Государства', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'mod-suggestions', name: 'admin-mod-suggestions', component: AdminModSuggestionsView, meta: { title: 'Предложения модов', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'metrika', name: 'admin-metrika', component: AdminMetrikaView, meta: { title: 'Метрика', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
     ],
   },
 ]

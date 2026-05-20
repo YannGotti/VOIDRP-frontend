@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import { getDashboardStats, getServerStatus, getRecentUsers } from '../../services/adminApi'
+import { getDashboardStats, getServerStatus, getRecentUsers, getMetrikaStats } from '../../services/adminApi'
 import { adminListPlayers } from '../../services/adminApi'
 import { authState } from '../../stores/authStore'
 
@@ -12,24 +12,30 @@ const recentUsers = ref([])
 const legacySummary = ref(null)
 const loading = ref(true)
 const serverLoading = ref(true)
+const metrika = ref(null)
+const metrikaLoading = ref(true)
 
 async function loadAll() {
   loading.value = true
   serverLoading.value = true
+  metrikaLoading.value = true
 
-  const [statsRes, serverRes, recentRes, legacyRes] = await Promise.allSettled([
+  const [statsRes, serverRes, recentRes, legacyRes, metrikaRes] = await Promise.allSettled([
     getDashboardStats(token()),
     getServerStatus(token()),
     getRecentUsers(token()),
     adminListPlayers(token(), { limit: 1 }),
+    getMetrikaStats(token()),
   ])
 
   stats.value = statsRes.status === 'fulfilled' ? statsRes.value : null
   server.value = serverRes.status === 'fulfilled' ? serverRes.value : { online: false }
   recentUsers.value = recentRes.status === 'fulfilled' ? (recentRes.value?.users || []) : []
+  metrika.value = metrikaRes.status === 'fulfilled' ? metrikaRes.value : null
 
   loading.value = false
   serverLoading.value = false
+  metrikaLoading.value = false
 }
 
 function formatDate(iso) {
@@ -168,6 +174,53 @@ onMounted(loadAll)
         <svg class="quick-card__arrow" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </RouterLink>
     </div>
+
+    <!-- Metrika stats -->
+    <div class="section-label">Яндекс.Метрика — 30 дней</div>
+    <div v-if="metrikaLoading" class="skel skel--cards" style="margin-bottom:1.75rem" />
+    <div v-else-if="metrika" class="stats-grid" style="margin-bottom:1.75rem">
+      <div class="stat">
+        <div class="stat__icon stat__icon--blue">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="stat__body">
+          <div class="stat__v">{{ metrika.visits.toLocaleString('ru') }}</div>
+          <div class="stat__l">Визиты</div>
+          <div class="stat__sub">сессий за 30 дней</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat__icon stat__icon--green">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="stat__body">
+          <div class="stat__v">{{ metrika.users.toLocaleString('ru') }}</div>
+          <div class="stat__l">Уникальные посетители</div>
+          <div class="stat__sub">за 30 дней</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat__icon stat__icon--cyan">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        </div>
+        <div class="stat__body">
+          <div class="stat__v">{{ metrika.pageviews.toLocaleString('ru') }}</div>
+          <div class="stat__l">Просмотры страниц</div>
+          <div class="stat__sub">за 30 дней</div>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat__icon stat__icon--orange">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+        </div>
+        <div class="stat__body">
+          <div class="stat__v">{{ metrika.bounce_rate }}%</div>
+          <div class="stat__l">Отказы</div>
+          <div class="stat__sub">показатель отказов</div>
+        </div>
+      </div>
+    </div>
+    <div v-else class="metrika-error">Метрика недоступна</div>
 
     <!-- Recent users -->
     <div class="section-label">Последние регистрации</div>
@@ -482,6 +535,7 @@ onMounted(loadAll)
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 .empty { color: #334155; font-size: 0.83rem; padding: 1.5rem; text-align: center; }
+.metrika-error { color: #334155; font-size: 0.83rem; padding: 0.75rem 0 1.75rem; }
 
 @media (max-width: 600px) { .ap { padding: 1rem 0.75rem 2rem; } }
 </style>

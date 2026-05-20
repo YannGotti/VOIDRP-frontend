@@ -272,7 +272,7 @@ onUnmounted(() => {
           <span>·</span>
           <a :href="siteConfig.bluemapUrl" target="_blank" rel="noreferrer" class="cta-link">Карта мира</a>
           <span>·</span>
-          <RouterLink to="/natios/rankings" class="cta-link">Рейтинг</RouterLink>
+          <RouterLink to="/nations/rankings" class="cta-link">Рейтинг</RouterLink>
           <span>·</span>
           <RouterLink to="/guide" class="cta-link">Гайд</RouterLink>
         </div>

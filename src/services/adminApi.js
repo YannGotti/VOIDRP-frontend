@@ -127,6 +127,14 @@ export function getRecentUsers(token) {
   return apiRequest('/admin/dashboard/recent-users', ah(token))
 }
 
+export function getMetrikaStats(token) {
+  return apiRequest('/admin/dashboard/metrika', ah(token))
+}
+
+export function getMetrikaFull(token, days = 30) {
+  return apiRequest(`/admin/metrika/full?days=${days}`, ah(token))
+}
+
 export function adminListPlayers(token, params = {}) {
   return apiRequest(`/admin/players${buildQuery(params)}`, ah(token))
 }
