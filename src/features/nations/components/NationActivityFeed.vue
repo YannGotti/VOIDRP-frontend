@@ -159,7 +159,7 @@ const normalizedItems = computed(() =>
 }
 
 .naf__time {
-  font-size: .7rem;
+  font-size: .75rem;
   color: rgb(71 85 105);
   white-space: nowrap;
 }

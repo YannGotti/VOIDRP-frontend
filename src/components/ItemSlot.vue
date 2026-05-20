@@ -139,11 +139,11 @@ const imgSizeClass = computed(() => ({
       <div class="bg-[#0d1117] border border-white/15 rounded-lg px-2.5 py-1.5 shadow-xl text-center whitespace-nowrap max-w-[200px]">
         <template v-if="isTag">
           <p class="text-xs font-semibold text-violet-300">{{ tagLabel }}</p>
-          <p class="text-[10px] text-white/40 font-mono mt-0.5">{{ item }}</p>
+          <p class="text-xs text-white/40 font-mono mt-0.5">{{ item }}</p>
         </template>
         <template v-else>
           <p v-if="ruName" class="text-xs font-semibold text-white/90">{{ ruName }}</p>
-          <p class="text-[10px] text-white/40 font-mono" :class="ruName ? 'mt-0.5' : ''">{{ item }}</p>
+          <p class="text-xs text-white/40 font-mono" :class="ruName ? 'mt-0.5' : ''">{{ item }}</p>
         </template>
       </div>
       <div class="w-2 h-2 bg-[#0d1117] border-r border-b border-white/15 rotate-45 -mt-1.5"></div>

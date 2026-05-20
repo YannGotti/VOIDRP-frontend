@@ -175,7 +175,7 @@ onMounted(load)
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
-.stat__l { font-size: 0.63rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #3d4f6e; margin-bottom: 0.3rem; }
+.stat__l { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #3d4f6e; margin-bottom: 0.3rem; }
 .stat__v { font-size: 1.5rem; font-weight: 900; color: #e2e8f0; }
 .stat__v--green { color: #86efac; }
 .stat__v--orange { color: #fdba74; }
@@ -217,7 +217,7 @@ onMounted(load)
 .btn--danger { background: rgba(239,68,68,0.12); color: #fca5a5; }
 .btn--danger:hover:not(:disabled) { background: rgba(239,68,68,0.22); }
 .btn--sm { padding: 0.38rem 0.75rem; font-size: 0.78rem; }
-.btn--xs { padding: 0.28rem 0.6rem; font-size: 0.72rem; }
+.btn--xs { padding: 0.28rem 0.6rem; font-size: .75rem; }
 
 /* Cards */
 .cards { display: flex; flex-direction: column; gap: 0.65rem; }
@@ -275,7 +275,7 @@ onMounted(load)
 }
 
 /* Badges */
-.badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.65rem; font-weight: 800; }
+.badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: .75rem; font-weight: 800; }
 .badge--green { background: rgba(34,197,94,0.1); color: #86efac; }
 .badge--orange { background: rgba(249,115,22,0.1); color: #fdba74; }
 .badge--blue { background: rgba(59,130,246,0.1); color: #93c5fd; }

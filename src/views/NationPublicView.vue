@@ -14,6 +14,7 @@ import { getNationActivity } from '../services/nationActivityApi'
 import { getNationStatsBySlug, getNationTopDonors, getNationTreasuryTransactions } from '../services/nationStatsApi'
 import { useAuthStore } from '../stores/authStore'
 import { formatCompactHoursFromMinutes, formatNumber, formatRoleLabel, formatRecruitmentLabel } from '../utils/formatters'
+import { usePageMeta } from '../composables/usePageMeta.js'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -193,6 +194,18 @@ async function loadNation() {
   actionMessage.value = ''
   try {
     nation.value = await getNationBySlug(route.params.slug, auth.accessToken || null)
+    const n = nation.value
+    usePageMeta({
+      title: n.title,
+      description: n.short_description || `Государство ${n.title} на сервере VoidRP.`,
+      url: `https://void-rp.ru/nation/${n.slug}`,
+      ...(n.assets?.icon_url ? { image: n.assets.icon_url } : {}),
+      breadcrumbs: [
+        { name: 'Главная', url: '/' },
+        { name: 'Государства', url: '/nations' },
+        { name: n.title },
+      ],
+    })
   } catch (err) {
     error.value = err.message || 'Не удалось загрузить страницу государства.'
   } finally {
@@ -657,7 +670,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
   background: rgba(0,0,0,.35);
   backdrop-filter: blur(10px);
   padding: .22rem .7rem;
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -764,7 +777,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
 }
 
 .np-stat span {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -830,7 +843,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
 .np-card__header .np-card__title { margin-bottom: 0; }
 
 .np-badge {
-  font-size: .7rem;
+  font-size: .75rem;
   font-weight: 700;
   border-radius: 999px;
   border: 1px solid rgba(148,163,184,.14);
@@ -884,7 +897,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 900;
   flex-shrink: 0;
 }
@@ -903,7 +916,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
 
 .np-member__info small {
   display: block;
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 600;
   color: rgb(100 116 139);
   margin-top: .1rem;
@@ -990,7 +1003,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: .7rem;
+  font-size: .75rem;
   font-weight: 900;
   color: #f8fbff;
   flex-shrink: 0;
@@ -1013,7 +1026,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
 
 .np-ally small {
   display: block;
-  font-size: .68rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
 }
 
@@ -1087,7 +1100,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
 
 .np-list__left small {
   display: block;
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
   margin-top: .05rem;
 }
@@ -1104,7 +1117,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
 
 .np-rank {
   display: inline-block;
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 800;
   color: rgb(100 116 139);
   margin-right: .3rem;
@@ -1114,7 +1127,7 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
 .np-map-card { padding: .85rem !important; }
 
 .np-map-link {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgb(100 116 139);
   text-decoration: none;

@@ -30,6 +30,10 @@ html {
   overflow-x: clip;
 }
 
+body {
+  overflow-x: hidden;
+}
+
 html,
 body,
 #app {
@@ -153,7 +157,7 @@ footer,
   border: 1px solid rgba(139, 92, 246, 0.22);
   background: rgba(139, 92, 246, 0.08);
   padding: 0.38rem 0.82rem;
-  font-size: 0.68rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -274,7 +278,7 @@ footer,
 .build-info-card__label,
 .label-text,
 .helper-text {
-  font-size: 0.72rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -317,7 +321,7 @@ footer,
 
 .inline-chip {
   padding-inline: 0.78rem;
-  font-size: 0.74rem;
+  font-size: .75rem;
 }
 
 .footer-chip:hover,
@@ -350,7 +354,7 @@ footer,
 
 .hero-step-label {
   margin: 0;
-  font-size: 0.68rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -480,7 +484,7 @@ footer,
 .site-navbar__meta {
   margin-top: 0.1rem;
   white-space: nowrap;
-  font-size: 0.72rem;
+  font-size: .75rem;
   color: #8ea0c4;
 }
 
@@ -727,14 +731,14 @@ footer,
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: rgba(255, 255, 255, 0.05);
   padding: 0.28rem 0.68rem;
-  font-size: 0.72rem;
+  font-size: .75rem;
   font-weight: 800;
   line-height: 1;
 }
 
 .badge-sm {
   padding: 0.24rem 0.56rem;
-  font-size: 0.68rem;
+  font-size: .75rem;
 }
 
 .badge-success {
@@ -781,7 +785,7 @@ footer,
   border-bottom: 1px solid rgba(148, 163, 184, 0.12);
   padding: 0 0.9rem 0.8rem;
   text-align: left;
-  font-size: 0.72rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;

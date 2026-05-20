@@ -147,7 +147,7 @@ onUnmounted(() => {
 
 .section-kicker {
   margin-bottom: 0.4rem !important;
-  font-size: 0.68rem !important;
+  font-size: 0.75rem !important;
   letter-spacing: 0.18em !important;
 }
 
@@ -169,7 +169,7 @@ onUnmounted(() => {
 }
 
 .btn.btn-sm {
-  min-height: 2.3rem !important;
+  min-height: 2.5rem !important;
   padding-inline: 0.85rem !important;
 }
 
@@ -187,7 +187,7 @@ onUnmounted(() => {
 }
 
 .metric-label {
-  font-size: 0.67rem !important;
+  font-size: 0.75rem !important;
 }
 
 .metric-value {
@@ -198,9 +198,9 @@ onUnmounted(() => {
 .footer-chip,
 .hero-chip,
 .inline-chip {
-  min-height: 2rem !important;
+  min-height: 2.5rem !important;
   padding: 0.4rem 0.7rem !important;
-  font-size: 0.72rem !important;
+  font-size: 0.75rem !important;
 }
 
 .site-navbar {
@@ -230,7 +230,7 @@ onUnmounted(() => {
 }
 
 .site-navbar__meta {
-  font-size: 0.7rem !important;
+  font-size: 0.75rem !important;
   line-height: 1.35 !important;
 }
 
@@ -246,6 +246,9 @@ onUnmounted(() => {
 .site-navbar__mobile-panel {
   margin-top: 0.55rem !important;
   padding: 0.85rem !important;
+  max-height: calc(100dvh - 5rem) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .site-navbar__mobile-links,

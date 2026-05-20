@@ -84,7 +84,7 @@ import { siteConfig } from '../config.site'
 }
 
 .bi-item span {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -135,7 +135,7 @@ import { siteConfig } from '../config.site'
 }
 
 .bi-num {
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 900;
   color: rgba(255,255,255,.4);
   flex-shrink: 0;

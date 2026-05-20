@@ -10,6 +10,10 @@ usePageMeta({
   title: 'Государства',
   description: 'Список всех государств сервера VoidRP. Смотри состав, казну и статистику каждого государства. Создай своё или вступи в существующее.',
   url: 'https://void-rp.ru/nations',
+  breadcrumbs: [
+    { name: 'Главная', url: '/' },
+    { name: 'Государства' },
+  ],
 })
 
 const auth = useAuthStore()
@@ -297,7 +301,7 @@ onMounted(loadPage)
 }
 
 .nl-eyebrow {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -359,7 +363,7 @@ onMounted(loadPage)
 .nl-search__count {
   position: absolute;
   right: .55rem;
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgb(139 92 246);
 }
@@ -425,7 +429,7 @@ onMounted(loadPage)
 }
 
 .nl-stat span {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -567,7 +571,7 @@ onMounted(loadPage)
   background: rgba(0,0,0,.4);
   backdrop-filter: blur(8px);
   padding: .18rem .55rem;
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -650,7 +654,7 @@ onMounted(loadPage)
   border-radius: 999px;
   border: 1px solid;
   padding: .1rem .45rem;
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .1em;
   text-transform: uppercase;

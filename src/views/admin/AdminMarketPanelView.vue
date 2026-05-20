@@ -347,7 +347,7 @@ onMounted(() => { loadSummary(); loadItems() })
 .stat--accent:hover { border-color: rgba(124,58,237,0.35); box-shadow: 0 8px 20px rgba(124,58,237,0.1); }
 
 .stat__l {
-  font-size: 0.63rem;
+  font-size: .75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -381,7 +381,7 @@ onMounted(() => { loadSummary(); loadItems() })
 .inp:focus, .sel:focus { border-color: rgba(124,58,237,0.45); }
 .sel option { background: #0d1422; }
 
-.filters__hint { font-size: 0.72rem; color: #334155; font-style: italic; }
+.filters__hint { font-size: .75rem; color: #334155; font-style: italic; }
 
 /* Buttons */
 .btn {
@@ -407,7 +407,7 @@ onMounted(() => { loadSummary(); loadItems() })
 .btn--success { background: rgba(34,197,94,0.12); color: #86efac; }
 .btn--success:hover:not(:disabled) { background: rgba(34,197,94,0.22); }
 .btn--sm { padding: 0.38rem 0.75rem; font-size: 0.78rem; }
-.btn--xs { padding: 0.25rem 0.55rem; font-size: 0.72rem; }
+.btn--xs { padding: 0.25rem 0.55rem; font-size: .75rem; }
 
 /* Table wrap */
 .table-wrap {
@@ -428,7 +428,7 @@ onMounted(() => { loadSummary(); loadItems() })
 .tbl thead th {
   padding: 0.58rem 0.8rem;
   text-align: left;
-  font-size: 0.63rem;
+  font-size: .75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -447,7 +447,7 @@ onMounted(() => { loadSummary(); loadItems() })
 
 .tbl td { padding: 0.5rem 0.8rem; color: #64748b; vertical-align: middle; }
 
-.tbl__mat { font-weight: 800; color: #c4b5fd !important; font-size: 0.72rem; font-family: monospace; }
+.tbl__mat { font-weight: 800; color: #c4b5fd !important; font-size: .75rem; font-family: monospace; }
 .tbl__name { color: #94a3b8 !important; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
 
 .tbl__price { text-align: right; min-width: 80px; }
@@ -474,11 +474,11 @@ onMounted(() => { loadSummary(); loadItems() })
   text-align: right;
 }
 
-.tbl__trend { font-weight: 700; font-size: 0.72rem; }
+.tbl__trend { font-weight: 700; font-size: .75rem; }
 .tbl__trend.up { color: #86efac; }
 .tbl__trend.down { color: #fca5a5; }
 
-.badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.65rem; font-weight: 800; }
+.badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: .75rem; font-weight: 800; }
 .badge--green { background: rgba(34,197,94,0.1); color: #86efac; }
 .badge--red { background: rgba(239,68,68,0.1); color: #fca5a5; }
 

@@ -316,7 +316,7 @@ onMounted(load)
 .tbl thead th {
   padding: 0.6rem 0.85rem;
   text-align: left;
-  font-size: 0.63rem;
+  font-size: .75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -335,7 +335,7 @@ onMounted(load)
 .tbl__login { font-weight: 800; color: #c4b5fd !important; }
 .tbl__nick { color: #94a3b8 !important; font-weight: 600; }
 .tbl__email { color: #475569 !important; font-size: 0.75rem; }
-.tbl__date { color: #334155 !important; font-size: 0.73rem; }
+.tbl__date { color: #334155 !important; font-size: .75rem; }
 .tbl__num { color: #64748b !important; font-weight: 700; text-align: center; }
 
 /* Badge */
@@ -343,7 +343,7 @@ onMounted(load)
   display: inline-block;
   padding: 0.18rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: .75rem;
   font-weight: 800;
 }
 .badge--green { background: rgba(34,197,94,0.1); color: #86efac; }
@@ -430,7 +430,7 @@ onMounted(load)
 
 .info-grid__label {
   display: block;
-  font-size: 0.65rem;
+  font-size: .75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -447,7 +447,7 @@ onMounted(load)
 }
 
 .modal__section {
-  font-size: 0.68rem;
+  font-size: .75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;

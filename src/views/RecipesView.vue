@@ -183,18 +183,18 @@ function filterByIngredient(item) {
                 <p class="text-sm font-bold text-slate-100 truncate leading-tight capitalize">
                   {{ outputDisplayName(recipe.output) }}
                 </p>
-                <p class="text-[10px] text-slate-500 truncate font-mono leading-tight mt-0.5">
+                <p class="text-xs text-slate-500 truncate font-mono leading-tight mt-0.5">
                   {{ recipe.output }}
                 </p>
               </div>
             </div>
             <div class="flex flex-col items-end gap-1 shrink-0">
-              <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+              <span class="text-xs px-2 py-0.5 rounded-full font-semibold"
                 :class="recipe.type === 'shaped'
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                   : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'"
               >{{ recipe.type === 'shaped' ? 'верстак' : 'shapeless' }}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400 border border-slate-600/40">
+              <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-400 border border-slate-600/40">
                 {{ recipe.category }}
               </span>
             </div>
@@ -208,13 +208,13 @@ function filterByIngredient(item) {
 
           <!-- Кнопки действий -->
           <div class="flex items-center justify-between gap-2 pt-0.5">
-            <p class="text-[10px] text-slate-600 truncate font-mono flex-1">{{ recipe.id }}</p>
+            <p class="text-xs text-slate-600 truncate font-mono flex-1">{{ recipe.id }}</p>
 
             <!-- "Используется в" — кнопка → модал -->
             <button
               v-if="getRecipesByIngredient(recipe.output).length > 0"
               @click="usedInItem = recipe.output"
-              class="shrink-0 flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-700/40 hover:bg-slate-700/70 border border-slate-600/30 hover:border-slate-500/50 text-slate-400 hover:text-slate-200 transition"
+              class="shrink-0 flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg bg-slate-700/40 hover:bg-slate-700/70 border border-slate-600/30 hover:border-slate-500/50 text-slate-400 hover:text-slate-200 transition"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               {{ getRecipesByIngredient(recipe.output).length }}
@@ -223,7 +223,7 @@ function filterByIngredient(item) {
             <!-- Дерево -->
             <button
               @click="treeRecipe = recipe"
-              class="shrink-0 flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 hover:border-violet-500/40 text-violet-400 hover:text-violet-300 transition"
+              class="shrink-0 flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 hover:border-violet-500/40 text-violet-400 hover:text-violet-300 transition"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="5" r="3"/><path d="M12 8v8"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 16l-7 3M12 16l7 3"/>

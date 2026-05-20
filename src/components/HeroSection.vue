@@ -87,7 +87,7 @@ import { siteConfig } from '../config.site'
 }
 
 .hs-eyebrow {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .2em;
   text-transform: uppercase;
@@ -163,7 +163,7 @@ import { siteConfig } from '../config.site'
 }
 
 .hs-panel__label {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .2em;
   text-transform: uppercase;

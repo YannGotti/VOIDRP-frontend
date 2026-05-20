@@ -8,6 +8,11 @@ usePageMeta({
   title: 'Рейтинг государств',
   description: 'Рейтинг государств сервера VoidRP по богатству, активности и размеру. Кто сильнейший на этой неделе?',
   url: 'https://void-rp.ru/nations/rankings',
+  breadcrumbs: [
+    { name: 'Главная', url: '/' },
+    { name: 'Государства', url: '/nations' },
+    { name: 'Рейтинг' },
+  ],
 })
 import { useAuthStore } from '../stores/authStore'
 import { formatCompactHoursFromMinutes, formatNumber } from '../utils/formatters'
@@ -225,7 +230,7 @@ onMounted(loadRankings)
 }
 
 .nr-eyebrow {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -311,7 +316,7 @@ onMounted(loadRankings)
 .nr-medal { font-size: 1.4rem; line-height: 1; }
 
 .nr-rank-num {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 900;
   letter-spacing: .12em;
   color: rgb(100 116 139);
@@ -356,7 +361,7 @@ onMounted(loadRankings)
 
 .nr-podium-card__name-block small {
   display: block;
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
   margin-top: .1rem;
 }
@@ -407,7 +412,7 @@ onMounted(loadRankings)
 }
 
 .nr-count {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .1em;
   color: rgb(100 116 139);
@@ -430,7 +435,7 @@ onMounted(loadRankings)
   background: rgba(255,255,255,.03);
   border-bottom: 1px solid rgba(255,255,255,.07);
   padding: .42rem .75rem;
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -503,7 +508,7 @@ onMounted(loadRankings)
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 900;
   color: #f8fbff;
   overflow: hidden;
@@ -521,7 +526,7 @@ onMounted(loadRankings)
 
 .nr-nation-tag {
   display: block;
-  font-size: .7rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
   margin-top: .05rem;
 }
@@ -586,7 +591,7 @@ onMounted(loadRankings)
 
 .nr-mitem__info small {
   display: block;
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
   margin-top: .05rem;
 }

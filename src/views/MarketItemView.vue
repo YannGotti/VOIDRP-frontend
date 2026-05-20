@@ -591,7 +591,7 @@ watch(material, load)
 
 .item-hero__meta { min-width: 0; }
 .item-hero__kicker {
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -636,7 +636,7 @@ watch(material, load)
 .stat-pill.sell { border-color: rgba(251,113,133,.2); background: rgba(251,113,133,.05); }
 
 .stat-pill__label {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -653,7 +653,7 @@ watch(material, load)
 .state-badge {
   border-radius: 999px;
   padding: .35rem .9rem;
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 900;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -666,7 +666,7 @@ watch(material, load)
 /* ── chart ── */
 .chart-wrap { overflow-x: auto; }
 .chart-svg { display: block; width: 100%; height: auto; min-width: 340px; }
-.chart-lbl { fill: rgb(71 85 105); font-size: 11px; }
+.chart-lbl { fill: rgb(71 85 105); font-size: 12px; }
 
 .legend-line {
   display: inline-block;
@@ -680,7 +680,7 @@ watch(material, load)
   border-radius: 999px;
   background: transparent;
   color: rgb(100 116 139);
-  font-size: .7rem;
+  font-size: .75rem;
   font-weight: 900;
   letter-spacing: .1em;
   padding: .28rem .7rem;
@@ -696,7 +696,7 @@ watch(material, load)
 
 .chart-range-hint {
   font-family: monospace;
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(71 85 105);
   padding: .1rem .45rem;
   background: rgba(255,255,255,.03);
@@ -712,7 +712,7 @@ watch(material, load)
   padding: .08rem .45rem;
   border-radius: 999px;
   background: rgba(148,163,184,.1);
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .08em;
   color: rgb(100 116 139);
@@ -731,7 +731,7 @@ watch(material, load)
   border: none;
   background: transparent;
   color: rgb(100 116 139);
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   padding: .28rem .65rem;
   border-radius: 7px;
@@ -782,7 +782,7 @@ watch(material, load)
   display: inline-block;
   border-radius: 999px;
   padding: .18rem .6rem;
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 900;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -812,7 +812,7 @@ watch(material, load)
   margin-bottom: .2rem;
 }
 .listing-row__tag {
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 900;
   letter-spacing: .1em;
   color: rgb(139 92 246);
@@ -827,7 +827,7 @@ watch(material, load)
   color: rgb(203 213 225);
 }
 .listing-row__seller {
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(71 85 105);
   margin-bottom: .6rem;
 }
@@ -846,5 +846,5 @@ watch(material, load)
   background: linear-gradient(90deg, rgb(52,211,153), rgb(16,185,129));
   transition: width .4s;
 }
-.listing-row__stock-label { font-size: .7rem; color: rgb(71 85 105); }
+.listing-row__stock-label { font-size: .75rem; color: rgb(71 85 105); }
 </style>

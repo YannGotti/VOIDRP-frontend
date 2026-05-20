@@ -202,7 +202,7 @@ async function handleLogout() {
 }
 
 .adm-brand__sub {
-  font-size: 0.68rem;
+  font-size: .75rem;
   color: #475569;
   font-weight: 600;
 }
@@ -323,7 +323,7 @@ async function handleLogout() {
 }
 
 .adm-user__role {
-  font-size: 0.65rem;
+  font-size: .75rem;
   color: #334155;
   font-weight: 600;
 }

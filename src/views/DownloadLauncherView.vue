@@ -7,6 +7,10 @@ usePageMeta({
   title: 'Скачать лаунчер',
   description: 'Скачай официальный лаунчер VoidRP — автоматическая установка сборки модов, авторизация и запуск Minecraft одной кнопкой.',
   url: 'https://void-rp.ru/download-launcher',
+  breadcrumbs: [
+    { name: 'Главная', url: '/' },
+    { name: 'Скачать лаунчер' },
+  ],
 })
 import { useAuthStore } from '../stores/authStore'
 

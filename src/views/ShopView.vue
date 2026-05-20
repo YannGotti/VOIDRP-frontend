@@ -143,7 +143,7 @@ onMounted(loadPage)
                 <!-- Cart badge -->
                 <span
                   v-if="cart[product.id]"
-                  class="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-violet-600 text-[11px] font-black text-white"
+                  class="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-violet-600 text-xs font-black text-white"
                 >{{ cart[product.id] }}</span>
               </div>
 
@@ -184,7 +184,7 @@ onMounted(loadPage)
               <h2 class="text-sm font-black text-slate-100">Корзина</h2>
               <span
                 v-if="cartCount"
-                class="ml-auto rounded-full bg-violet-600 px-2 py-0.5 text-[11px] font-black text-white"
+                class="ml-auto rounded-full bg-violet-600 px-2 py-0.5 text-xs font-black text-white"
               >{{ cartCount }}</span>
             </div>
 
@@ -255,7 +255,7 @@ onMounted(loadPage)
             >Очистить корзину</button>
 
             <!-- Delivery info -->
-            <div v-if="auth.isAuthenticated.value" class="rounded-xl border border-slate-700/40 bg-slate-900/60 px-3 py-2.5 text-[11px] leading-relaxed text-slate-500 space-y-1">
+            <div v-if="auth.isAuthenticated.value" class="rounded-xl border border-slate-700/40 bg-slate-900/60 px-3 py-2.5 text-xs leading-relaxed text-slate-500 space-y-1">
               <p>
                 <span class="text-slate-400">Никнейм:</span>
                 <span class="ml-1 font-bold text-slate-300">{{ auth.state.playerAccount?.minecraft_nickname || '—' }}</span>
@@ -268,7 +268,7 @@ onMounted(loadPage)
             </div>
 
             <!-- Legal -->
-            <p class="border-t border-slate-700/40 pt-3 text-[11px] leading-relaxed text-slate-600">
+            <p class="border-t border-slate-700/40 pt-3 text-xs leading-relaxed text-slate-600">
               Нажимая «Оплатить», вы соглашаетесь с
               <RouterLink to="/offer" class="prose-link">офертой</RouterLink>.
               Цифровые товары выдаются автоматически и не подлежат возврату.

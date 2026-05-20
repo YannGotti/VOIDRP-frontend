@@ -128,7 +128,7 @@ const managementRules = computed(() => {
           <div v-for="member in alliance.members || []" :key="member.id" class="action-card">
             <p class="font-semibold text-slate-100">{{ member.nation?.title || member.nation?.slug }}</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">[{{ member.nation?.tag }}]</p>
-            <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            <p class="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
               {{ memberRoleLabel(member.role) }}
             </p>
           </div>

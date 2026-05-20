@@ -204,7 +204,7 @@ onMounted(load)
 }
 
 .stat--accent:hover { border-color: rgba(124,58,237,0.35); box-shadow: 0 8px 20px rgba(124,58,237,0.1); }
-.stat__l { font-size: 0.63rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #3d4f6e; margin-bottom: 0.3rem; }
+.stat__l { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #3d4f6e; margin-bottom: 0.3rem; }
 .stat__v { font-size: 1.5rem; font-weight: 900; color: #e2e8f0; }
 .stat--accent .stat__v { color: #c4b5fd; }
 
@@ -251,7 +251,7 @@ onMounted(load)
 .tbl thead th {
   padding: 0.58rem 0.85rem;
   text-align: left;
-  font-size: 0.63rem;
+  font-size: .75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -266,8 +266,8 @@ onMounted(load)
 .tbl td { padding: 0.55rem 0.85rem; color: #64748b; vertical-align: middle; }
 
 .tbl__name { font-weight: 800; color: #e2e8f0 !important; min-width: 130px; }
-.tbl__slug { color: #334155 !important; font-family: monospace; font-size: 0.72rem; }
-.tbl__date { color: #334155 !important; font-size: 0.72rem; }
+.tbl__slug { color: #334155 !important; font-family: monospace; font-size: .75rem; }
+.tbl__date { color: #334155 !important; font-size: .75rem; }
 .tbl__num { text-align: center; color: #94a3b8 !important; font-weight: 700; }
 .tbl__zero { color: #1e293b; }
 
@@ -279,7 +279,7 @@ onMounted(load)
   display: inline-block;
   padding: 0.15rem 0.45rem;
   border-radius: 5px;
-  font-size: 0.68rem;
+  font-size: .75rem;
   font-weight: 900;
   background: rgba(124,58,237,0.1);
   color: #c4b5fd;
@@ -287,9 +287,9 @@ onMounted(load)
   font-family: monospace;
 }
 
-.alliance-chip { font-size: 0.72rem; color: #64748b; font-style: italic; }
+.alliance-chip { font-size: .75rem; color: #64748b; font-style: italic; }
 
-.badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.65rem; font-weight: 800; }
+.badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: .75rem; font-weight: 800; }
 .badge--green { background: rgba(34,197,94,0.1); color: #86efac; }
 .badge--yellow { background: rgba(234,179,8,0.1); color: #fde047; }
 .badge--red { background: rgba(239,68,68,0.1); color: #fca5a5; }

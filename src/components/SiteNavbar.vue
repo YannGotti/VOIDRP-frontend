@@ -293,6 +293,8 @@ async function handleLogout() {
   display: flex;
   align-items: center;
   gap: 0.55rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.95rem;
 }
 
 /* ── Dropdown trigger ─────────────────── */
@@ -376,7 +378,7 @@ async function handleLogout() {
   color: #c4b5fd;
 }
 .site-navbar__dropdown-item-desc {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: #64748b;
   white-space: nowrap;
 }
@@ -466,7 +468,7 @@ async function handleLogout() {
 .site-navbar__avatar--sm {
   width: 1.6rem;
   height: 1.6rem;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
 }
 .site-navbar__avatar-img {
   width: 100%;
@@ -490,7 +492,7 @@ async function handleLogout() {
   align-items: center;
   gap: 0.55rem;
   padding: 0.5rem 0.95rem 0.2rem;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.06em;

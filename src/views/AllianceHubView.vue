@@ -7,6 +7,10 @@ usePageMeta({
   title: 'Альянсы',
   description: 'Межгосударственные альянсы сервера VoidRP — военные блоки, экономические союзы и политические федерации между государствами.',
   url: 'https://void-rp.ru/alliances',
+  breadcrumbs: [
+    { name: 'Главная', url: '/' },
+    { name: 'Альянсы' },
+  ],
 })
 import AllianceProposalFeed from '../features/alliances/components/AllianceProposalFeed.vue'
 import AllianceRelationsPanel from '../features/alliances/components/AllianceRelationsPanel.vue'
@@ -541,7 +545,7 @@ onMounted(loadPage)
 }
 
 .ah-eyebrow {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -621,7 +625,7 @@ onMounted(loadPage)
   border-radius: 999px;
   background: rgba(139,92,246,.3);
   color: rgb(196 181 253);
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 900;
   padding: 0 .3rem;
 }
@@ -704,13 +708,13 @@ onMounted(loadPage)
 
 .ah-alliance-item__info small {
   display: block;
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
   margin-top: .05rem;
 }
 
 .ah-alliance-item__count {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgb(100 116 139);
   border: 1px solid rgba(255,255,255,.08);
@@ -726,7 +730,7 @@ onMounted(loadPage)
 }
 
 .ah-status-label {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -761,7 +765,7 @@ onMounted(loadPage)
 .ah-form__field { display: flex; flex-direction: column; gap: .35rem; }
 
 .ah-field-label {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgb(148 163 184);
 }
@@ -801,7 +805,7 @@ onMounted(loadPage)
 
 .ah-tx-left { min-width: 0; }
 .ah-tx-left span { display: block; font-size: .83rem; font-weight: 600; color: rgb(203 213 225); }
-.ah-tx-left small { display: block; font-size: .72rem; color: rgb(100 116 139); margin-top: .05rem; }
+.ah-tx-left small { display: block; font-size: .75rem; color: rgb(100 116 139); margin-top: .05rem; }
 
 .ah-tx-list li > strong {
   font-size: .83rem;

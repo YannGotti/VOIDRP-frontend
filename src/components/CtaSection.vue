@@ -36,7 +36,7 @@ import { siteConfig } from '../config.site'
 }
 
 .cta-eyebrow {
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .2em;
   text-transform: uppercase;

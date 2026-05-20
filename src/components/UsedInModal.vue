@@ -67,12 +67,12 @@ function outputName(item) {
                   <p class="text-sm font-semibold text-slate-200 truncate capitalize">
                     {{ outputName(recipe.output) }}
                   </p>
-                  <p class="text-[10px] text-slate-500 font-mono truncate">{{ recipe.output }}</p>
+                  <p class="text-xs text-slate-500 font-mono truncate">{{ recipe.output }}</p>
                 </div>
               </div>
               <button
                 @click="emit('open-tree', recipe)"
-                class="shrink-0 flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 text-violet-400 hover:text-violet-300 transition"
+                class="shrink-0 flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 text-violet-400 hover:text-violet-300 transition"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="5" r="3"/><path d="M12 8v8"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="M12 16l-7 3M12 16l7 3"/>

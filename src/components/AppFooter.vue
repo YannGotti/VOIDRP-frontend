@@ -26,7 +26,7 @@ import { siteConfig } from '../config.site'
         </div>
       </div>
 
-      <div class="px-1 text-center text-[11px] text-slate-500">
+      <div class="px-1 text-center text-xs text-slate-500">
         © 2026 VoidRP
         <span class="mx-1">·</span>
         <RouterLink to="/privacy" class="transition hover:text-slate-300">Политика конфиденциальности</RouterLink>

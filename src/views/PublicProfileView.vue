@@ -223,16 +223,16 @@ onBeforeUnmount(() => {
 
               <div class="relative px-5 pb-5 pt-5 md:px-7 md:pb-7 md:pt-7">
                 <div class="flex flex-wrap items-center gap-2">
-                  <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
+                  <span class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md">
                     Профиль игрока
                   </span>
-                  <span class="rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em]" :style="accentBadgeStyle">
+                  <span class="rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em]" :style="accentBadgeStyle">
                     Акцент
                   </span>
                   <RouterLink
                     v-if="publicNation?.slug"
                     :to="nationLink"
-                    class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md transition hover:bg-black/40"
+                    class="rounded-full border border-white/12 bg-black/30 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em] text-white/84 backdrop-blur-md transition hover:bg-black/40"
                   >
                     {{ publicNation.title }}
                   </RouterLink>
@@ -303,7 +303,7 @@ onBeforeUnmount(() => {
                   <div class="grid min-w-0 grid-cols-3 gap-3 md:w-[360px]">
                     <div v-for="item in stats" :key="item.label" class="metric-card profile-stat-card text-center" :style="cardStyle">
                       <p class="text-[1.7rem] font-black leading-none text-slate-50">{{ item.value }}</p>
-                      <p class="mt-2 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">
+                      <p class="mt-2 text-xs font-bold uppercase tracking-[0.24em] text-slate-500">
                         {{ item.label }}
                       </p>
                     </div>

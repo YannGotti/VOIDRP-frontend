@@ -7,6 +7,10 @@ usePageMeta({
   title: 'Гайд сборки',
   description: 'Полный гайд по сборке модов VoidRP — как прогрессировать, что крафтить, как работают механики. Всё для новичков и опытных игроков.',
   url: 'https://void-rp.ru/guide',
+  breadcrumbs: [
+    { name: 'Главная', url: '/' },
+    { name: 'Гайд' },
+  ],
 })
 
 const CHECK_STORAGE_KEY = 'voidrp-expert-progression-guide-v1'
@@ -606,7 +610,7 @@ watch(checked, (value) => {
 }
 
 .gp-eyebrow {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -652,7 +656,7 @@ watch(checked, (value) => {
 }
 
 .gp-progress__label {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -660,7 +664,7 @@ watch(checked, (value) => {
 }
 
 .gp-progress__fraction {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgba(255,255,255,.4);
 }
@@ -689,7 +693,7 @@ watch(checked, (value) => {
 }
 
 .gp-progress__hint {
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgba(255,255,255,.35);
   margin: 0;
 }
@@ -725,7 +729,7 @@ watch(checked, (value) => {
 }
 
 .gp-intro-label {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -772,7 +776,7 @@ watch(checked, (value) => {
 }
 
 .gp-nav__label {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -799,7 +803,7 @@ watch(checked, (value) => {
 .gp-nav-link:hover { background: rgba(255,255,255,.05); color: #fff; }
 
 .gp-nav-link__num {
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 900;
   width: 22px;
   height: 22px;
@@ -835,12 +839,12 @@ watch(checked, (value) => {
   display: flex;
   align-items: center;
   gap: .4rem;
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
 }
 
 .gp-route li span {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 800;
   color: rgb(71 85 105);
   width: 16px;
@@ -865,7 +869,7 @@ watch(checked, (value) => {
 }
 
 .gp-stage__num {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -896,7 +900,7 @@ watch(checked, (value) => {
   border-radius: 999px;
   background: rgba(255,255,255,.04);
   padding: .18rem .55rem;
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -920,7 +924,7 @@ watch(checked, (value) => {
 }
 
 .gp-list-label {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -946,7 +950,7 @@ watch(checked, (value) => {
   color: rgb(203 213 225);
 }
 
-.gp-diamond { color: rgb(110 231 183); flex-shrink: 0; font-size: .7rem; margin-top: .15rem; }
+.gp-diamond { color: rgb(110 231 183); flex-shrink: 0; font-size: .75rem; margin-top: .15rem; }
 
 .gp-checklist { display: flex; flex-direction: column; gap: .3rem; }
 
@@ -991,7 +995,7 @@ watch(checked, (value) => {
   background: rgba(255,255,255,.03);
   border-bottom: 1px solid rgba(255,255,255,.07);
   padding: .42rem .75rem;
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -1065,7 +1069,7 @@ watch(checked, (value) => {
 }
 
 .gp-limit-hint {
-  font-size: .7rem;
+  font-size: .75rem;
   color: rgb(71 85 105);
 }
 
@@ -1104,7 +1108,7 @@ watch(checked, (value) => {
 }
 
 .gp-cmd-block__note {
-  font-size: .73rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
   margin: 0 0 .65rem;
   line-height: 1.5;
@@ -1128,7 +1132,7 @@ watch(checked, (value) => {
 
 .gp-cmd {
   font-family: 'Courier New', monospace;
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgb(110 231 183);
   background: rgba(110,231,183,.07);
@@ -1170,7 +1174,7 @@ watch(checked, (value) => {
 }
 
 .gp-mod-cat__name {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -1211,13 +1215,13 @@ watch(checked, (value) => {
 }
 
 .gp-mod-key {
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
   line-height: 1.4;
 }
 
 .gp-mod-note {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgb(71 85 105);
   border: 1px solid rgba(255,255,255,.06);
@@ -1268,7 +1272,7 @@ watch(checked, (value) => {
 }
 
 .gp-tier-epoch {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1284,7 +1288,7 @@ watch(checked, (value) => {
 }
 
 .gp-tier-mod {
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 600;
   color: rgb(71 85 105);
 }

@@ -64,7 +64,7 @@ const QTY_PRESETS = [1, 4, 8, 16, 32, 64]
           <ItemSlot :item="recipe.output" :count="recipe.output_count" size="md" />
           <div class="min-w-0 flex-1">
             <p class="text-base font-bold text-slate-100 capitalize truncate">{{ outputName }}</p>
-            <p class="text-[10px] text-slate-500 font-mono truncate">{{ recipe.output }}</p>
+            <p class="text-xs text-slate-500 font-mono truncate">{{ recipe.output }}</p>
           </div>
 
           <!-- Quantity -->

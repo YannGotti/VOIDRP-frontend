@@ -58,19 +58,19 @@ const iconFallback = computed(() => tag.value.slice(0, 2).toUpperCase())
             </div>
 
             <div class="min-w-0 flex-1 pb-1">
-              <div class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Государство</div>
+              <div class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Государство</div>
               <h3 class="mt-2 truncate text-2xl font-black tracking-tight text-slate-950">{{ title }}</h3>
               <p class="mt-1 text-sm leading-6 text-slate-600">[{{ tag }}] · {{ shortDescription }}</p>
             </div>
           </div>
 
           <div class="mt-4 rounded-[20px] border border-slate-200 bg-white/82 p-4">
-            <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Описание</p>
+            <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Описание</p>
             <p class="mt-2 text-sm leading-6 text-slate-700">{{ description }}</p>
           </div>
 
           <div class="mt-3 rounded-[20px] border border-slate-200 bg-white/82 p-4">
-            <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Ссылка</p>
+            <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Ссылка</p>
             <p class="mt-2 break-all text-sm leading-6 text-slate-700">
               {{ publicNationUrl || `/nation/${props.form.slug || props.nation?.slug || 'your-nation'}` }}
             </p>

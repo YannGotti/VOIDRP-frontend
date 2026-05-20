@@ -721,7 +721,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
               <div v-for="member in nation.members" :key="member.user_id" class="action-card">
                 <p class="font-semibold text-slate-100">{{ member.minecraft_nickname || member.site_login }}</p>
                 <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
-                <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                <p class="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
                   {{ formatRoleLabel(member.role) }}
                 </p>
               </div>
@@ -818,11 +818,11 @@ watch(success, (value) => { if (value) toastSuccess(value) })
               <div class="grid gap-3 sm:grid-cols-2">
                 <div class="metric-card text-center">
                   <p class="metric-value !text-[1.12rem]">{{ allianceSummary.members_count }}</p>
-                  <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Государств</p>
+                  <p class="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Государств</p>
                 </div>
                 <div class="metric-card text-center">
                   <p class="metric-value !text-[1.12rem]">{{ allianceSummary.transfer_fee_percent }}%</p>
-                  <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Комиссия</p>
+                  <p class="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Комиссия</p>
                 </div>
               </div>
 
@@ -1074,7 +1074,7 @@ watch(success, (value) => { if (value) toastSuccess(value) })
                   <div class="min-w-0">
                     <p class="truncate font-semibold text-slate-100">{{ member.minecraft_nickname || member.site_login }}</p>
                     <p class="mt-1 text-sm text-slate-400">@{{ member.site_login }}</p>
-                    <p class="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                    <p class="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
                       {{ formatRoleLabel(member.role) }}
                     </p>
                     <p v-if="member.custom_prefix" class="mt-1 text-xs text-violet-400">

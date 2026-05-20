@@ -7,8 +7,8 @@ import { usePageMeta } from '../composables/usePageMeta.js'
 
 useReveal()
 usePageMeta({
-  title: 'VoidRP — Minecraft Roleplay сервер',
-  description: 'VoidRP — Minecraft roleplay сервер с живой экономикой, государствами, альянсами и сотнями модов. Единый аккаунт, удобный лаунчер — заходи на void-rp.ru.',
+  title: 'VoidRP (Войд РП) — Майнкрафт Roleplay сервер',
+  description: 'Войд РП — майнкрафт ролевой сервер с живой экономикой, государствами, альянсами и сотнями модов. VoidRP: единый аккаунт, удобный лаунчер — void-rp.ru.',
 })
 
 const ipCopied = ref(false)
@@ -272,7 +272,7 @@ onUnmounted(() => {
           <span>·</span>
           <a :href="siteConfig.bluemapUrl" target="_blank" rel="noreferrer" class="cta-link">Карта мира</a>
           <span>·</span>
-          <RouterLink to="/nation/rankings" class="cta-link">Рейтинг</RouterLink>
+          <RouterLink to="/natios/rankings" class="cta-link">Рейтинг</RouterLink>
           <span>·</span>
           <RouterLink to="/guide" class="cta-link">Гайд</RouterLink>
         </div>
@@ -500,7 +500,7 @@ onUnmounted(() => {
   background: rgba(139,92,246,.1);
   border-radius: 999px;
   padding: .38rem .9rem;
-  font-size: .68rem; font-weight: 700; letter-spacing: .14em;
+  font-size: .75rem; font-weight: 700; letter-spacing: .14em;
   text-transform: uppercase; color: rgba(196,181,253,1);
   margin-bottom: 1.6rem;
   backdrop-filter: blur(6px);
@@ -653,7 +653,7 @@ onUnmounted(() => {
 }
 
 .step-card__num {
-  font-size: .62rem; font-weight: 900; letter-spacing: .16em;
+  font-size: .75rem; font-weight: 900; letter-spacing: .16em;
   color: rgba(139,92,246,.7);
 }
 .step-card__title {
@@ -728,14 +728,14 @@ onUnmounted(() => {
   background: rgba(255,255,255,.04);
   padding: 1.6rem 1.85rem;
   display: flex; flex-direction: column; align-items: center; gap: .9rem;
-  text-align: center; min-width: 230px;
+  text-align: center; min-width: min(230px, 100%);
   backdrop-filter: blur(10px);
   transition: border-color .25s;
 }
 .launcher-download-box:hover { border-color: rgba(139,92,246,.35); }
 
 .ldb-label {
-  font-size: .65rem; font-weight: 700; letter-spacing: .18em;
+  font-size: .75rem; font-weight: 700; letter-spacing: .18em;
   text-transform: uppercase; color: rgba(167,139,250,.8); margin: 0;
 }
 .ldb-btn {

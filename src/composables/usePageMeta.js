@@ -22,9 +22,27 @@ function setLink(rel, href) {
   el.setAttribute('href', href)
 }
 
+function setJsonLd(id, data) {
+  let el = document.querySelector(`script[data-ld="${id}"]`)
+  if (!el) {
+    el = document.createElement('script')
+    el.setAttribute('type', 'application/ld+json')
+    el.setAttribute('data-ld', id)
+    document.head.appendChild(el)
+  }
+  el.textContent = JSON.stringify(data)
+}
+
+function removejsonLd(id) {
+  const el = document.querySelector(`script[data-ld="${id}"]`)
+  if (el) el.remove()
+}
+
 /**
- * Обновляет все SEO-теги страницы.
- * @param {{ title?: string, description?: string, image?: string, url?: string, noindex?: boolean }} opts
+ * @param {{ title?: string, description?: string, image?: string, url?: string, noindex?: boolean, breadcrumbs?: Array<{name: string, url?: string}> }} opts
+ * breadcrumbs — массив от корня к текущей странице, например:
+ *   [{ name: 'Главная', url: '/' }, { name: 'Государства', url: '/nations' }]
+ *   Последний элемент — текущая страница (url можно не указывать).
  */
 export function usePageMeta(opts = {}) {
   const {
@@ -33,6 +51,7 @@ export function usePageMeta(opts = {}) {
     image = DEFAULT_IMAGE,
     url = BASE_URL + window.location.pathname,
     noindex = false,
+    breadcrumbs = null,
   } = opts
 
   const fullTitle = title === SITE_NAME ? title : `${title} — ${SITE_NAME}`
@@ -54,4 +73,19 @@ export function usePageMeta(opts = {}) {
   setMeta('twitter:image', image)
 
   setLink('canonical', url)
+
+  if (breadcrumbs && breadcrumbs.length > 0) {
+    setJsonLd('breadcrumb', {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbs.map((crumb, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: crumb.name,
+        ...(crumb.url ? { item: BASE_URL + crumb.url } : {}),
+      })),
+    })
+  } else {
+    removejsonLd('breadcrumb')
+  }
 }

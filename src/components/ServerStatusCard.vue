@@ -79,7 +79,7 @@ function copyIp() {
 }
 
 .sc-label {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;

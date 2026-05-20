@@ -126,10 +126,10 @@ const cardStyle = computed(() => ({
           <div class="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/72"></div>
 
           <div class="absolute left-4 top-4 flex flex-wrap gap-2">
-            <span class="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/88 backdrop-blur-md">
+            <span class="rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em] text-white/88 backdrop-blur-md">
               @{{ slugText }}
             </span>
-            <span class="rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em]" :style="accentBadgeStyle">
+            <span class="rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em]" :style="accentBadgeStyle">
               Акцент
             </span>
           </div>
@@ -146,7 +146,7 @@ const cardStyle = computed(() => ({
               <div class="min-w-0 flex-1 pt-1">
                 <div class="flex items-center gap-3">
                   <span class="h-2.5 w-2.5 rounded-full" :style="accentDotStyle"></span>
-                  <span class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">Цвет страницы</span>
+                  <span class="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Цвет страницы</span>
                 </div>
 
                 <h3 class="mt-3 break-words text-2xl font-black tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] md:text-[1.95rem]">
@@ -163,14 +163,14 @@ const cardStyle = computed(() => ({
 
             <div class="mt-4 grid gap-3">
               <div class="rounded-[20px] border p-4 backdrop-blur" :style="cardStyle">
-                <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">О себе</p>
+                <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">О себе</p>
                 <p class="mt-2 text-sm leading-6 text-slate-300">
                   {{ bioText }}
                 </p>
               </div>
 
               <div class="rounded-[20px] border p-4 backdrop-blur" :style="cardStyle">
-                <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Ссылка</p>
+                <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Ссылка</p>
                 <p class="mt-2 break-all text-sm leading-6 text-slate-300">
                   {{ publicProfileUrl || `/u/${slugText}` }}
                 </p>

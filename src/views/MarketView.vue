@@ -7,6 +7,10 @@ usePageMeta({
   title: 'Рынок',
   description: 'Торговый рынок сервера VoidRP — актуальные цены на все товары, спрос и предложение от государств в реальном времени.',
   url: 'https://void-rp.ru/market',
+  breadcrumbs: [
+    { name: 'Главная', url: '/' },
+    { name: 'Рынок' },
+  ],
 })
 import { useRouter } from 'vue-router'
 import {
@@ -393,7 +397,7 @@ onMounted(loadMarket)
 }
 
 .mp-eyebrow {
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -455,7 +459,7 @@ onMounted(loadMarket)
 .mp-search__count {
   position: absolute;
   right: .55rem;
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgb(139 92 246);
 }
@@ -478,7 +482,7 @@ onMounted(loadMarket)
 }
 
 .mp-stat span {
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -535,7 +539,7 @@ onMounted(loadMarket)
 }
 
 .mp-count {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .1em;
   color: rgb(100 116 139);
@@ -559,7 +563,7 @@ onMounted(loadMarket)
   border: none;
   background: transparent;
   color: rgb(100 116 139);
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   padding: .26rem .6rem;
   border-radius: 6px;
@@ -614,7 +618,7 @@ onMounted(loadMarket)
   border-bottom: 1px solid rgba(255,255,255,.07);
   padding: .45rem .75rem;
   text-align: left;
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -631,7 +635,7 @@ onMounted(loadMarket)
 .mp-tbl th.sortable:hover { color: rgb(203 213 225); }
 
 .sort-arrow {
-  font-size: .7rem;
+  font-size: .75rem;
   letter-spacing: 0;
   color: rgb(139 92 246);
   text-transform: none;
@@ -664,7 +668,7 @@ onMounted(loadMarket)
 
 .mp-material-id {
   display: block;
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(71 85 105);
   font-family: monospace;
   margin-top: .05rem;
@@ -678,7 +682,7 @@ onMounted(loadMarket)
   display: inline-block;
   border-radius: 999px;
   padding: .15rem .5rem;
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -740,7 +744,7 @@ onMounted(loadMarket)
 
 .mp-mcard__left small {
   display: block;
-  font-size: .7rem;
+  font-size: .75rem;
   color: rgb(71 85 105);
   font-family: monospace;
   margin-top: .05rem;
@@ -792,7 +796,7 @@ onMounted(loadMarket)
 
 .mp-mcard__price small {
   display: block;
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -897,7 +901,7 @@ onMounted(loadMarket)
   flex-shrink: 0;
   border-radius: 999px;
   padding: .1rem .45rem;
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 900;
   letter-spacing: .09em;
   text-transform: uppercase;
@@ -931,7 +935,7 @@ onMounted(loadMarket)
   justify-content: space-between;
   gap: .5rem;
   margin-top: .18rem;
-  font-size: .69rem;
+  font-size: .75rem;
   color: rgb(71 85 105);
 }
 
@@ -984,7 +988,7 @@ onMounted(loadMarket)
 
 .mp-lot__nation {
   display: block;
-  font-size: .72rem;
+  font-size: .75rem;
   color: rgb(100 116 139);
   margin-top: .1rem;
   white-space: nowrap;
@@ -1000,7 +1004,7 @@ onMounted(loadMarket)
 }
 
 .mp-lot__qty {
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 700;
   color: rgb(134 239 172);
   background: rgba(34,197,94,.08);
@@ -1020,7 +1024,7 @@ onMounted(loadMarket)
 .mp-lot__meta div { display: flex; flex-direction: column; gap: .1rem; }
 
 .mp-lot__meta small {
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
@@ -1040,7 +1044,7 @@ onMounted(loadMarket)
   border-radius: 7px;
   background: rgba(255,255,255,.03);
   color: rgb(100 116 139);
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;

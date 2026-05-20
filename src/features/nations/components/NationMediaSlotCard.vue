@@ -32,12 +32,12 @@ function onSelect(event) {
 
       <div class="mt-4 grid gap-3 md:grid-cols-2">
         <div class="rounded-[18px] border border-white/10 bg-slate-950/60 px-4 py-3">
-          <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Файл</p>
+          <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Файл</p>
           <p class="mt-2 break-words text-sm font-medium leading-6 text-slate-200">{{ selectedFileName || 'Ничего не выбрано' }}</p>
         </div>
 
         <div class="rounded-[18px] border border-white/10 bg-slate-950/60 px-4 py-3">
-          <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Рекомендации</p>
+          <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Рекомендации</p>
           <p class="mt-2 text-sm leading-6 text-slate-300">{{ recommendation }}</p>
         </div>
       </div>

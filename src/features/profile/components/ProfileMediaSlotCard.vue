@@ -60,7 +60,7 @@ function openFilePicker() {
         <p class="mt-1 text-sm leading-6 text-slate-400">{{ subtitle }}</p>
       </div>
 
-      <span class="shrink-0 rounded-full border border-white/10 bg-slate-900 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
+      <span class="shrink-0 rounded-full border border-white/10 bg-slate-900 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
         {{ slotChip }}
       </span>
     </div>
@@ -77,12 +77,12 @@ function openFilePicker() {
 
       <div class="mt-4 grid gap-3 md:grid-cols-2">
         <div class="rounded-[18px] border border-white/10 bg-slate-950/60 px-4 py-3">
-          <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Файл</p>
+          <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Файл</p>
           <p class="mt-2 break-words text-sm font-medium leading-6 text-slate-200">{{ selectedFileName || 'Ничего не выбрано' }}</p>
         </div>
 
         <div class="rounded-[18px] border border-white/10 bg-slate-950/60 px-4 py-3">
-          <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">Рекомендации</p>
+          <p class="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Рекомендации</p>
           <p class="mt-2 text-sm leading-6 text-slate-300">{{ recommendation }}</p>
         </div>
       </div>
@@ -104,7 +104,7 @@ function openFilePicker() {
           </div>
 
           <div
-            class="shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] transition"
+            class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.18em] transition"
             :class="selectedFileName ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200' : 'border-white/10 bg-black/20 text-slate-300 group-hover:border-violet-400/30 group-hover:bg-violet-500/10 group-hover:text-violet-200'"
           >
             Нажать

@@ -7,6 +7,10 @@ usePageMeta({
   title: 'Рейтинг прогрессии',
   description: 'Топ игроков VoidRP по прогрессии — кто дальше всех продвинулся в освоении сборки модов.',
   url: 'https://void-rp.ru/leaderboard',
+  breadcrumbs: [
+    { name: 'Главная', url: '/' },
+    { name: 'Рейтинг прогрессии' },
+  ],
 })
 import { toastError } from '../services/toast'
 

@@ -339,7 +339,7 @@ onMounted(load)
 .admin-card small,
 .admin-editor label span {
   color: rgb(148 163 184);
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 900;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -410,7 +410,7 @@ onMounted(load)
 
 .admin-table th {
   color: rgb(148 163 184);
-  font-size: .68rem;
+  font-size: .75rem;
   font-weight: 900;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -445,7 +445,7 @@ onMounted(load)
 .status-bad {
   border-radius: 999px;
   padding: .38rem .65rem;
-  font-size: .72rem;
+  font-size: .75rem;
   font-weight: 900;
   text-transform: uppercase;
 }

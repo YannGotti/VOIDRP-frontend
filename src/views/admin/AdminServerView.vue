@@ -135,7 +135,7 @@ onUnmounted(() => clearInterval(timer))
 .ap__sub { font-size: 0.75rem; color: #334155; margin: 0.15rem 0 0; }
 .ap__header-right { display: flex; align-items: center; gap: 0.6rem; }
 
-.updated { font-size: 0.72rem; color: #334155; }
+.updated { font-size: .75rem; color: #334155; }
 
 .btn {
   display: inline-flex;
@@ -244,17 +244,17 @@ onUnmounted(() => clearInterval(timer))
   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
-.stat__l { font-size: 0.63rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #3d4f6e; margin-bottom: 0.35rem; }
+.stat__l { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #3d4f6e; margin-bottom: 0.35rem; }
 .stat__v { font-size: 1.75rem; font-weight: 900; color: #e2e8f0; line-height: 1; }
 .stat__v--sm { font-size: 1rem; margin-top: 0.3rem; }
 .stat__v--green { color: #86efac; }
 .stat__v--yellow { color: #fde047; }
 .stat__v--red { color: #fca5a5; }
-.stat__sub { font-size: 0.65rem; color: #2d3e5c; margin-top: 0.2rem; }
+.stat__sub { font-size: .75rem; color: #2d3e5c; margin-top: 0.2rem; }
 
 /* Section label */
 .section-label {
-  font-size: 0.67rem;
+  font-size: .75rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -275,7 +275,7 @@ onUnmounted(() => clearInterval(timer))
   flex-shrink: 0;
 }
 
-.section-label__note { font-style: italic; font-weight: 500; text-transform: none; letter-spacing: 0; color: #1e2d45; font-size: 0.65rem; }
+.section-label__note { font-style: italic; font-weight: 500; text-transform: none; letter-spacing: 0; color: #1e2d45; font-size: .75rem; }
 
 /* Players */
 .players-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
@@ -301,7 +301,7 @@ onUnmounted(() => clearInterval(timer))
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: .75rem;
   font-weight: 900;
 }
 

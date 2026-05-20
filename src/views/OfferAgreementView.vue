@@ -528,7 +528,7 @@ const limitations = [
   border: 1px solid rgba(139, 92, 246, 0.28);
   background: rgba(139, 92, 246, 0.12);
   padding: .32rem .8rem;
-  font-size: .65rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -606,7 +606,7 @@ const limitations = [
 }
 
 .legal-toc__heading {
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 800;
   letter-spacing: .18em;
   text-transform: uppercase;
@@ -648,7 +648,7 @@ const limitations = [
   border-radius: 5px;
   background: rgba(139, 92, 246, .14);
   color: rgb(167 139 250);
-  font-size: .62rem;
+  font-size: .75rem;
   font-weight: 900;
   flex-shrink: 0;
 }
@@ -711,7 +711,7 @@ const limitations = [
   border-radius: 7px;
   background: rgba(139, 92, 246, .18);
   color: rgb(167 139 250);
-  font-size: .7rem;
+  font-size: .75rem;
   font-weight: 900;
   flex-shrink: 0;
 }
@@ -749,7 +749,7 @@ const limitations = [
 .legal-row__bullet {
   color: rgb(167 139 250);
   margin-top: .05rem;
-  font-size: .65rem;
+  font-size: .75rem;
 }
 
 .legal-link {

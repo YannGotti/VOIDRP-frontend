@@ -94,7 +94,7 @@ onMounted(loadSocial)
       <div class="metric-grid metric-grid-3">
         <div v-for="item in counters" :key="item.label" class="metric-card text-center">
           <p class="metric-value">{{ item.value }}</p>
-          <p class="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">{{ item.label }}</p>
+          <p class="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{{ item.label }}</p>
         </div>
       </div>
 
