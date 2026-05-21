@@ -7,6 +7,7 @@ import { resendVerification } from '../services/authApi'
 import { getMyNation } from '../services/nationsApi'
 import { getMyPublicProfile } from '../services/profileApi'
 import { getPlayerProgression } from '../services/progressionApi'
+import { getBattlePassProfileByNick } from '../services/battlepassApi'
 import { toastError, toastSuccess } from '../services/toast'
 import { reloadMe, useAuthStore } from '../stores/authStore'
 
@@ -18,6 +19,7 @@ const sendingVerification = ref(false)
 const publicProfile = ref(null)
 const myNation = ref(null)
 const progression = ref(null)
+const bpProfile = ref(null)
 
 const TIERS = [
   { key: 'create_age',   label: 'Механизмы',   icon: '⚙️' },
@@ -115,14 +117,16 @@ async function loadData() {
   try {
     await reloadMe()
     const nick = auth.state.playerAccount?.minecraft_nickname
-    const [profilePayload, nationPayload, progressionPayload] = await Promise.all([
+    const [profilePayload, nationPayload, progressionPayload, bpPayload] = await Promise.all([
       auth.accessToken ? getMyPublicProfile(auth.accessToken) : null,
       auth.accessToken ? getMyNation(auth.accessToken) : null,
       nick ? getPlayerProgression(nick).catch(() => null) : null,
+      nick ? getBattlePassProfileByNick(nick).catch(() => null) : null,
     ])
     publicProfile.value = profilePayload || null
     myNation.value = nationPayload || null
     progression.value = progressionPayload || null
+    bpProfile.value = bpPayload || null
   } catch (e) {
     toastError(e.message || t('profile.loadError'))
   } finally {
@@ -368,6 +372,58 @@ onMounted(loadData)
                 <RouterLink to="/nation/studio" class="btn btn-primary flex-1 !py-1.5 !text-xs">{{ t('profile.createNation') }}</RouterLink>
               </div>
             </div>
+          </section>
+
+          <!-- Battle Pass -->
+          <section class="surface-card p-4 md:p-5">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="section-kicker !mb-1">{{ t('profile.bpKicker') }}</div>
+                <h2 class="text-base font-black tracking-tight text-slate-50">{{ t('profile.bpTitle') }}</h2>
+              </div>
+              <span
+                v-if="bpProfile?.has_premium"
+                class="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-300"
+              >
+                ✦ Premium
+              </span>
+              <span v-else class="rounded-full bg-slate-700/60 px-2 py-0.5 text-xs text-slate-400">
+                {{ t('profile.bpNoPremium') }}
+              </span>
+            </div>
+
+            <div v-if="bpProfile" class="mt-3 space-y-2">
+              <div class="flex items-center justify-between rounded-xl bg-slate-800/40 px-3 py-2.5">
+                <span class="text-xs text-slate-400">{{ t('profile.bpLevel') }}</span>
+                <span class="text-xs font-bold text-slate-100">{{ bpProfile.level }} / 120</span>
+              </div>
+              <div class="rounded-xl bg-slate-800/40 px-3 py-2.5">
+                <div class="mb-1.5 flex items-center justify-between">
+                  <span class="text-xs text-slate-400">{{ t('profile.bpSeason') }} {{ bpProfile.season }}</span>
+                  <span class="text-xs text-slate-500">{{ bpProfile.xp.toLocaleString() }} XP</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.07); height: 4px; border-radius: 999px; overflow: hidden;">
+                  <div
+                    :style="{
+                      width: Math.min(100, Math.round((bpProfile.level / 120) * 100)) + '%',
+                      background: bpProfile.has_premium
+                        ? 'linear-gradient(90deg, #f59e0b, #f97316)'
+                        : 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+                      height: '100%',
+                      borderRadius: '999px',
+                      transition: 'width 0.5s ease',
+                    }"
+                  ></div>
+                </div>
+              </div>
+              <div v-if="bpProfile.has_premium && bpProfile.premium_expires_at" class="flex items-center justify-between rounded-xl bg-amber-500/10 px-3 py-2">
+                <span class="text-xs text-amber-400/80">{{ t('profile.bpPremiumActive') }}</span>
+                <span class="text-xs font-semibold text-amber-300">
+                  {{ new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short' }).format(new Date(bpProfile.premium_expires_at)) }}
+                </span>
+              </div>
+            </div>
+            <p v-else class="mt-3 text-center text-xs text-slate-500">{{ t('profile.bpNoData') }}</p>
           </section>
 
           <section class="surface-card p-4 md:p-5">

@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { getPublicProfileBySlug } from '../services/profileApi'
 import { followProfile, unfollowProfile } from '../services/socialApi'
 import { useAuthStore } from '../stores/authStore'
+import { getBattlePassProfileByNick } from '../services/battlepassApi'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -15,6 +16,7 @@ const error = ref('')
 const actionMessage = ref('')
 const followLoading = ref(false)
 const profile = ref(null)
+const bpProfile = ref(null)
 const publicNation = computed(() => profile.value?.nation || null)
 
 function hexToRgba(hex, alpha) {
@@ -138,6 +140,12 @@ const profileFacts = computed(() => {
     items.push({ label: t('publicProfile.factStatus'), value: profile.value.status_text })
   }
 
+  if (bpProfile.value) {
+    const lvlText = `${bpProfile.value.level} / 120`
+    const suffix = bpProfile.value.has_premium ? ' ✦' : ''
+    items.push({ label: t('publicProfile.factBpLevel'), value: lvlText + suffix })
+  }
+
   return items
 })
 
@@ -154,6 +162,10 @@ async function loadProfile() {
   try {
     const payload = await getPublicProfileBySlug(route.params.slug, authStore.accessToken || null)
     profile.value = payload
+    const nick = payload?.player_account?.minecraft_nickname
+    if (nick) {
+      bpProfile.value = await getBattlePassProfileByNick(nick).catch(() => null)
+    }
   } catch (err) {
     error.value = err.message || t('publicProfile.loadError')
   } finally {
@@ -238,6 +250,13 @@ onBeforeUnmount(() => {
                   >
                     {{ publicNation.title }}
                   </RouterLink>
+                  <span
+                    v-if="bpProfile?.has_premium"
+                    class="group relative rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.22em] text-amber-300 backdrop-blur-md cursor-default"
+                    :title="t('publicProfile.premiumBadgeTooltip')"
+                  >
+                    ✦ {{ t('publicProfile.premiumBadge') }}
+                  </span>
                 </div>
 
                 <div class="mt-12 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">

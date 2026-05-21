@@ -33,6 +33,7 @@ import AdminServerView from '../views/admin/AdminServerView.vue'
 import AdminNationsView from '../views/admin/AdminNationsView.vue'
 import AdminModSuggestionsView from '../views/admin/AdminModSuggestionsView.vue'
 import AdminMetrikaView from '../views/admin/AdminMetrikaView.vue'
+import AdminBattlePassView from '../views/admin/AdminBattlePassView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
 import MarketView from '../views/MarketView.vue'
 import MarketItemView from '../views/MarketItemView.vue'
@@ -85,6 +86,7 @@ const routes = [
       { path: 'nations', name: 'admin-nations', component: AdminNationsView, meta: { title: 'Государства', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'mod-suggestions', name: 'admin-mod-suggestions', component: AdminModSuggestionsView, meta: { title: 'Предложения модов', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'metrika', name: 'admin-metrika', component: AdminMetrikaView, meta: { title: 'Метрика', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'battlepass', name: 'admin-battlepass', component: AdminBattlePassView, meta: { title: 'Battle Pass', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
     ],
   },
 ]
