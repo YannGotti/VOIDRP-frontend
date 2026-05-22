@@ -927,5 +927,11 @@ export default {
     recentTitle: 'Recent purchases',
     loadError: 'Could not load the shop.',
     checkoutError: 'Error creating the payment',
+    off: '−{n}%',
+    paySuccess: 'Payment successful! Item will be granted within a minute.',
+    loginToBuy: 'Log in to buy',
+    payFor: 'Pay {n} ₽',
+    discountBadge: 'Sale',
+    deliverTo: 'Deliver to:',
   },
 }

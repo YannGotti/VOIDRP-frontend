@@ -927,5 +927,11 @@ export default {
     recentTitle: 'Последние покупки',
     loadError: 'Не удалось загрузить магазин.',
     checkoutError: 'Ошибка при создании платежа',
+    off: '−{n}%',
+    paySuccess: 'Оплата прошла! Товар выдан в течение минуты.',
+    loginToBuy: 'Войти для покупки',
+    payFor: 'Оплатить {n} ₽',
+    discountBadge: 'Скидка',
+    deliverTo: 'Выдача на никнейм:',
   },
 }
