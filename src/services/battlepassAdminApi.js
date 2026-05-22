@@ -16,9 +16,17 @@ export async function adminListBattlePassPremium(token, params = {}) {
 }
 
 export async function adminGrantBattlePassPremium(token, data) {
-  return apiRequest('/admin/battlepass/premium/grant', { method: 'POST', body: data, ...ah(token) })
+  return apiRequest('/admin/battlepass/premium/grant', { method: 'POST', body: JSON.stringify(data), ...ah(token) })
 }
 
 export async function adminRevokeBattlePassPremium(token, minecraft_uuid) {
   return apiRequest(`/admin/battlepass/premium/${minecraft_uuid}`, { method: 'DELETE', ...ah(token) })
+}
+
+export async function adminGetBattlePassPlayerByNick(token, nickname) {
+  return apiRequest(`/admin/battlepass/player-by-nick/${encodeURIComponent(nickname)}`, { method: 'GET', ...ah(token) })
+}
+
+export async function adminRevokeBattlePassPremiumByNick(token, nickname) {
+  return apiRequest(`/admin/battlepass/premium/revoke-by-nick/${encodeURIComponent(nickname)}`, { method: 'POST', ...ah(token) })
 }

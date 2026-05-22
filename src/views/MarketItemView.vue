@@ -216,6 +216,33 @@ const xLabels = computed(() => {
 const hasChart = computed(() => Boolean(buyPath.value || sellPath.value))
 const chartSource = computed(() => chartData.value?.source ?? null)
 
+// % change for the selected period (first point → last point in history)
+const periodChange = computed(() => {
+  if (!chartData.value || chartData.value.source !== 'history') return null
+  const { points } = chartData.value
+  if (points.length < 2) return null
+  const firstBuyPt  = points.find(p => p.avgBuy  !== null)
+  const lastBuyPt   = [...points].reverse().find(p => p.avgBuy  !== null)
+  const firstSellPt = points.find(p => p.avgSell !== null)
+  const lastSellPt  = [...points].reverse().find(p => p.avgSell !== null)
+  const buyPct  = firstBuyPt  && firstBuyPt.avgBuy  > 0 && lastBuyPt  && firstBuyPt !== lastBuyPt
+    ? ((lastBuyPt.avgBuy  - firstBuyPt.avgBuy)  / firstBuyPt.avgBuy  * 100) : null
+  const sellPct = firstSellPt && firstSellPt.avgSell > 0 && lastSellPt && firstSellPt !== lastSellPt
+    ? ((lastSellPt.avgSell - firstSellPt.avgSell) / firstSellPt.avgSell * 100) : null
+  return { buyPct, sellPct }
+})
+
+function pctFormat(v) {
+  if (v === null || !Number.isFinite(v)) return null
+  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'
+}
+function pctClass(v) {
+  if (v === null) return 'pct-neutral'
+  if (v > 0)  return 'pct-up'
+  if (v < 0)  return 'pct-down'
+  return 'pct-neutral'
+}
+
 // ─── data load ────────────────────────────────────────────────────────────────
 
 async function load() {
@@ -350,14 +377,35 @@ watch(material, load)
             <div class="section-kicker !mb-2">{{ t('marketItem.chartTitle') }}</div>
             <h2 class="text-xl font-black text-slate-50">{{ t('marketItem.chartTitle') }}</h2>
           </div>
-          <div v-if="chartSource === 'history'" class="flex items-center gap-1.5">
-            <button
-              v-for="d in [7, 30, 90]"
-              :key="d"
-              class="days-btn"
-              :class="{ active: historyDays === d }"
-              @click="setHistoryDays(d)"
-            >{{ d }}д</button>
+          <div v-if="chartSource === 'history'" class="flex items-center flex-wrap gap-2">
+            <div class="flex items-center gap-1.5">
+              <button
+                v-for="d in [7, 30, 90]"
+                :key="d"
+                class="days-btn"
+                :class="{ active: historyDays === d }"
+                @click="setHistoryDays(d)"
+              >{{ d }}д</button>
+            </div>
+            <template v-if="periodChange">
+              <span class="period-divider" aria-hidden="true"></span>
+              <span
+                v-if="periodChange.buyPct !== null"
+                class="period-chg"
+                :class="pctClass(periodChange.buyPct)"
+                :title="`Покупка: изменение за ${historyDays} дн.`"
+              >
+                {{ t('marketItem.stateBuy') }} {{ pctFormat(periodChange.buyPct) }}
+              </span>
+              <span
+                v-if="periodChange.sellPct !== null"
+                class="period-chg"
+                :class="pctClass(periodChange.sellPct)"
+                :title="`Скупка: изменение за ${historyDays} дн.`"
+              >
+                {{ t('marketItem.stateSell') }} {{ pctFormat(periodChange.sellPct) }}
+              </span>
+            </template>
           </div>
         </div>
 
@@ -694,6 +742,40 @@ watch(material, load)
   border-color: rgba(52,211,153,.45);
   background: rgba(52,211,153,.1);
   color: rgb(134 239 172);
+}
+
+.period-divider {
+  display: inline-block;
+  width: 1px;
+  height: 16px;
+  background: rgba(255,255,255,.1);
+  border-radius: 1px;
+  margin: 0 .1rem;
+}
+
+.period-chg {
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  padding: .22rem .65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: default;
+}
+.period-chg.pct-up {
+  color: rgb(134 239 172);
+  background: rgba(52,211,153,.1);
+  border: 1px solid rgba(52,211,153,.22);
+}
+.period-chg.pct-down {
+  color: rgb(253 164 175);
+  background: rgba(251,113,133,.1);
+  border: 1px solid rgba(251,113,133,.22);
+}
+.period-chg.pct-neutral {
+  color: rgb(100 116 139);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
 }
 
 .chart-range-hint {

@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { adminListPlayers, adminPatchLegacy } from '../../services/adminApi'
+import { adminGetBattlePassPlayerByNick, adminGrantBattlePassPremium, adminRevokeBattlePassPremium, adminRevokeBattlePassPremiumByNick } from '../../services/battlepassAdminApi'
 import { authState } from '../../stores/authStore'
 
 const token = () => authState.accessToken
@@ -16,6 +17,15 @@ const modal = ref(null)
 const actionLoading = ref(false)
 const actionMsg = ref('')
 const actionErr = ref('')
+
+// Battle Pass section
+const bpInfo = ref(null)
+const bpLoading = ref(false)
+const bpDays = ref(30)
+const bpNote = ref('')
+const bpMsg = ref('')
+const bpErr = ref('')
+const bpManualUuid = ref('')
 
 async function load() {
   loading.value = true
@@ -38,6 +48,74 @@ function openModal(item) {
   modal.value = item
   actionMsg.value = ''
   actionErr.value = ''
+  bpInfo.value = null
+  bpMsg.value = ''
+  bpErr.value = ''
+  bpDays.value = 30
+  bpNote.value = ''
+  bpManualUuid.value = ''
+  void loadBpInfo(item.player_account.minecraft_nickname)
+}
+
+async function loadBpInfo(nickname) {
+  bpLoading.value = true
+  try {
+    bpInfo.value = await adminGetBattlePassPlayerByNick(token(), nickname)
+  } catch {
+    bpInfo.value = null
+  } finally {
+    bpLoading.value = false
+  }
+}
+
+async function grantBp() {
+  if (!bpInfo.value) return
+  const nickname = modal.value.player_account.minecraft_nickname
+  const uuid = bpInfo.value.minecraft_uuid || bpManualUuid.value.trim()
+  if (!uuid) { bpErr.value = 'Введите UUID игрока вручную'; return }
+  bpLoading.value = true
+  bpMsg.value = ''
+  bpErr.value = ''
+  try {
+    await adminGrantBattlePassPremium(token(), {
+      minecraft_uuid: uuid,
+      minecraft_nickname: nickname,
+      days: bpDays.value,
+      note: bpNote.value || null,
+    })
+    bpMsg.value = `Battle Pass Premium выдан на ${bpDays.value} дн.`
+    await loadBpInfo(nickname)
+  } catch (e) {
+    bpErr.value = e.message || 'Ошибка при выдаче BP'
+  } finally {
+    bpLoading.value = false
+  }
+}
+
+async function revokeBp() {
+  if (!confirm('Отозвать Battle Pass Premium у игрока?')) return
+  bpLoading.value = true
+  bpMsg.value = ''
+  bpErr.value = ''
+  const nickname = modal.value.player_account.minecraft_nickname
+  try {
+    // всегда используем revoke-by-nick: обновляет DB (если запись есть) + всегда отправляет RCON
+    await adminRevokeBattlePassPremiumByNick(token(), nickname)
+    bpMsg.value = 'Battle Pass Premium отозван.'
+    await loadBpInfo(nickname)
+  } catch (e) {
+    bpErr.value = e.message || 'Ошибка при отзыве BP'
+  } finally {
+    bpLoading.value = false
+  }
+}
+
+function formatBpExpiry(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleString('ru-RU', {
+    day: '2-digit', month: '2-digit', year: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  })
 }
 
 function closeModal() {
@@ -240,6 +318,65 @@ onMounted(load)
 
             <div v-if="actionMsg" class="notice notice--ok">{{ actionMsg }}</div>
             <div v-if="actionErr" class="notice notice--err">{{ actionErr }}</div>
+
+            <div class="modal__divider" style="margin-top:1rem" />
+
+            <!-- Battle Pass Premium -->
+            <div class="modal__section">Battle Pass Premium</div>
+
+            <div v-if="bpLoading && !bpInfo" class="bp-skeleton" />
+
+            <template v-else>
+              <!-- Current status -->
+              <div v-if="bpInfo" class="bp-status-row">
+                <span class="bp-status-label">Статус:</span>
+                <span v-if="bpInfo.has_premium" class="badge badge--green">
+                  Активен до {{ formatBpExpiry(bpInfo.expires_at) }}
+                </span>
+                <span v-else-if="bpInfo.expires_at" class="badge badge--red">
+                  Истёк {{ formatBpExpiry(bpInfo.expires_at) }}
+                </span>
+                <span v-else class="badge badge--dim">Не выдан</span>
+
+                <span class="bp-level-hint">Ур. {{ bpInfo.level }} · {{ bpInfo.xp }} XP</span>
+              </div>
+
+              <!-- UUID not found — manual input -->
+              <div v-if="bpInfo && !bpInfo.minecraft_uuid" class="bp-uuid-row">
+                <span class="bp-uuid-hint">UUID не найден в БД. Введите вручную:</span>
+                <input
+                  v-model="bpManualUuid"
+                  class="inp bp-uuid-inp"
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  spellcheck="false"
+                />
+              </div>
+
+              <!-- Grant form -->
+              <div class="bp-grant-row">
+                <select v-model="bpDays" class="sel bp-days-sel">
+                  <option :value="7">7 дней</option>
+                  <option :value="14">14 дней</option>
+                  <option :value="30">30 дней</option>
+                  <option :value="60">60 дней</option>
+                  <option :value="90">90 дней</option>
+                </select>
+                <input v-model="bpNote" class="inp bp-note-inp" placeholder="Причина (необязательно)" />
+                <button
+                  class="btn btn--primary btn--sm"
+                  :disabled="bpLoading"
+                  @click="grantBp"
+                >{{ bpInfo?.has_premium ? '+ Продлить' : 'Выдать BP' }}</button>
+                <button
+                  class="btn btn--danger btn--sm"
+                  :disabled="bpLoading"
+                  @click="revokeBp"
+                >Отозвать</button>
+              </div>
+
+              <div v-if="bpMsg" class="notice notice--ok">{{ bpMsg }}</div>
+              <div v-if="bpErr" class="notice notice--err">{{ bpErr }}</div>
+            </template>
           </div>
     </div>
   </div>
@@ -466,6 +603,41 @@ onMounted(load)
 }
 .notice--ok { background: rgba(34,197,94,0.1); color: #86efac; }
 .notice--err { background: rgba(239,68,68,0.1); color: #fca5a5; }
+
+/* Battle Pass section */
+.bp-skeleton {
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #0d1422 25%, #121929 50%, #0d1422 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  margin-bottom: 0.75rem;
+}
+.bp-status-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.bp-status-label { font-size: 0.78rem; color: #475569; font-weight: 700; }
+.bp-level-hint { font-size: 0.72rem; color: #334155; margin-left: auto; }
+.bp-grant-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.bp-days-sel { width: auto; flex-shrink: 0; }
+.bp-note-inp { flex: 1; min-width: 120px; }
+.bp-uuid-row {
+  margin-bottom: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.bp-uuid-hint { font-size: 0.72rem; color: #f59e0b; font-weight: 600; }
+.bp-uuid-inp { font-family: monospace; font-size: 0.75rem; width: 100%; }
 
 .modal-enter-active, .modal-leave-active { transition: opacity 0.18s ease; }
 .modal-enter-from, .modal-leave-to { opacity: 0; }
