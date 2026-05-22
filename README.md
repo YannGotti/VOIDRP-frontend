@@ -1,89 +1,67 @@
-# VoidRP Site Starter
+# VoidRP Site
 
-Готовая стартовая структура под **Vue 3 + Vite + Vue Router + Tailwind CSS v4 + daisyUI v5**.
+Сайт проекта VoidRP — регистрация, профиль, государства, альянсы, магазин, Battle Pass, лидерборд.
 
-## Быстрый старт на Linux
+## Стек
 
-### 1. Проверить Node.js
-Нужен Node.js версии `^20.19.0 || >=22.12.0`.
+- **Vue 3** (Composition API, `<script setup>`) · Vite 6
+- **Vue Router 4** · без Pinia (module-level reactive store)
+- **Tailwind CSS v4** · daisyUI v5
+- Без TypeScript
 
-```bash
-node -v
-```
-
-### 2. Создать проект
-Если у тебя Yarn Modern:
+## Быстрый старт
 
 ```bash
-yarn create vue@latest voidrp-site
-```
-
-Если команда не сработает:
-
-```bash
-yarn dlx create-vue@latest voidrp-site
-```
-
-### 3. Выбрать опции
-При создании проекта выбери:
-
-- TypeScript: **No**
-- JSX: **No**
-- Vue Router: **Yes**
-- Pinia: **No**
-- Vitest: **No**
-- E2E: **No**
-- ESLint: **Yes**
-- Prettier: **Yes** (по желанию)
-
-### 4. Перейти в проект
-```bash
-cd voidrp-site
-```
-
-### 5. Поставить Tailwind и daisyUI
-```bash
-yarn add -D tailwindcss @tailwindcss/vite daisyui
-```
-
-### 6. Заменить файлы из этого архива в свой проект
-Скопируй содержимое папок и файлов в свой `voidrp-site`.
-
-### 7. Установить зависимости и запустить
-```bash
+cd VOIDRP-SITE
 yarn
-yarn dev --host
+cp .env.example .env   # VITE_API_BASE_URL оставь пустым для dev (работает через Vite proxy)
+yarn dev --host        # dev-сервер на порту 5175
 ```
 
-Сайт будет доступен по адресу вроде:
+Продакшн-сборка:
 
 ```bash
-http://<твой-ip>:5173
+yarn build   # → dist/
 ```
 
-## Production build
-```bash
-yarn build
+## Структура
+
+```
+src/
+├── router/index.js          # маршруты, навигационный guard, meta.requiresAuth / requiresAdmin
+├── stores/authStore.js      # auth state (reactive, localStorage voidrp_auth_v1)
+├── services/
+│   ├── apiBase.js           # центральный apiRequest(), перевод ошибок на русский
+│   ├── authApi.js           # регистрация, логин, refresh, logout
+│   ├── adminApi.js          # дашборд, статус сервера, метрика
+│   ├── adminDonateApi.js    # EasyDonate overview, платежи
+│   └── ...                  # profileApi, nationsApi, alliancesApi, marketApi, …
+├── views/
+│   ├── admin/               # AdminLayout + все вкладки админ-панели
+│   └── ...                  # публичные страницы
+├── features/
+│   ├── nations/             # компоненты государств
+│   └── alliances/           # компоненты альянсов
+├── components/              # переиспользуемые UI компоненты
+└── i18n/locales/            # ru.js + en.js (vue-i18n)
 ```
 
-Собранный сайт будет в папке `dist/`.
+## Auth flow
 
-## .env
-Создай файл `.env` в корне проекта по примеру `.env.example`.
+1. Логин → получаем `access_token` (JWT) + `refresh_token` (opaque)
+2. Все запросы к API идут с `Authorization: Bearer <access_token>`
+3. При 401 — автоматический тихий refresh через `setUnauthorizedHandler`
+4. Состояние сохраняется в `localStorage` под ключом `voidrp_auth_v1`
 
-## Пример JSON для статуса сервера
-Фронт ожидает такой ответ от `VITE_STATUS_ENDPOINT`:
+## Админ-панель
 
-```json
-{
-  "online": true,
-  "playersOnline": 7,
-  "playersMax": 100,
-  "version": "1.21.1",
-  "motd": "VoidRP x Better MC 5",
-  "latency": 42,
-  "samplePlayers": ["YannGotti", "Player2", "Player3"]
-}
-```
+Доступна по `/admin` только для `is_admin` пользователей. Вкладки:
+- Дашборд — общая статистика, метрика, быстрый доступ
+- Донаты — EasyDonate платежи, выручка, графики
+- Battle Pass — управление Premium подписками
+- Игроки, Государства, Рынок, Сервер
 
-# VOIDRP-frontend
+## Важно
+
+- Все тексты интерфейса добавляются в оба файла локализации: `src/i18n/locales/ru.js` и `en.js`
+- Ошибки API переводятся на русский в `apiBase.js` (таблица `FIELD_LABELS` должна совпадать с `_FIELD_LABELS` в бэкенде)
