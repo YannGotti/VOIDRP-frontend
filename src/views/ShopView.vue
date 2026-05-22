@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { createPayment, getDonateProducts, getLastPayments } from '../services/donateApi'
+import { apiRequest } from '../services/apiBase'
 import { toastError, toastSuccess } from '../services/toast'
 import { useAuthStore } from '../stores/authStore'
 
@@ -18,6 +19,7 @@ const products = ref([])
 const lastPayments = ref([])
 const cart = ref({})
 const coupon = ref('')
+const serverOnline = ref(null) // null = checking, true = online, false = offline
 
 const cartItems = computed(() => products.value.filter((p) => cart.value[p.id] > 0))
 const cartCount = computed(() => Object.values(cart.value).reduce((s, n) => s + n, 0))
@@ -98,6 +100,10 @@ async function loadPage() {
   loading.value = true
   error.value = ''
   try {
+    const statusRes = await apiRequest('/server/status').catch(() => ({ online: false }))
+    serverOnline.value = !!statusRes?.online
+    if (!serverOnline.value) return
+
     const [prods, pays] = await Promise.all([
       getDonateProducts(),
       getLastPayments().catch(() => []),
@@ -156,8 +162,34 @@ onMounted(() => {
 
       <div v-if="error" class="alert alert-error">{{ error }}</div>
 
+      <!-- Server offline banner -->
+      <div v-if="serverOnline === false" class="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 ring-1 ring-slate-700/50 p-8 flex flex-col items-center gap-5 text-center">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(239,68,68,0.06)_0%,transparent_70%)]" />
+        <div class="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-800 ring-1 ring-red-500/20">
+          <svg class="h-10 w-10 text-red-500/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="8" rx="2"/>
+            <rect x="2" y="14" width="20" height="8" rx="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/>
+            <line x1="6" y1="18" x2="6.01" y2="18"/>
+            <line x1="17" y1="5" x2="7" y2="19"/>
+          </svg>
+        </div>
+        <div class="relative space-y-1.5">
+          <p class="text-xl font-black text-slate-100">{{ t('shop.serverOfflineTitle') }}</p>
+          <p class="max-w-sm text-sm leading-relaxed text-slate-500">{{ t('shop.serverOfflineDesc') }}</p>
+        </div>
+        <button
+          class="relative flex items-center gap-2 rounded-xl bg-slate-800 px-5 py-2.5 text-sm font-bold text-slate-300 ring-1 ring-slate-700 transition hover:bg-slate-700 hover:text-slate-100 active:scale-95"
+          :disabled="loading"
+          @click="loadPage"
+        >
+          <svg class="h-4 w-4" :class="loading ? 'animate-spin' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          {{ t('shop.serverOfflineRetry') }}
+        </button>
+      </div>
+
       <!-- Main layout -->
-      <div class="flex flex-col gap-5 lg:flex-row lg:items-start">
+      <div v-if="serverOnline !== false" class="flex flex-col gap-5 lg:flex-row lg:items-start">
 
         <!-- Product section -->
         <div class="min-w-0 flex-1">

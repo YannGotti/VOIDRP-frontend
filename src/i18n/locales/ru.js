@@ -933,5 +933,8 @@ export default {
     payFor: 'Оплатить {n} ₽',
     discountBadge: 'Скидка',
     deliverTo: 'Выдача на никнейм:',
+    serverOfflineTitle: 'Сервер недоступен',
+    serverOfflineDesc: 'В данный момент сервер выключен или проходит техническое обслуживание. Магазин временно недоступен.',
+    serverOfflineRetry: 'Обновить',
   },
 }

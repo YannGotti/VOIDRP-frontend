@@ -933,5 +933,8 @@ export default {
     payFor: 'Pay {n} ₽',
     discountBadge: 'Sale',
     deliverTo: 'Deliver to:',
+    serverOfflineTitle: 'Server offline',
+    serverOfflineDesc: 'The server is currently offline or undergoing maintenance. The shop is temporarily unavailable.',
+    serverOfflineRetry: 'Retry',
   },
 }
