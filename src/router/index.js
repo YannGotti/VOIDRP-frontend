@@ -35,6 +35,8 @@ import AdminModSuggestionsView from '../views/admin/AdminModSuggestionsView.vue'
 import AdminMetrikaView from '../views/admin/AdminMetrikaView.vue'
 import AdminBattlePassView from '../views/admin/AdminBattlePassView.vue'
 import AdminDonateView from '../views/admin/AdminDonateView.vue'
+import AdminAnticheatView from '../views/admin/AdminAnticheatView.vue'
+import AdminAnticheatPlayerView from '../views/admin/AdminAnticheatPlayerView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
 import MarketView from '../views/MarketView.vue'
 import MarketItemView from '../views/MarketItemView.vue'
@@ -89,6 +91,8 @@ const routes = [
       { path: 'metrika', name: 'admin-metrika', component: AdminMetrikaView, meta: { title: 'Метрика', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'battlepass', name: 'admin-battlepass', component: AdminBattlePassView, meta: { title: 'Battle Pass', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'donate', name: 'admin-donate', component: AdminDonateView, meta: { title: 'Донаты', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'anticheat', name: 'admin-anticheat', component: AdminAnticheatView, meta: { title: 'Античит', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'anticheat/:uuid', name: 'admin-anticheat-player', component: AdminAnticheatPlayerView, meta: { title: 'Игрок — Античит', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
     ],
   },
 ]
