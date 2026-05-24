@@ -22,3 +22,38 @@ export async function anticheatPlayerAction(token, playerUuid, action, reason = 
     ...ah(token),
   })
 }
+
+export async function anticheatListModVerdicts(token) {
+  return apiRequest('/admin/anticheat/mod-verdicts', { method: 'GET', ...ah(token) })
+}
+
+export async function anticheatSetModVerdict(token, modId, verdict, reviewedBy = 'admin', notes = '') {
+  return apiRequest('/admin/anticheat/mod-verdicts', {
+    method: 'POST',
+    body: JSON.stringify({ mod_id: modId, verdict, reviewed_by: reviewedBy, notes }),
+    ...ah(token),
+  })
+}
+
+export async function anticheatDeleteModVerdict(token, modId) {
+  return apiRequest(`/admin/anticheat/mod-verdicts/${encodeURIComponent(modId)}`, {
+    method: 'DELETE',
+    ...ah(token),
+  })
+}
+
+export async function anticheatGetConfig(token) {
+  return apiRequest('/admin/anticheat/config', { method: 'GET', ...ah(token) })
+}
+
+export async function anticheatUpdateConfig(token, updates, updatedBy = 'admin') {
+  return apiRequest('/admin/anticheat/config', {
+    method: 'PUT',
+    body: JSON.stringify({ updates, updated_by: updatedBy }),
+    ...ah(token),
+  })
+}
+
+export async function anticheatGetStats(token) {
+  return apiRequest('/admin/anticheat/stats', { method: 'GET', ...ah(token) })
+}

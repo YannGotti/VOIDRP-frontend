@@ -5,6 +5,11 @@ import { useI18n } from 'vue-i18n'
 import { siteConfig } from '../config.site.js'
 import { useReveal } from '../composables/useReveal.js'
 import { usePageMeta } from '../composables/usePageMeta.js'
+import { getServerStats, getNationRankings } from '../services/nationStatsApi.js'
+import { apiRequest } from '../services/apiBase.js'
+
+function getLandingScreenshots() { return apiRequest('/landing/screenshots') }
+function getServerStatus() { return apiRequest('/server/status') }
 
 const { t } = useI18n()
 
@@ -22,10 +27,46 @@ function copyIp() {
   })
 }
 
-const LIGHT_SELECTOR = '.step-card, .feat-card, .launcher-card, .cta-card'
+// ── Stats counter ──────────────────────────────────────────────────────────
+const statPlayersEl = ref(null)
+const statNationsEl = ref(null)
+const statsData = ref(null)
+let statsAnimated = false
+let statsObserver = null
+
+function countUp(el, target, duration = 1500) {
+  const start = performance.now()
+  const step = (now) => {
+    const p = Math.min((now - start) / duration, 1)
+    const ease = 1 - Math.pow(1 - p, 4)
+    el.textContent = Math.round(ease * target).toLocaleString('ru')
+    if (p < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+
+function triggerCountUp() {
+  if (statsAnimated || !statsData.value) return
+  statsAnimated = true
+  if (statPlayersEl.value) countUp(statPlayersEl.value, statsData.value.total_players)
+  if (statNationsEl.value) countUp(statNationsEl.value, statsData.value.total_nations)
+}
+
+// ── Live online ────────────────────────────────────────────────────────────
+const onlinePlayers = ref(null)
+
+// ── Screenshots ────────────────────────────────────────────────────────────
+const screenshots = ref([])
+
+// ── Top nations ────────────────────────────────────────────────────────────
+const topNations = ref([])
+const nationsLoading = ref(true)
+
+// ── Spotlight (mouse follow) ───────────────────────────────────────────────
+const LIGHT_SELECTOR = '.step-card, .feat-card, .launcher-card, .cta-card, .nation-card'
 let lightCleanup = []
 
-onMounted(() => {
+onMounted(async () => {
   document.querySelectorAll(LIGHT_SELECTOR).forEach((card) => {
     function onMove(e) {
       const r = card.getBoundingClientRect()
@@ -41,12 +82,56 @@ onMounted(() => {
       card.removeEventListener('mouseleave', onLeave)
     })
   })
+
+  // Fetch all data in parallel
+  const [stats, rankings, serverStatus, shots] = await Promise.allSettled([
+    getServerStats(),
+    getNationRankings(),
+    getServerStatus(),
+    getLandingScreenshots(),
+  ])
+
+  if (serverStatus.status === 'fulfilled' && serverStatus.value?.online) {
+    onlinePlayers.value = serverStatus.value.players_online ?? null
+  }
+
+  if (shots.status === 'fulfilled') {
+    screenshots.value = shots.value || []
+  }
+
+  if (stats.status === 'fulfilled') {
+    statsData.value = stats.value
+    // Observe stats bar; trigger count-up when visible
+    const statsBar = document.querySelector('.stats-bar')
+    if (statsBar) {
+      statsObserver = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            triggerCountUp()
+            statsObserver.disconnect()
+          }
+        },
+        { threshold: 0.3 },
+      )
+      statsObserver.observe(statsBar)
+    }
+  }
+
+  if (rankings.status === 'fulfilled') {
+    topNations.value = (rankings.value.items || []).slice(0, 3)
+  }
+  nationsLoading.value = false
 })
 
 onUnmounted(() => {
   lightCleanup.forEach((fn) => fn())
   lightCleanup = []
+  statsObserver?.disconnect()
 })
+
+function nationAccent(nation) {
+  return nation.accent_color || '#7c3aed'
+}
 </script>
 
 <template>
@@ -108,7 +193,8 @@ onUnmounted(() => {
         <span class="hero__sep">·</span>
         <span class="hero__online">
           <span class="hero__online-dot"></span>
-          {{ t('hero.serverOnline') }}
+          <template v-if="onlinePlayers !== null">{{ onlinePlayers }} {{ t('hero.online') }}</template>
+          <template v-else>{{ t('hero.serverOnline') }}</template>
         </span>
         <span class="hero__sep">·</span>
         <a :href="siteConfig.bluemapUrl" target="_blank" rel="noreferrer" class="hero__map-link">{{ t('hero.worldMap') }}</a>
@@ -117,6 +203,17 @@ onUnmounted(() => {
 
     <div class="hero__scroll-cue anim-hero anim-d5">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ SCREENSHOTS ═══════════════════════ -->
+  <section v-if="screenshots.length" class="screenshots-section" aria-hidden="true">
+    <div class="marquee-wrap">
+      <div class="marquee-track">
+        <div v-for="(s, i) in [...screenshots, ...screenshots]" :key="i" class="marquee-item">
+          <img :src="s.url" class="marquee-img" loading="lazy" decoding="async" />
+        </div>
+      </div>
     </div>
   </section>
 
@@ -154,6 +251,28 @@ onUnmounted(() => {
     </div>
   </section>
 
+  <!-- ═══════════════════════ STATS ═══════════════════════ -->
+  <section class="stats-section">
+    <div class="container-shell">
+      <div class="stats-bar" data-reveal>
+        <div class="stat-item">
+          <span class="stat-num" ref="statPlayersEl">—</span>
+          <span class="stat-label">{{ t('stats.players') }}</span>
+        </div>
+        <div class="stat-divider" aria-hidden="true"></div>
+        <div class="stat-item">
+          <span class="stat-num" ref="statNationsEl">—</span>
+          <span class="stat-label">{{ t('stats.nations') }}</span>
+        </div>
+        <div class="stat-divider" aria-hidden="true"></div>
+        <div class="stat-item">
+          <span class="stat-num">320+</span>
+          <span class="stat-label">{{ t('stats.mods') }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ═══════════════════════ LAUNCHER ═══════════════════════ -->
   <section class="launcher-section">
     <div class="container-shell">
@@ -186,6 +305,66 @@ onUnmounted(() => {
             </p>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ TOP NATIONS ═══════════════════════ -->
+  <section class="top-nations-section">
+    <div class="container-shell">
+      <div class="section-header" data-reveal>
+        <div class="kicker-wrap">
+          <span class="kicker-line"></span>
+          <p class="section-kicker">{{ t('topNations.kicker') }}</p>
+          <span class="kicker-line"></span>
+        </div>
+        <h2 class="section-h2">{{ t('topNations.title') }}</h2>
+      </div>
+
+      <!-- skeleton -->
+      <div v-if="nationsLoading" class="nations-grid">
+        <div v-for="i in 3" :key="i" class="nation-card nation-card--skeleton">
+          <div class="skeleton nc-skel-rank"></div>
+          <div class="skeleton nc-skel-title"></div>
+          <div class="skeleton nc-skel-meta"></div>
+        </div>
+      </div>
+
+      <!-- data -->
+      <div v-else-if="topNations.length" class="nations-grid nations-grid--loaded">
+        <div
+          v-for="(nation, i) in topNations"
+          :key="nation.slug"
+          class="nation-card"
+          :style="{ '--nc-accent': nationAccent(nation) }"
+        >
+          <div class="nation-card__accent-bar"></div>
+          <div class="nation-card__top">
+            <span class="nation-card__rank" :class="`nc-rank--${i + 1}`">#{{ i + 1 }}</span>
+            <span class="nation-card__tag" :style="{ color: nationAccent(nation) }">[{{ nation.tag }}]</span>
+          </div>
+          <router-link :to="`/nation/${nation.slug}`" class="nation-card__title">
+            {{ nation.title }}
+          </router-link>
+          <div class="nation-card__meta">
+            <span>{{ t('topNations.members', { n: nation.members_count }) }}</span>
+            <span class="nc-dot">·</span>
+            <span>{{ t('topNations.score', { n: Math.round(nation.score) }) }}</span>
+          </div>
+          <div class="nation-card__bar">
+            <div
+              class="nation-card__bar-fill"
+              :style="{ width: i === 0 ? '100%' : i === 1 ? '72%' : '48%', background: nationAccent(nation) }"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- empty -->
+      <p v-else class="nations-empty">{{ t('topNations.noData') }}</p>
+
+      <div class="nations-footer">
+        <RouterLink to="/nations/rankings" class="nations-link">{{ t('topNations.allRankings') }}</RouterLink>
       </div>
     </div>
   </section>
@@ -243,6 +422,68 @@ onUnmounted(() => {
           </div>
           <h3 class="feat-card__title">{{ t('features.design') }}</h3>
           <p class="feat-card__desc">{{ t('features.designDesc') }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ GAMEPLAY ═══════════════════════ -->
+  <section class="gameplay-section">
+    <div class="container-shell">
+      <div class="section-header" data-reveal>
+        <div class="kicker-wrap">
+          <span class="kicker-line"></span>
+          <p class="section-kicker">{{ t('gameplay.kicker') }}</p>
+          <span class="kicker-line"></span>
+        </div>
+        <h2 class="section-h2">{{ t('gameplay.title') }}</h2>
+      </div>
+      <div class="gameplay-grid">
+        <div class="gp-card" data-reveal data-delay="0">
+          <div class="gp-card__icon gp-icon--red">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 1 0-4.243-4.243 3 3 0 0 0 4.243 4.243zm9.9-9.9a3 3 0 1 0-4.243-4.243 3 3 0 0 0 4.243 4.243z"/></svg>
+          </div>
+          <h3 class="gp-card__title">{{ t('gameplay.war') }}</h3>
+          <p class="gp-card__desc">{{ t('gameplay.warDesc') }}</p>
+        </div>
+        <div class="gp-card" data-reveal data-delay="70">
+          <div class="gp-card__icon gp-icon--amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+          </div>
+          <h3 class="gp-card__title">{{ t('gameplay.build') }}</h3>
+          <p class="gp-card__desc">{{ t('gameplay.buildDesc') }}</p>
+        </div>
+        <div class="gp-card" data-reveal data-delay="140">
+          <div class="gp-card__icon gp-icon--cyan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          </div>
+          <h3 class="gp-card__title">{{ t('gameplay.explore') }}</h3>
+          <p class="gp-card__desc">{{ t('gameplay.exploreDesc') }}</p>
+        </div>
+        <div class="gp-card" data-reveal data-delay="210">
+          <div class="gp-card__icon gp-icon--violet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <h3 class="gp-card__title">{{ t('gameplay.role') }}</h3>
+          <p class="gp-card__desc">{{ t('gameplay.roleDesc') }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ BATTLE PASS ═══════════════════════ -->
+  <section class="bp-section">
+    <div class="container-shell">
+      <div class="bp-card" data-reveal>
+        <div class="bp-card__glow"></div>
+        <div class="bp-card__left">
+          <p class="bp-kicker">{{ t('battlepassTeaser.kicker') }}</p>
+          <h2 class="bp-card__title">{{ t('battlepassTeaser.title') }}</h2>
+          <p class="bp-card__desc">{{ t('battlepassTeaser.desc') }}</p>
+          <RouterLink to="/shop" class="bp-card__link">{{ t('battlepassTeaser.link') }}</RouterLink>
+        </div>
+        <div class="bp-card__right" aria-hidden="true">
+          <div class="bp-icon">⭐</div>
         </div>
       </div>
     </div>
@@ -588,6 +829,284 @@ onUnmounted(() => {
   background: rgba(139,92,246,.45);
 }
 .kicker-line--dim { background: rgba(167,139,250,.25); }
+
+/* ════════════════════════════════════
+   SCREENSHOT MARQUEE
+════════════════════════════════════ */
+.screenshots-section {
+  overflow: hidden;
+  padding: 0 0 5rem;
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.marquee-wrap { overflow: hidden; }
+
+.marquee-track {
+  display: flex; gap: .85rem;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+.marquee-wrap:hover .marquee-track { animation-play-state: paused; }
+
+.marquee-item { flex-shrink: 0; }
+.marquee-img {
+  height: 200px; width: auto;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.07);
+  display: block;
+}
+
+/* ════════════════════════════════════
+   GAMEPLAY
+════════════════════════════════════ */
+.gameplay-section { padding: 0 0 5.5rem; }
+
+.gameplay-grid {
+  display: grid; gap: .85rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.gp-card {
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 20px;
+  background: rgba(255,255,255,.022);
+  padding: 1.6rem; display: flex; flex-direction: column; gap: .8rem;
+  transition: border-color .28s, transform .22s, box-shadow .28s;
+}
+.gp-card:hover {
+  border-color: rgba(139,92,246,.25);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 36px rgba(0,0,0,.25);
+}
+
+.gp-card__icon {
+  width: 46px; height: 46px; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.gp-icon--red    { background: rgba(239,68,68,.1);   border: 1px solid rgba(239,68,68,.22);   color: #fca5a5; }
+.gp-icon--amber  { background: rgba(245,158,11,.09);  border: 1px solid rgba(245,158,11,.2);   color: #fcd34d; }
+.gp-icon--cyan   { background: rgba(6,182,212,.1);    border: 1px solid rgba(6,182,212,.22);   color: #67e8f9; }
+.gp-icon--violet { background: rgba(139,92,246,.11);  border: 1px solid rgba(139,92,246,.24);  color: #a78bfa; }
+
+.gp-card__title { font-size: .97rem; font-weight: 800; color: #e2e8f0; margin: 0; }
+.gp-card__desc  { font-size: .81rem; line-height: 1.65; color: rgba(100,116,139,.95); margin: 0; }
+
+/* ════════════════════════════════════
+   BATTLE PASS TEASER
+════════════════════════════════════ */
+.bp-section { padding: 0 0 5.5rem; }
+
+.bp-card {
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(251,191,36,.2);
+  border-radius: 24px;
+  background: radial-gradient(ellipse at top left, rgba(251,191,36,.1) 0%, transparent 55%),
+    linear-gradient(135deg, rgba(20,16,42,.98), rgba(10,10,22,1));
+  padding: 2.5rem 2.75rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+  transition: box-shadow .3s;
+}
+.bp-card:hover { box-shadow: 0 0 60px rgba(251,191,36,.08), 0 20px 50px rgba(0,0,0,.35); }
+
+.bp-card__glow {
+  position: absolute; width: 400px; height: 250px;
+  background: rgba(251,191,36,.07); filter: blur(90px);
+  border-radius: 999px; top: -80px; left: -60px; pointer-events: none;
+}
+
+.bp-kicker {
+  font-size: .72rem; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: rgba(251,191,36,.7); margin: 0 0 .5rem;
+}
+.bp-card__title {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 900; letter-spacing: -.04em; color: #fff; margin: 0 0 .7rem;
+}
+.bp-card__desc {
+  font-size: .88rem; line-height: 1.7;
+  color: rgba(255,255,255,.48); margin: 0 0 1.4rem; max-width: 460px;
+}
+.bp-card__link {
+  display: inline-flex; align-items: center;
+  font-size: .9rem; font-weight: 700;
+  color: rgba(251,191,36,.85); text-decoration: none;
+  transition: color .18s;
+}
+.bp-card__link:hover { color: #fde68a; }
+
+.bp-card__right { flex-shrink: 0; }
+.bp-icon { font-size: 4.5rem; line-height: 1; opacity: .45; filter: drop-shadow(0 0 24px rgba(251,191,36,.5)); }
+
+@media (max-width: 600px) { .bp-card__right { display: none; } .bp-card { padding: 2rem 1.5rem; } }
+
+/* ════════════════════════════════════
+   STATS
+════════════════════════════════════ */
+.stats-section { padding: 0 0 4rem; }
+
+.stats-bar {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 0;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 22px;
+  background: rgba(255,255,255,.022);
+  backdrop-filter: blur(10px);
+  padding: 2rem 2.5rem;
+  overflow: hidden;
+}
+
+.stat-item {
+  flex: 1; min-width: 140px;
+  display: flex; flex-direction: column; align-items: center; gap: .38rem;
+  padding: .5rem 1rem;
+}
+
+.stat-num {
+  font-size: clamp(2rem, 5vw, 2.9rem);
+  font-weight: 900; letter-spacing: -.04em;
+  background: linear-gradient(120deg, #fff 0%, #c4b5fd 50%, #7dd3fc 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  line-height: 1;
+  min-width: 4ch; text-align: center;
+}
+
+.stat-label {
+  font-size: .72rem; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: rgba(148,163,184,.55);
+  text-align: center;
+}
+
+.stat-divider {
+  width: 1px; height: 52px; flex-shrink: 0;
+  background: rgba(255,255,255,.07);
+  margin: 0 .5rem;
+}
+
+@media (max-width: 520px) {
+  .stat-divider { display: none; }
+  .stats-bar { gap: 1.2rem; padding: 1.5rem; }
+  .stat-item { min-width: 100%; border-bottom: 1px solid rgba(255,255,255,.06); padding-bottom: 1rem; }
+  .stat-item:last-child { border-bottom: none; }
+}
+
+/* ════════════════════════════════════
+   TOP NATIONS
+════════════════════════════════════ */
+.top-nations-section { padding: 0 0 5.5rem; }
+
+.nations-grid {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 768px) { .nations-grid { grid-template-columns: 1fr; } }
+
+.nation-card {
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  background: rgba(255,255,255,.022);
+  padding: 1.5rem 1.4rem 1.3rem;
+  display: flex; flex-direction: column; gap: .7rem;
+  transition: border-color .28s, transform .22s, box-shadow .28s;
+}
+.nation-card:hover {
+  border-color: color-mix(in srgb, var(--nc-accent, #7c3aed) 50%, transparent);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,.3);
+}
+
+/* coloured top strip */
+.nation-card__accent-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--nc-accent, #7c3aed);
+  opacity: .65;
+}
+
+.nation-card__top {
+  display: flex; align-items: center; gap: .55rem;
+}
+
+.nation-card__rank {
+  font-size: .82rem; font-weight: 900; letter-spacing: .04em;
+}
+.nc-rank--1 { color: #fbbf24; }
+.nc-rank--2 { color: #94a3b8; }
+.nc-rank--3 { color: #b45309; }
+
+.nation-card__tag {
+  font-size: .78rem; font-weight: 700; letter-spacing: .04em;
+}
+
+.nation-card__title {
+  font-size: 1.05rem; font-weight: 800; color: #f1f5f9;
+  text-decoration: none; line-height: 1.25;
+  transition: color .18s;
+}
+.nation-card__title:hover { color: #c4b5fd; }
+
+.nation-card__meta {
+  font-size: .77rem; color: rgba(148,163,184,.65);
+  display: flex; align-items: center; gap: .4rem;
+}
+.nc-dot { opacity: .4; }
+
+/* relative score bar */
+.nation-card__bar {
+  height: 3px; border-radius: 999px;
+  background: rgba(255,255,255,.06); overflow: hidden;
+  margin-top: .2rem;
+}
+.nation-card__bar-fill {
+  height: 100%; border-radius: 999px;
+  opacity: .55;
+  transition: width .8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* skeleton */
+.nation-card--skeleton { pointer-events: none; }
+.nc-skel-rank  { height: 12px; width: 60px;  border-radius: 6px; }
+.nc-skel-title { height: 20px; width: 120px; border-radius: 8px; margin-top: .3rem; }
+.nc-skel-meta  { height: 10px; width: 90px;  border-radius: 6px; margin-top: .2rem; }
+
+.nations-grid--loaded {
+  animation: reveal-up .65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.nations-footer {
+  margin-top: 1.4rem; display: flex; justify-content: flex-end;
+  animation: reveal-up .65s cubic-bezier(0.16, 1, 0.3, 1) .15s both;
+}
+.nations-link {
+  font-size: .82rem; font-weight: 700;
+  color: rgba(167,139,250,.7); text-decoration: none;
+  transition: color .18s;
+}
+.nations-link:hover { color: #c4b5fd; }
+
+.nations-empty {
+  font-size: .9rem; color: rgba(148,163,184,.45);
+  text-align: center; padding: 2.5rem 0;
+}
+
+/* nation-card spotlight */
+.nation-card::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(
+    circle 200px at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--nc-accent, #7c3aed) 18%, transparent) 0%,
+    transparent 70%
+  );
+  opacity: 0; transition: opacity .35s ease; pointer-events: none;
+}
+.nation-card.lit::after { opacity: 1; }
 
 /* ════════════════════════════════════
    STEPS

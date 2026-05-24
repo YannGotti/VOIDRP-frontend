@@ -16,13 +16,13 @@ usePageMeta({
 import AllianceProposalFeed from '../features/alliances/components/AllianceProposalFeed.vue'
 import AllianceRelationsPanel from '../features/alliances/components/AllianceRelationsPanel.vue'
 import {
+  applyToAlliance,
   createAlliance,
   createAllianceProposal,
   getAllianceBySlug,
   getAllianceProposals,
   getAllianceTransactions,
   getAlliances,
-  joinAlliance,
   leaveAlliance,
   transferAllianceFunds,
   updateAlliancePolicies,
@@ -83,7 +83,8 @@ const isAuthenticated = computed(() => auth.isAuthenticated.value)
 const hasNation = computed(() => Boolean(myNation.value?.slug))
 const canManageNation = computed(() => Boolean(myNation.value?.viewer_can_manage))
 const selectedViewer = computed(() => selectedAlliance.value?.viewer || {})
-const canJoinSelected = computed(() => Boolean(selectedViewer.value?.can_join))
+const canApplySelected = computed(() => Boolean(selectedViewer.value?.can_apply ?? selectedViewer.value?.can_join))
+const hasPendingApplication = computed(() => Boolean(selectedViewer.value?.has_pending_application))
 const canLeaveSelected = computed(() => Boolean(selectedViewer.value?.can_leave))
 const canManageAlliance = computed(() => Boolean(selectedViewer.value?.can_manage_alliance))
 const canManagePolicies = computed(() => Boolean(selectedViewer.value?.can_manage_policies))
@@ -199,15 +200,15 @@ async function createAllianceAction() {
   }
 }
 
-async function joinSelectedAlliance() {
+async function applyToSelectedAlliance() {
   if (!selectedAlliance.value) return
   actionLoading.value = true
   try {
-    await joinAlliance(auth.accessToken, selectedAlliance.value.slug)
-    toastSuccess(t('allianceHub.joinedSuccess'))
-    await loadPage()
+    await applyToAlliance(auth.accessToken, selectedAlliance.value.slug)
+    toastSuccess(t('allianceHub.appliedSuccess'))
+    await loadSelectedAlliance(selectedAlliance.value.slug)
   } catch (err) {
-    toastError(err?.message || t('allianceHub.joinError'))
+    toastError(err?.message || t('allianceHub.applyError'))
   } finally {
     actionLoading.value = false
   }
@@ -385,9 +386,18 @@ onMounted(loadPage)
                 <p v-else class="ah-status-meta">{{ t('allianceHub.notInAlliance') }}</p>
 
                 <div v-if="selectedAlliance" class="ah-status-actions">
-                  <button v-if="canJoinSelected" type="button" class="btn btn-primary btn-sm w-full" :disabled="actionLoading" @click="joinSelectedAlliance">
-                    {{ t('allianceHub.joinAlliance') }}
+                  <button
+                    v-if="canApplySelected && !hasPendingApplication"
+                    type="button"
+                    class="btn btn-primary btn-sm w-full"
+                    :disabled="actionLoading"
+                    @click="applyToSelectedAlliance"
+                  >
+                    {{ t('allianceHub.applyToAlliance') }}
                   </button>
+                  <div v-if="hasPendingApplication" class="ah-pending-badge">
+                    ⏳ {{ t('allianceHub.applicationPending') }}
+                  </div>
                   <button v-if="canLeaveSelected" type="button" class="btn btn-outline btn-sm w-full" :disabled="actionLoading" @click="leaveSelectedAlliance">
                     {{ t('allianceHub.leaveAlliance') }}
                   </button>
@@ -829,5 +839,20 @@ onMounted(loadPage)
 .ah-readonly {
   font-size: .83rem;
   color: rgb(100 116 139);
+}
+
+.ah-pending-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  padding: .4rem .7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(234,179,8,.2);
+  background: rgba(234,179,8,.06);
+  color: rgb(253 224 71);
+  font-size: .8rem;
+  font-weight: 700;
+  text-align: center;
 }
 </style>

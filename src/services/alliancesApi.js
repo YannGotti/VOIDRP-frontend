@@ -30,6 +30,13 @@ export async function joinAlliance(accessToken, allianceSlug) {
   })
 }
 
+export async function applyToAlliance(accessToken, slug) {
+  return await apiRequest(`/alliances/${encodeURIComponent(slug)}/apply`, {
+    method: 'POST',
+    headers: buildAuthHeaders(accessToken),
+  })
+}
+
 export async function leaveAlliance(accessToken) {
   return await apiRequest('/alliances/leave', {
     method: 'POST',

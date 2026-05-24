@@ -1,5 +1,9 @@
 import { apiRequest, buildAuthHeaders } from './apiBase'
 
+export async function getServerStats() {
+  return apiRequest('/server/stats', { method: 'GET' })
+}
+
 export async function getNationRankings(accessToken = null) {
   return await apiRequest('/nation-stats/rankings', {
     method: 'GET',

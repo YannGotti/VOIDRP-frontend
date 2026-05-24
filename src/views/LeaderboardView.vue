@@ -146,7 +146,7 @@ onMounted(load)
               </div>
 
               <span
-                v-if="entry.rank <= 3"
+                v-if="entry.rank === 1"
                 class="hidden shrink-0 text-xs text-slate-500 sm:block"
               >
                 {{ t('leaderboard.first') }}

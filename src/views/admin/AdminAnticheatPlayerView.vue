@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { anticheatGetPlayer, anticheatPlayerAction } from '../../services/adminAnticheatApi.js'
+import { anticheatGetPlayer, anticheatPlayerAction, anticheatSetModVerdict, anticheatDeleteModVerdict } from '../../services/adminAnticheatApi.js'
 import { authState } from '../../stores/authStore'
 
 const route = useRoute()
@@ -19,6 +19,38 @@ const actionMsg = ref('')
 const actionErr = ref('')
 const actionReason = ref('')
 const showSnapshotIdx = ref(0)
+const showInjectionIdx = ref(0)
+
+const verdictLoading = ref({})
+const verdictMsg = ref('')
+
+async function setVerdict(modId, verdict) {
+  const key = modId + verdict
+  verdictLoading.value = { ...verdictLoading.value, [key]: true }
+  verdictMsg.value = ''
+  try {
+    await anticheatSetModVerdict(token(), modId, verdict)
+    verdictMsg.value = verdict === 'CHEAT'
+      ? `${modId} помечен как ЧИТ`
+      : `${modId} помечен как БЕЗОПАСНЫЙ`
+    await load()
+  } catch (e) {
+    verdictMsg.value = e.message || 'Ошибка'
+  } finally {
+    verdictLoading.value = { ...verdictLoading.value, [key]: false }
+  }
+}
+
+async function clearVerdict(modId) {
+  verdictMsg.value = ''
+  try {
+    await anticheatDeleteModVerdict(token(), modId)
+    verdictMsg.value = `Вердикт для ${modId} удалён`
+    await load()
+  } catch (e) {
+    verdictMsg.value = e.message || 'Ошибка'
+  }
+}
 
 async function load() {
   loading.value = true
@@ -203,12 +235,29 @@ function fmtDate(iso) {
 
               <div v-if="data.snapshots[showSnapshotIdx].suspicious_mods.length > 0" class="acp-susp-block">
                 <div class="acp-susp-title">Подозрительные моды</div>
-                <div class="acp-mod-list">
-                  <span
+                <div v-if="verdictMsg" class="acp-verdict-msg">{{ verdictMsg }}</div>
+                <div class="acp-susp-list">
+                  <div
                     v-for="m in data.snapshots[showSnapshotIdx].suspicious_mods"
                     :key="m"
-                    class="acp-mod acp-mod--bad"
-                  >{{ m }}</span>
+                    class="acp-susp-row"
+                  >
+                    <span class="acp-mod acp-mod--bad">{{ m }}</span>
+                    <div class="acp-verdict-btns">
+                      <button
+                        class="acp-vbtn acp-vbtn--cheat"
+                        :disabled="verdictLoading[m + 'CHEAT']"
+                        @click="setVerdict(m.split(':')[0], 'CHEAT')"
+                        title="Это чит — всегда флагировать"
+                      >Это чит</button>
+                      <button
+                        class="acp-vbtn acp-vbtn--safe"
+                        :disabled="verdictLoading[m + 'SAFE']"
+                        @click="setVerdict(m.split(':')[0], 'SAFE')"
+                        title="Безопасный — больше не флагировать"
+                      >Безопасный</button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -225,6 +274,54 @@ function fmtDate(iso) {
           </template>
         </section>
       </div>
+
+      <!-- Injection detection reports -->
+      <section v-if="data.injection_reports && data.injection_reports.length > 0" class="acp-section acp-section--inject">
+        <div class="acp-section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Инжект-детекция
+          <span class="acp-section-count">{{ data.injection_reports.length }}</span>
+        </div>
+        <div class="acp-snap-tabs">
+          <button
+            v-for="(r, idx) in data.injection_reports"
+            :key="r.id"
+            class="acp-snap-tab"
+            :class="{ 'acp-snap-tab--active': showInjectionIdx === idx, 'acp-snap-tab--danger': r.agents_detected || r.suspicious_libraries.length > 0 }"
+            @click="showInjectionIdx = idx"
+          >
+            {{ fmtDate(r.created_at) }}
+            <span v-if="r.agents_detected || r.suspicious_libraries.length > 0" class="acp-snap-warn">⚡</span>
+          </button>
+        </div>
+        <div v-if="data.injection_reports[showInjectionIdx]" class="acp-inject-detail">
+          <div class="acp-snap-row">
+            <span class="acp-snap-lbl">Java-агенты:</span>
+            <span :class="data.injection_reports[showInjectionIdx].agents_detected ? 'acp-warn' : 'acp-ok'">
+              {{ data.injection_reports[showInjectionIdx].agents_detected ? 'ОБНАРУЖЕНЫ' : 'Нет' }}
+            </span>
+          </div>
+          <div v-if="data.injection_reports[showInjectionIdx].java_agents.length > 0" class="acp-inject-list">
+            <div class="acp-inject-subtitle">Агенты:</div>
+            <span
+              v-for="a in data.injection_reports[showInjectionIdx].java_agents"
+              :key="a"
+              class="acp-mod acp-mod--bad"
+            >{{ a }}</span>
+          </div>
+          <div v-if="data.injection_reports[showInjectionIdx].suspicious_libraries.length > 0" class="acp-inject-list">
+            <div class="acp-inject-subtitle">Подозрит. библиотеки:</div>
+            <span
+              v-for="lib in data.injection_reports[showInjectionIdx].suspicious_libraries"
+              :key="lib"
+              class="acp-mod acp-mod--bad"
+            >{{ lib }}</span>
+          </div>
+          <div v-if="!data.injection_reports[showInjectionIdx].agents_detected && data.injection_reports[showInjectionIdx].suspicious_libraries.length === 0" class="acp-ok" style="font-size:0.82rem;padding:0.25rem 0;">
+            Признаков инъекции не обнаружено
+          </div>
+        </div>
+      </section>
     </template>
   </div>
 </template>
@@ -548,6 +645,36 @@ function fmtDate(iso) {
 }
 
 .acp-mod--bad { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.2); }
+
+/* Suspicious mod row with verdict buttons */
+.acp-susp-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.acp-susp-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.acp-verdict-btns { display: flex; gap: 0.3rem; margin-left: auto; }
+.acp-vbtn {
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.12s;
+}
+.acp-vbtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.acp-vbtn--cheat { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.25); color: #f87171; }
+.acp-vbtn--cheat:hover:not(:disabled) { background: rgba(239,68,68,0.22); }
+.acp-vbtn--safe { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.2); color: #4ade80; }
+.acp-vbtn--safe:hover:not(:disabled) { background: rgba(34,197,94,0.2); }
+.acp-verdict-msg { font-size: 0.78rem; color: #a78bfa; margin-bottom: 0.4rem; }
+
+/* Injection detection section */
+.acp-section--inject {
+  margin-top: 1.25rem;
+  border-color: rgba(251,191,36,0.15);
+}
+.acp-snap-tab--danger { border-color: rgba(251,191,36,0.3); color: #fbbf24; }
+.acp-inject-detail { font-size: 0.82rem; padding-top: 0.25rem; }
+.acp-inject-list { margin: 0.5rem 0; }
+.acp-inject-subtitle { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #475569; margin-bottom: 0.3rem; letter-spacing: 0.05em; }
 
 /* States */
 .acp-loading {

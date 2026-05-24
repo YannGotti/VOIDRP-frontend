@@ -22,7 +22,8 @@ import NationsListView from '../views/NationsListView.vue'
 import NationPublicView from '../views/NationPublicView.vue'
 import NationStudioView from '../views/NationStudioView.vue'
 import NationRankingsView from '../views/NationRankingsView.vue'
-import AllianceHubView from '../views/AllianceHubView.vue'
+import AlliancesListView from '../views/AlliancesListView.vue'
+import AlliancePublicView from '../views/AlliancePublicView.vue'
 import AdminLegacyView from '../views/AdminLegacyView.vue'
 import AdminMarketView from '../views/AdminMarketView.vue'
 import AdminLayout from '../views/admin/AdminLayout.vue'
@@ -37,6 +38,7 @@ import AdminBattlePassView from '../views/admin/AdminBattlePassView.vue'
 import AdminDonateView from '../views/admin/AdminDonateView.vue'
 import AdminAnticheatView from '../views/admin/AdminAnticheatView.vue'
 import AdminAnticheatPlayerView from '../views/admin/AdminAnticheatPlayerView.vue'
+import AdminLandingView from '../views/admin/AdminLandingView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
 import MarketView from '../views/MarketView.vue'
 import MarketItemView from '../views/MarketItemView.vue'
@@ -72,7 +74,8 @@ const routes = [
   { path: '/nation/:slug', name: 'nation-public', component: NationPublicView, meta: { title: 'Государство' } },
   { path: '/nation/studio', name: 'nation-studio', component: NationStudioView, meta: { title: 'Студия государства', requiresAuth: true } },
   { path: '/nations/rankings', name: 'nation-rankings', component: NationRankingsView, meta: { title: 'Рейтинг государств' } },
-  { path: '/alliances', name: 'alliances', component: AllianceHubView, meta: { title: 'Альянсы' } },
+  { path: '/alliances', name: 'alliances', component: AlliancesListView, meta: { title: 'Альянсы' } },
+  { path: '/alliances/:slug', name: 'alliance-public', component: AlliancePublicView, meta: { title: 'Альянс' } },
   { path: '/leaderboard', name: 'leaderboard', component: LeaderboardView, meta: { title: 'Рейтинг прогрессии' } },
   { path: '/players/top', name: 'players-top', component: PlayersTopView, meta: { title: 'Топ игроков' } },
   { path: '/internal-admin', name: 'admin-legacy', component: AdminLegacyView, meta: { title: 'Legacy Admin', hidePublicShell: true } },
@@ -93,6 +96,7 @@ const routes = [
       { path: 'donate', name: 'admin-donate', component: AdminDonateView, meta: { title: 'Донаты', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'anticheat', name: 'admin-anticheat', component: AdminAnticheatView, meta: { title: 'Античит', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'anticheat/:uuid', name: 'admin-anticheat-player', component: AdminAnticheatPlayerView, meta: { title: 'Игрок — Античит', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'landing', name: 'admin-landing', component: AdminLandingView, meta: { title: 'Главная страница', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
     ],
   },
 ]
