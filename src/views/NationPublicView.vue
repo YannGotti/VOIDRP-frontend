@@ -408,7 +408,15 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
               <div class="np-members">
                 <div v-for="member in nation.members" :key="member.user_id" class="np-member">
                   <div class="np-member__av" :style="{ background: hexToRgba(accent, 0.28), color: accent }">
-                    {{ avatarChar(member) }}
+                    <img
+                      v-if="member.minecraft_nickname"
+                      :src="`/api/v1/public/player-head/${encodeURIComponent(member.minecraft_nickname)}`"
+                      class="np-member__head"
+                      alt=""
+                      loading="lazy"
+                      @error="e => { e.currentTarget.onerror = null; e.currentTarget.src = `https://mc-heads.net/avatar/${encodeURIComponent(member.minecraft_nickname)}/32` }"
+                    />
+                    <span class="np-member__letter">{{ avatarChar(member) }}</span>
                   </div>
                   <div class="np-member__info">
                     <strong>{{ member.minecraft_nickname || member.site_login }}</strong>
@@ -902,6 +910,21 @@ onBeforeUnmount(() => { document.documentElement.style.removeProperty('--route-b
   font-size: .75rem;
   font-weight: 900;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.np-member__head {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.np-member__letter {
+  position: relative;
+  z-index: 0;
 }
 
 .np-member__info { min-width: 0; }

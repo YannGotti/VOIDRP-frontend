@@ -24,7 +24,12 @@ const CATEGORY_ICONS = {
 const RANK_MEDALS = ['🥇', '🥈', '🥉']
 
 function headUrl(nickname) {
-  return `https://mc-heads.net/avatar/${encodeURIComponent(nickname)}/32`
+  return `/api/v1/public/player-head/${encodeURIComponent(nickname)}`
+}
+
+function onHeadError(e, nickname) {
+  e.currentTarget.onerror = null
+  e.currentTarget.src = `https://mc-heads.net/avatar/${encodeURIComponent(nickname)}/32`
 }
 
 function fmtValue(entry, category) {
@@ -141,7 +146,7 @@ onMounted(load)
                 :alt="entry.minecraft_nickname"
                 class="h-8 w-8 shrink-0 rounded-sm"
                 loading="lazy"
-                @error="$event.target.style.display='none'"
+                @error="e => onHeadError(e, entry.minecraft_nickname)"
               />
 
               <!-- Name + date -->
