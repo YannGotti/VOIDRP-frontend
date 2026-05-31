@@ -223,6 +223,30 @@ const tierGates = [
   { epoch: 'Эндгейм',          item: 'Катализатор бесконечности', id: 'avaritia:infinity_catalyst',   mod: 'Avaritia', color: '#4ade80' },
 ]
 
+const farmRules = [
+  {
+    icon: '🔦',
+    color: '#22c55e',
+    title: 'Рычаг — обязателен',
+    text: 'Каждая ферма мобов должна иметь рычаг (или кнопку) для полного отключения спавна. Уходя от спавнера — выключай ферму.',
+    type: 'required',
+  },
+  {
+    icon: '⚔️',
+    color: '#f59e0b',
+    title: 'Молотилка — обязательна',
+    text: 'Механизм убийства мобов должен работать постоянно пока ферма активна. Моб обязан погибнуть — не залежаться живым рядом со спавнером.',
+    type: 'required',
+  },
+  {
+    icon: '💀',
+    color: '#ef4444',
+    title: 'Нарушение = снос спавнера',
+    text: 'Если мобы спавнятся неконтролируемо и не умирают — это прямая нагрузка на сервер. Администратор сломает спавнер без предупреждения.',
+    type: 'warning',
+  },
+]
+
 const regionLimits = [
   { label: 'Макс. объём привата', value: '20 000 000 блоков', hint: '≈ 200 × 200 × 500' },
   { label: 'Приватов на игрока', value: '16', hint: 'по умолчанию' },
@@ -493,6 +517,28 @@ watch(checked, (value) => {
               <p class="gp-tier-epoch" :style="{ color: gate.color }">{{ gate.epoch }}</p>
               <p class="gp-tier-item">{{ gate.item }}</p>
               <span class="gp-tier-mod">{{ gate.mod }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── MOB FARM RULES ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Правила для ферм мобов</h2>
+        <p class="gp-farm-intro">
+          Фермы мобов создают нагрузку на сервер. Несоблюдение правил — причина для административного вмешательства без предупреждения.
+        </p>
+        <div class="gp-farm-rules">
+          <div
+            v-for="rule in farmRules"
+            :key="rule.title"
+            class="gp-farm-rule"
+            :class="'gp-farm-rule--' + rule.type"
+          >
+            <div class="gp-farm-rule__icon">{{ rule.icon }}</div>
+            <div class="gp-farm-rule__body">
+              <strong class="gp-farm-rule__title" :style="{ color: rule.color }">{{ rule.title }}</strong>
+              <p class="gp-farm-rule__text">{{ rule.text }}</p>
             </div>
           </div>
         </div>
@@ -1291,5 +1337,57 @@ watch(checked, (value) => {
   font-size: .75rem;
   font-weight: 600;
   color: rgb(71 85 105);
+}
+
+/* ─── Mob Farm Rules ─── */
+.gp-farm-intro {
+  font-size: .82rem;
+  color: rgba(255,255,255,.45);
+  margin: 0 0 1rem;
+  line-height: 1.55;
+}
+
+.gp-farm-rules {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.gp-farm-rule {
+  display: flex;
+  align-items: flex-start;
+  gap: .9rem;
+  border-radius: 12px;
+  padding: .85rem 1rem;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.03);
+}
+
+.gp-farm-rule--warning {
+  border-color: rgba(239,68,68,.35);
+  background: rgba(239,68,68,.07);
+}
+
+.gp-farm-rule__icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: .1rem;
+}
+
+.gp-farm-rule__body { flex: 1; }
+
+.gp-farm-rule__title {
+  display: block;
+  font-size: .875rem;
+  font-weight: 700;
+  margin-bottom: .2rem;
+}
+
+.gp-farm-rule__text {
+  font-size: .8rem;
+  color: rgba(255,255,255,.55);
+  margin: 0;
+  line-height: 1.5;
 }
 </style>

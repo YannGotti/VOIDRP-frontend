@@ -38,6 +38,8 @@ const ENCHANT_NAMES = {
   UNBREAKING: 'Прочность',
   VANISHING_CURSE: 'Проклятие исчезновения',
   WIND_BURST: 'Порыв ветра',
+  DENSITY: 'Плотность',
+  BANE_OF_ARTHROPODS: 'Гибель членистоногих',
 }
 
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
@@ -69,6 +71,7 @@ const POTION_EFFECT_NAMES = {
   TURTLE_MASTER: 'Панциря черепахи',
   LONG_TURTLE_MASTER: 'Панциря черепахи (долгое)',
   STRONG_TURTLE_MASTER: 'Панциря черепахи II',
+  INFESTED: 'Заражения',
 }
 
 function _resolveSpecial(key) {
@@ -108,6 +111,13 @@ function _resolveSpecial(key) {
   if (base === 'TIPPED_ARROW') {
     const effectName = POTION_EFFECT_NAMES[sub]
     if (effectName) return `Стрела ${effectName.charAt(0).toLowerCase() + effectName.slice(1)}`
+    return null
+  }
+
+  if (base === 'MINECRAFT' && sub.startsWith('OMINOUS_BOTTLE_')) {
+    const level = parseInt(sub.replace('OMINOUS_BOTTLE_', ''))
+    const roman = ['', 'I', 'II', 'III', 'IV', 'V'][level] || level
+    if (roman) return `Зловещая бутылка ${roman}`
     return null
   }
 
@@ -636,6 +646,7 @@ const NAMES = {
   SNIFFER_EGG: 'Яйцо снифера',
 
   // Медь
+  WAXED_CUT_COPPER: 'Вощёная обрезная медь',
   WAXED_OXIDIZED_CUT_COPPER: 'Вощёная окисленная обрезная медь',
   WAXED_OXIDIZED_CUT_COPPER_SLAB: 'Плита из вощёной окисленной обрезной меди',
   WAXED_WEATHERED_CUT_COPPER: 'Вощёная состарившаяся обрезная медь',
@@ -644,12 +655,23 @@ const NAMES = {
 
   // Музыкальные диски
   MUSIC_DISC_11: 'Музыкальный диск «11»',
+  MUSIC_DISC_13: 'Музыкальный диск «13»',
   MUSIC_DISC_BLOCKS: 'Музыкальный диск «Blocks»',
+  MUSIC_DISC_CAT: 'Музыкальный диск «Cat»',
+  MUSIC_DISC_CHIRP: 'Музыкальный диск «Chirp»',
   MUSIC_DISC_CREATOR: 'Музыкальный диск «Creator»',
+  MUSIC_DISC_CREATOR_MUSIC_BOX: 'Музыкальный диск «Creator (Music Box)»',
+  MUSIC_DISC_FAR: 'Музыкальный диск «Far»',
+  MUSIC_DISC_MALL: 'Музыкальный диск «Mall»',
   MUSIC_DISC_MELLOHI: 'Музыкальный диск «Mellohi»',
+  MUSIC_DISC_OTHERSIDE: 'Музыкальный диск «Otherside»',
+  MUSIC_DISC_PIGSTEP: 'Музыкальный диск «Pigstep»',
+  MUSIC_DISC_PRECIPICE: 'Музыкальный диск «Precipice»',
+  MUSIC_DISC_RELIC: 'Музыкальный диск «Relic»',
   MUSIC_DISC_STAL: 'Музыкальный диск «Stal»',
   MUSIC_DISC_STRAD: 'Музыкальный диск «Strad»',
   MUSIC_DISC_WAIT: 'Музыкальный диск «Wait»',
+  MUSIC_DISC_WARD: 'Музыкальный диск «Ward»',
 
   // Искажённое (Warped)
   WARPED_FUNGUS: 'Искажённый гриб',
@@ -679,6 +701,55 @@ const NAMES = {
   WARD_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Защита»',
   WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Первопроходец»',
   WILD_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Дикий»',
+  BOLT_ARMOR_TRIM_SMITHING_TEMPLATE: 'Шаблон «Молния»',
+  NETHERITE_UPGRADE_SMITHING_TEMPLATE: 'Шаблон незеритового улучшения',
+
+  // Прочие ванильные
+  ANCIENT_DEBRIS: 'Древние обломки',
+  CLAY: 'Глина',
+  END_ROD: 'Жезл Края',
+  GLOWSTONE_DUST: 'Светокаменная пыль',
+  GOLDEN_CARROT: 'Золотая морковь',
+  MAGMA_BLOCK: 'Блок магмы',
+  WHITE_CONCRETE: 'Белый бетон',
+  SKULL_BANNER_PATTERN: 'Узор для знамени «Череп»',
+
+  // Предметы и блоки без перевода (добавлено)
+  BLACKSTONE_SLAB: 'Плита из чёрного камня',
+  BRUSH: 'Кисть',
+  CHORUS_FLOWER: 'Цветок хора',
+  COD_BUCKET: 'Ведро с треской',
+  COMPOSTER: 'Компостер',
+  CRAFTER: 'Крафтер',
+  DARK_OAK_WOOD: 'Брус тёмного дуба',
+  DEEPSLATE: 'Сланец',
+  DISPENSER: 'Раздатчик',
+  GLOW_LICHEN: 'Светящийся лишайник',
+  GOAT_HORN: 'Рог козла',
+  JUKEBOX: 'Музыкальный ящик',
+  LEVER: 'Рычаг',
+  MANGROVE_STAIRS: 'Ступени из мангрового дерева',
+  MAP: 'Карта',
+  NOTE_BLOCK: 'Нотный блок',
+  PEARLESCENT_FROGLIGHT: 'Жемчужный лягушачий фонарь',
+  POLISHED_BLACKSTONE_STAIRS: 'Ступени из полированного чёрного камня',
+  POLISHED_DIORITE_STAIRS: 'Ступени из полированного диорита',
+  QUARTZ_BRICKS: 'Кварцевые кирпичи',
+  QUARTZ_SLAB: 'Кварцевая плита',
+  QUARTZ_STAIRS: 'Кварцевые ступени',
+  RED_NETHER_BRICKS: 'Красный адский кирпич',
+  ROOTED_DIRT: 'Дерновая земля',
+  SALMON_BUCKET: 'Ведро с лососем',
+  SANDSTONE_SLAB: 'Плита из песчаника',
+  SANDSTONE_STAIRS: 'Ступени из песчаника',
+  SHROOMLIGHT: 'Светогриб',
+  SLIME_BLOCK: 'Блок слизи',
+  SMOKER: 'Коптильня',
+  SMOOTH_SANDSTONE: 'Гладкий песчаник',
+  SNOW: 'Снег',
+  STONE_BRICK_STAIRS: 'Ступени из каменных кирпичей',
+  STONE_BUTTON: 'Каменная кнопка',
+  STONECUTTER: 'Камнерез',
 }
 
 export function getMaterialName(material) {

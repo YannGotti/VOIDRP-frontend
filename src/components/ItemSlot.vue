@@ -42,7 +42,7 @@ const tooltipText = computed(() => {
 
 const iconUrl = computed(() => {
   if (isTag.value || isEmpty.value || imgError.value) return null
-  return `/item-icons/${modid.value}/${itemKey.value}.png`
+  return `/item-icons/${modid.value.toLowerCase()}/${itemKey.value.toLowerCase()}.png`
 })
 
 const tagLabel = computed(() => {

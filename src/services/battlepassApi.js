@@ -7,3 +7,7 @@ export async function getBattlePassProfileByNick(nickname) {
 export async function getBattlePassProfile(minecraftUuid) {
   return apiRequest(`/battlepass/profile/${minecraftUuid}`)
 }
+
+export async function getBattlePassLeaderboard() {
+  return apiRequest('/battlepass/leaderboard')
+}

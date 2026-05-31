@@ -39,6 +39,7 @@ import AdminDonateView from '../views/admin/AdminDonateView.vue'
 import AdminAnticheatView from '../views/admin/AdminAnticheatView.vue'
 import AdminAnticheatPlayerView from '../views/admin/AdminAnticheatPlayerView.vue'
 import AdminLandingView from '../views/admin/AdminLandingView.vue'
+import AdminFeedbackView from '../views/admin/AdminFeedbackView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
 import MarketView from '../views/MarketView.vue'
 import MarketItemView from '../views/MarketItemView.vue'
@@ -48,6 +49,7 @@ import LeaderboardView from '../views/LeaderboardView.vue'
 import PlayersTopView from '../views/PlayersTopView.vue'
 import RecipesView from '../views/RecipesView.vue'
 import ShopView from '../views/ShopView.vue'
+import BattlePassView from '../views/BattlePassView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
@@ -78,6 +80,7 @@ const routes = [
   { path: '/alliances/:slug', name: 'alliance-public', component: AlliancePublicView, meta: { title: 'Альянс' } },
   { path: '/leaderboard', name: 'leaderboard', component: LeaderboardView, meta: { title: 'Рейтинг прогрессии' } },
   { path: '/players/top', name: 'players-top', component: PlayersTopView, meta: { title: 'Топ игроков' } },
+  { path: '/battlepass', name: 'battlepass', component: BattlePassView, meta: { title: 'Боевой пропуск' } },
   { path: '/internal-admin', name: 'admin-legacy', component: AdminLegacyView, meta: { title: 'Legacy Admin', hidePublicShell: true } },
   { path: '/internal-admin/market', name: 'admin-market', component: AdminMarketView, meta: { title: 'Market Admin', hidePublicShell: true } },
   {
@@ -97,6 +100,7 @@ const routes = [
       { path: 'anticheat', name: 'admin-anticheat', component: AdminAnticheatView, meta: { title: 'Античит', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'anticheat/:uuid', name: 'admin-anticheat-player', component: AdminAnticheatPlayerView, meta: { title: 'Игрок — Античит', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'landing', name: 'admin-landing', component: AdminLandingView, meta: { title: 'Главная страница', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'feedback', name: 'admin-feedback', component: AdminFeedbackView, meta: { title: 'Обращения', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
     ],
   },
 ]

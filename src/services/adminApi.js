@@ -205,3 +205,14 @@ export function adminDeleteModSuggestion(token, id) {
     method: 'DELETE',
   })
 }
+
+export function adminListFeedback(token) {
+  return apiRequest('/admin/player-feedback/', ah(token))
+}
+
+export function adminDeleteFeedback(token, id) {
+  return apiRequest(`/admin/player-feedback/${id}`, {
+    ...ah(token),
+    method: 'DELETE',
+  })
+}

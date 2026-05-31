@@ -480,7 +480,7 @@ function nationAccent(nation) {
           <p class="bp-kicker">{{ t('battlepassTeaser.kicker') }}</p>
           <h2 class="bp-card__title">{{ t('battlepassTeaser.title') }}</h2>
           <p class="bp-card__desc">{{ t('battlepassTeaser.desc') }}</p>
-          <RouterLink to="/shop" class="bp-card__link">{{ t('battlepassTeaser.link') }}</RouterLink>
+          <RouterLink to="/battlepass" class="bp-card__link">{{ t('battlepassTeaser.link') }}</RouterLink>
         </div>
         <div class="bp-card__right" aria-hidden="true">
           <div class="bp-icon">⭐</div>
