@@ -1014,5 +1014,7 @@ export default {
     serverOfflineTitle: 'Server offline',
     serverOfflineDesc: 'The server is currently offline or undergoing maintenance. The shop is temporarily unavailable.',
     serverOfflineRetry: 'Retry',
+    details: 'Details',
+    categoryAll: 'All',
   },
 }

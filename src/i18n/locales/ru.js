@@ -1014,5 +1014,7 @@ export default {
     serverOfflineTitle: 'Сервер недоступен',
     serverOfflineDesc: 'В данный момент сервер выключен или проходит техническое обслуживание. Магазин временно недоступен.',
     serverOfflineRetry: 'Обновить',
+    details: 'Подробнее',
+    categoryAll: 'Все',
   },
 }
