@@ -341,6 +341,88 @@ const modCategories = [
   },
 ]
 
+// ── Economy & Market ──
+const marketStats = [
+  { label: 'Комиссия продавца', value: '2%', hint: 'идёт в казну государства' },
+  { label: 'Premium BP комиссия', value: '1%', hint: 'нужен Battle Pass Premium' },
+  { label: 'Сбор налога', value: 'раз в неделю', hint: 'прогрессивные ставки' },
+  { label: 'Налог на казну', value: '5% / неделя', hint: 'для государственных казн' },
+]
+
+const marketCommands = [
+  { cmd: '/shop', desc: 'Открыть GUI игрового рынка' },
+  { cmd: '/pm sell <кол-во|all> <цена>', desc: 'Выставить ордер на продажу (предмет из руки)' },
+  { cmd: '/pm buy <item_key> <кол-во> <цена>', desc: 'Выставить ордер на покупку по ключу предмета' },
+  { cmd: '/pm orders', desc: 'Открыть GUI своих ордеров' },
+  { cmd: '/pm pickup', desc: 'Забрать незабранные предметы и деньги после сделок' },
+  { cmd: '/pm cancel sell|buy <id>', desc: 'Отменить ордер и вернуть предметы / деньги' },
+  { cmd: '/pm confirm', desc: 'Подтвердить ожидающее действие' },
+  { cmd: '/marketprice', desc: 'Цена предмета в руке (алиасы: /mprice, /price)' },
+]
+
+const potionKeys = [
+  { key: 'potion:night_vision', name: 'Ночное зрение' },
+  { key: 'potion:speed', name: 'Скорость' },
+  { key: 'potion:strength', name: 'Сила' },
+  { key: 'potion:healing', name: 'Мгновенное лечение' },
+  { key: 'potion:regeneration', name: 'Регенерация' },
+  { key: 'potion:fire_resistance', name: 'Огнестойкость' },
+  { key: 'potion:water_breathing', name: 'Дыхание под водой' },
+  { key: 'potion:invisibility', name: 'Невидимость' },
+  { key: 'potion:leaping', name: 'Прыжок' },
+  { key: 'potion:slow_falling', name: 'Медленное падение' },
+  { key: 'splash_potion:night_vision', name: 'Бросаемое: ночное зрение' },
+  { key: 'splash_potion:healing', name: 'Бросаемое: лечение' },
+  { key: 'splash_potion:strength', name: 'Бросаемое: сила' },
+  { key: 'lingering_potion:regeneration', name: 'Оседающее: регенерация' },
+]
+
+const wealthTaxTiers = [
+  { range: '0 – 100 000₽', rate: '0%', color: '#22c55e' },
+  { range: '100 000 – 500 000₽', rate: '2%', color: '#f59e0b' },
+  { range: '500 000 – 2 000 000₽', rate: '5%', color: '#f97316' },
+  { range: '2 000 000₽ и выше', rate: '10%', color: '#ef4444' },
+]
+
+// ── Daily Quests ──
+const dailyQuestCommands = [
+  { cmd: '/dq', desc: 'Открыть 3 ежедневных квеста (обновляются каждый день в полночь)' },
+  { cmd: '/bq', desc: 'Испытание Героя — 1 сложный квест на 3 дня, +2000 XP Battle Pass при выполнении' },
+  { cmd: '/delivery', desc: 'Задание Торговца Артефактами — принести особые предметы, +3000 XP Battle Pass' },
+  { cmd: '/questtrack', desc: 'Закрепить / открепить активный квест в углу экрана' },
+]
+
+const dailyQuestTypes = [
+  { icon: '⚔️', name: 'Убийство', desc: 'Убить определённых мобов' },
+  { icon: '⛏️', name: 'Добыча', desc: 'Добыть нужное количество блоков' },
+  { icon: '📦', name: 'Сбор', desc: 'Собрать определённые предметы' },
+  { icon: '🎣', name: 'Рыбалка', desc: 'Поймать рыбу удочкой' },
+  { icon: '🐄', name: 'Разведение', desc: 'Разводить животных' },
+  { icon: '🔨', name: 'Крафт', desc: 'Скрафтить предметы' },
+  { icon: '💰', name: 'Продажа рынка', desc: 'Продать предметы через /shop или /pm sell' },
+  { icon: '🛒', name: 'Покупка рынка', desc: 'Купить предметы через /shop или /pm buy' },
+  { icon: '⭐', name: 'ModSell', desc: 'Продать модовые предметы через /modsell' },
+]
+
+// ── Battle Pass ──
+const bpXpSources = [
+  { source: 'Убийство редкого / уникального моба', xp: '+500 XP' },
+  { source: 'Убийство необычного моба', xp: '+150 XP' },
+  { source: 'Убийство обычного моба', xp: '+10 XP' },
+  { source: 'Рыночная сделка', xp: '+5 XP за предмет' },
+  { source: 'Квест Battle Pass выполнен', xp: '+300–600 XP' },
+  { source: 'Ежедневный квест (/dq) выполнен', xp: '+600 XP' },
+  { source: 'Испытание Героя (/bq) выполнено', xp: '+2 000 XP' },
+  { source: 'Задание Торговца (/delivery) выполнено', xp: '+3 000 XP' },
+]
+
+// ── ModSell ──
+const modSellCommands = [
+  { cmd: '/modsell [кол-во]', desc: 'Продать модовый предмет из руки (алиас: /мпродать)' },
+  { cmd: '/msellall', desc: 'Продать все подходящие предметы из инвентаря (алиас: /мпродатьвсё)' },
+  { cmd: '/msellinfo', desc: 'Узнать цену предмета в руке (алиас: /мценник)' },
+]
+
 const totalChecks = computed(() => stages.reduce((sum, stage) => sum + stage.checks.length, 0))
 const completedChecks = computed(() => Object.values(checked.value).filter(Boolean).length)
 const completionPercent = computed(() => {
@@ -633,6 +715,169 @@ watch(checked, (value) => {
                   <span class="gp-mod-key">{{ mod.key }}</span>
                 </div>
                 <span class="gp-mod-note">{{ mod.note }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── ECONOMY & TAXES ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Экономика и налоги</h2>
+        <p class="gp-tier-hint">Прогрессивный налог на богатство списывается раз в неделю — только с суммы выше порога. Рыночная комиссия 2% с каждой продажи автоматически поступает в казну государства продавца.</p>
+
+        <div class="gp-limits-row" style="margin-bottom:.85rem">
+          <div v-for="stat in marketStats" :key="stat.label" class="gp-limit-chip">
+            <span class="gp-limit-label">{{ stat.label }}</span>
+            <span class="gp-limit-value">{{ stat.value }}</span>
+            <span class="gp-limit-hint">{{ stat.hint }}</span>
+          </div>
+        </div>
+
+        <p class="gp-list-label" style="margin-bottom:.5rem">Ставки налога на богатство (раз в неделю)</p>
+        <div class="gp-table-wrap">
+          <table class="gp-table">
+            <thead>
+              <tr><th>Диапазон баланса</th><th>Ставка</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="tier in wealthTaxTiers" :key="tier.range">
+                <td>{{ tier.range }}</td>
+                <td><strong :style="{ color: tier.color }">{{ tier.rate }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ─── PLAYER MARKET ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Игровой рынок (/shop)</h2>
+        <p class="gp-tier-hint">Ордерная биржа: игроки выставляют ордера на продажу и покупку — сделки исполняются автоматически при совпадении цен. После исполнения ордера забери товар через <code class="gp-cmd" style="display:inline">/pm pickup</code>.</p>
+        <div class="gp-cmds-grid">
+          <div class="gp-cmd-block">
+            <p class="gp-cmd-block__title">
+              <span class="gp-cmd-block__dot" style="background:#34d399"></span>
+              Команды рынка
+            </p>
+            <p class="gp-cmd-block__note">Продажа — возьми предмет в руку и введи <code class="gp-cmd" style="display:inline">/pm sell</code>. Покупка — укажи item_key предмета вручную. Комиссия 2% (1% с Premium BP) списывается с продавца при исполнении ордера и зачисляется в казну его государства.</p>
+            <div class="gp-cmd-list">
+              <div v-for="row in marketCommands" :key="row.cmd" class="gp-cmd-row">
+                <code class="gp-cmd">{{ row.cmd }}</code>
+                <span class="gp-cmd-desc">{{ row.desc }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gp-cmds-grid" style="margin-top:.85rem">
+          <div class="gp-cmd-block">
+            <p class="gp-cmd-block__title">
+              <span class="gp-cmd-block__dot" style="background:#a78bfa"></span>
+              Зелья и зачарованные книги — ключи для /pm buy
+            </p>
+            <p class="gp-cmd-block__note">
+              Для зелий используй формат <code class="gp-cmd" style="display:inline">potion:эффект</code>,
+              для бросаемых — <code class="gp-cmd" style="display:inline">splash_potion:эффект</code>,
+              для оседающих — <code class="gp-cmd" style="display:inline">lingering_potion:эффект</code>.<br>
+              Для книг: <code class="gp-cmd" style="display:inline">enchanted_book:зачарование:уровень</code>
+              — например <code class="gp-cmd" style="display:inline">enchanted_book:sharpness:5</code>.
+            </p>
+            <div class="gp-cmd-list">
+              <div v-for="row in potionKeys" :key="row.key" class="gp-cmd-row">
+                <code class="gp-cmd">{{ row.key }}</code>
+                <span class="gp-cmd-desc">{{ row.name }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── DAILY QUESTS ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Ежедневные квесты</h2>
+        <p class="gp-tier-hint">Три независимые системы квестов с разными сроками и наградами. При получении награды автоматически начисляется XP Battle Pass.</p>
+
+        <div class="gp-cmds-grid" style="margin-bottom:.85rem">
+          <div class="gp-cmd-block">
+            <p class="gp-cmd-block__title">
+              <span class="gp-cmd-block__dot" style="background:#f59e0b"></span>
+              Команды квестов
+            </p>
+            <p class="gp-cmd-block__note">XP Battle Pass начисляется при получении награды, а не при выполнении задания. Используй /questtrack чтобы отслеживать прогресс прямо на экране.</p>
+            <div class="gp-cmd-list">
+              <div v-for="row in dailyQuestCommands" :key="row.cmd" class="gp-cmd-row">
+                <code class="gp-cmd">{{ row.cmd }}</code>
+                <span class="gp-cmd-desc">{{ row.desc }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="gp-list-label" style="margin-bottom:.5rem">Типы квестов</p>
+        <div class="gp-tier-grid">
+          <div v-for="qt in dailyQuestTypes" :key="qt.name" class="gp-tier-card">
+            <div style="font-size:1.1rem;flex-shrink:0;margin-top:.05rem">{{ qt.icon }}</div>
+            <div class="gp-tier-card__body">
+              <p class="gp-tier-epoch" style="color:rgb(148 163 184)">{{ qt.name }}</p>
+              <p style="font-size:.75rem;font-weight:500;color:rgb(100 116 139);margin:0">{{ qt.desc }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── BATTLE PASS ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">Battle Pass (/bp)</h2>
+        <p class="gp-tier-hint">1000 уровней, по 1000 XP на уровень. Каждый уровень — награда: монеты, предметы или опыт. Доступны бесплатная и Premium дорожки с отдельными квестами каждый день.</p>
+
+        <div class="gp-limits-row" style="margin-bottom:.85rem">
+          <div class="gp-limit-chip">
+            <span class="gp-limit-label">Уровни</span>
+            <span class="gp-limit-value">1 – 1000</span>
+            <span class="gp-limit-hint">1000 XP на уровень</span>
+          </div>
+          <div class="gp-limit-chip">
+            <span class="gp-limit-label">Бесплатные квесты</span>
+            <span class="gp-limit-value">3 / день</span>
+            <span class="gp-limit-hint">обновляются в полночь</span>
+          </div>
+          <div class="gp-limit-chip">
+            <span class="gp-limit-label">Premium квесты</span>
+            <span class="gp-limit-value">3 / день</span>
+            <span class="gp-limit-hint">нужен Battle Pass Premium</span>
+          </div>
+          <div class="gp-limit-chip">
+            <span class="gp-limit-label">Premium бонус</span>
+            <span class="gp-limit-value">1% комиссия</span>
+            <span class="gp-limit-hint">вместо 2% на рынке</span>
+          </div>
+        </div>
+
+        <p class="gp-list-label" style="margin-bottom:.5rem">Источники XP</p>
+        <div class="gp-tips-grid">
+          <div v-for="src in bpXpSources" :key="src.source" class="gp-tip">
+            <strong>{{ src.xp }}</strong>
+            <small>{{ src.source }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── MODSELL ─── -->
+      <div class="surface-card gp-card">
+        <h2 class="gp-section-title">ModSell — продажа модовых предметов</h2>
+        <p class="gp-tier-hint">Продажа предметов из модов напрямую за монеты сервера. Цены динамические — рассчитываются автоматически по рыночной модели. Продажа через ModSell засчитывается в квесты типа «ModSell» в Daily Quests.</p>
+        <div class="gp-cmds-grid">
+          <div class="gp-cmd-block">
+            <p class="gp-cmd-block__title">
+              <span class="gp-cmd-block__dot" style="background:#a78bfa"></span>
+              Команды ModSell
+            </p>
+            <p class="gp-cmd-block__note">Положи предмет в руку и введи команду. Принимаются только предметы из реестра сервера — проверь /msellinfo перед продажей.</p>
+            <div class="gp-cmd-list">
+              <div v-for="row in modSellCommands" :key="row.cmd" class="gp-cmd-row">
+                <code class="gp-cmd">{{ row.cmd }}</code>
+                <span class="gp-cmd-desc">{{ row.desc }}</span>
               </div>
             </div>
           </div>

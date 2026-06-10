@@ -1,4 +1,5 @@
 import { apiRequest } from './apiBase'
+import { authState } from '../stores/authStore'
 
 function buildQuery(params = {}) {
   const searchParams = new URLSearchParams()
@@ -34,4 +35,47 @@ export async function getMarketTransactions(params = {}) {
 
 export async function getMarketItemHistory(material, days = 30) {
   return await apiRequest(`/market/items/${encodeURIComponent(material)}/history?days=${days}`, { method: 'GET' })
+}
+
+// ── Player market API ─────────────────────────────────────────────────────────
+
+export async function getPlayerMarketItems() {
+  return await apiRequest('/market/player/items', { method: 'GET' })
+}
+
+export async function getPlayerMarketOrderBook(itemKey) {
+  return await apiRequest(`/market/player/order-book/${encodeURIComponent(itemKey)}`, { method: 'GET' })
+}
+
+export async function getPlayerMarketSellOrders(params = {}) {
+  return await apiRequest(`/market/player/sell-orders${buildQuery(params)}`, { method: 'GET' })
+}
+
+export async function getPlayerMarketBuyOrders(params = {}) {
+  return await apiRequest(`/market/player/buy-orders${buildQuery(params)}`, { method: 'GET' })
+}
+
+export async function getPlayerMarketTrades(params = {}) {
+  return await apiRequest(`/market/player/trades${buildQuery(params)}`, { method: 'GET' })
+}
+
+export async function getMyPlayerMarketSellOrders(params = {}) {
+  return await apiRequest(`/market/player/me/sell-orders${buildQuery(params)}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${authState.accessToken}` },
+  })
+}
+
+export async function getMyPlayerMarketBuyOrders(params = {}) {
+  return await apiRequest(`/market/player/me/buy-orders${buildQuery(params)}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${authState.accessToken}` },
+  })
+}
+
+export async function getMyPlayerMarketTrades(params = {}) {
+  return await apiRequest(`/market/player/me/trades${buildQuery(params)}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${authState.accessToken}` },
+  })
 }

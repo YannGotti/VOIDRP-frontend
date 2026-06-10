@@ -40,9 +40,11 @@ import AdminAnticheatView from '../views/admin/AdminAnticheatView.vue'
 import AdminAnticheatPlayerView from '../views/admin/AdminAnticheatPlayerView.vue'
 import AdminLandingView from '../views/admin/AdminLandingView.vue'
 import AdminFeedbackView from '../views/admin/AdminFeedbackView.vue'
+import AdminCrashReportsView from '../views/admin/AdminCrashReportsView.vue'
 import ExpertGuideView from '../views/ExpertGuideView.vue'
 import MarketView from '../views/MarketView.vue'
 import MarketItemView from '../views/MarketItemView.vue'
+import PlayerMarketMyOrdersView from '../views/PlayerMarketMyOrdersView.vue'
 import PrivacyPolicyView from '../views/PrivacyPolicyView.vue'
 import OfferAgreementView from '../views/OfferAgreementView.vue'
 import LeaderboardView from '../views/LeaderboardView.vue'
@@ -50,13 +52,16 @@ import PlayersTopView from '../views/PlayersTopView.vue'
 import RecipesView from '../views/RecipesView.vue'
 import ShopView from '../views/ShopView.vue'
 import BattlePassView from '../views/BattlePassView.vue'
+import GameUiMarketView from '../views/GameUiMarketView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
   { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин', requiresAuth: true } },
   { path: '/guide', name: 'expert-guide', component: ExpertGuideView, meta: { title: 'Гайд сборки' } },
   { path: '/recipes', name: 'recipes', component: RecipesView, meta: { title: 'Крафты сборки' } },
-  { path: '/market', name: 'market', component: MarketView, meta: { title: 'Рынок' } },
+  { path: '/game-ui/market', name: 'game-ui-market', component: GameUiMarketView, meta: { title: 'Рынок игроков', hidePublicShell: true } },
+  { path: '/market', name: 'market', component: MarketView, meta: { title: 'Рынок игроков' } },
+  { path: '/market/me/orders', name: 'market-my-orders', component: PlayerMarketMyOrdersView, meta: { title: 'Мои ордера', requiresAuth: true } },
   { path: '/market/:material', name: 'market-item', component: MarketItemView, meta: { title: 'Товар' } },
   { path: '/links', name: 'links', component: LinksView, meta: { title: 'Ссылки' } },
   { path: '/privacy', name: 'privacy-policy', component: PrivacyPolicyView, meta: { title: 'Политика конфиденциальности' } },
@@ -101,6 +106,7 @@ const routes = [
       { path: 'anticheat/:uuid', name: 'admin-anticheat-player', component: AdminAnticheatPlayerView, meta: { title: 'Игрок — Античит', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'landing', name: 'admin-landing', component: AdminLandingView, meta: { title: 'Главная страница', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
       { path: 'feedback', name: 'admin-feedback', component: AdminFeedbackView, meta: { title: 'Обращения', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
+      { path: 'launcher-crashes', name: 'admin-launcher-crashes', component: AdminCrashReportsView, meta: { title: 'Краши лаунчера', requiresAuth: true, requiresAdmin: true, hidePublicShell: true } },
     ],
   },
 ]
