@@ -1017,6 +1017,15 @@ export default {
     details: 'Details',
     categoryAll: 'All',
   },
+  gameUiMenu: {
+    title: 'Main Menu',
+    market: 'Market',
+    treasury: 'Treasury',
+    alliance: 'Alliance',
+    battlepass: 'Battle Pass',
+    quests: 'Quests',
+    site: 'Website',
+  },
   gameUiMarket: {
     title: 'Player Market',
     tabItems: 'Items',

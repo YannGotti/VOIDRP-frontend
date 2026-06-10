@@ -53,12 +53,14 @@ import RecipesView from '../views/RecipesView.vue'
 import ShopView from '../views/ShopView.vue'
 import BattlePassView from '../views/BattlePassView.vue'
 import GameUiMarketView from '../views/GameUiMarketView.vue'
+import GameUiMenuView from '../views/GameUiMenuView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView, meta: { title: 'Главная' } },
   { path: '/shop', name: 'shop', component: ShopView, meta: { title: 'Магазин', requiresAuth: true } },
   { path: '/guide', name: 'expert-guide', component: ExpertGuideView, meta: { title: 'Гайд сборки' } },
   { path: '/recipes', name: 'recipes', component: RecipesView, meta: { title: 'Крафты сборки' } },
+  { path: '/game-ui/menu', name: 'game-ui-menu', component: GameUiMenuView, meta: { title: 'Меню', hidePublicShell: true } },
   { path: '/game-ui/market', name: 'game-ui-market', component: GameUiMarketView, meta: { title: 'Рынок игроков', hidePublicShell: true } },
   { path: '/market', name: 'market', component: MarketView, meta: { title: 'Рынок игроков' } },
   { path: '/market/me/orders', name: 'market-my-orders', component: PlayerMarketMyOrdersView, meta: { title: 'Мои ордера', requiresAuth: true } },

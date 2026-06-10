@@ -1017,6 +1017,15 @@ export default {
     details: 'Подробнее',
     categoryAll: 'Все',
   },
+  gameUiMenu: {
+    title: 'Главное меню',
+    market: 'Рынок',
+    treasury: 'Казна',
+    alliance: 'Альянсы',
+    battlepass: 'Боевой пропуск',
+    quests: 'Квесты',
+    site: 'Сайт',
+  },
   gameUiMarket: {
     title: 'Рынок игроков',
     tabItems: 'Товары',
